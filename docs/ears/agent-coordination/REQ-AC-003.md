@@ -1,0 +1,19 @@
+# REQ-AC-003: Inter-Agent Messaging
+
+**Pattern:** Event-Driven
+**Capability:** Agent Coordination
+
+## Requirement
+
+When an agent sends a message to another agent, the system shall deliver the message to the target agent's mailbox.
+
+## Acceptance Criteria
+
+- [ ] Messages are addressed by task ID
+- [ ] The target agent receives the message in its input stream
+- [ ] Message delivery is asynchronous and non-blocking for the sender
+
+## Source Evidence
+
+- `OpenHarness/src/openharness/tools/send_message_tool.py`
+- `OpenHarness/src/openharness/swarm/mailbox.py`

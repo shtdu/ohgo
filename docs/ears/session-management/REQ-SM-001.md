@@ -1,0 +1,18 @@
+# REQ-SM-001: Session Persistence
+
+**Pattern:** Ubiquitous
+**Capability:** Session Management
+
+## Requirement
+
+The system shall persist conversation state including message history and tool results so that sessions can be resumed after termination.
+
+## Acceptance Criteria
+
+- [ ] Session state is saved automatically during conversation
+- [ ] Sessions are keyed by directory and session ID
+- [ ] Session data survives process termination
+
+## Source Evidence
+
+- `OpenHarness/src/openharness/commands/` — `/resume`, `/continue` commands

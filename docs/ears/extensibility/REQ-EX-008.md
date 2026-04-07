@@ -1,0 +1,18 @@
+# REQ-EX-008: Plugin Enable and Disable
+
+**Pattern:** Event-Driven
+**Capability:** Extensibility
+
+## Requirement
+
+When the user enables or disables a plugin, the system shall update the active plugin set without restarting the session.
+
+## Acceptance Criteria
+
+- [ ] Disabled plugins are skipped during discovery
+- [ ] Enabling a plugin loads its contributions immediately
+- [ ] Plugin enable state is persisted in settings
+
+## Source Evidence
+
+- `OpenHarness/src/openharness/settings.py` — `enabled_plugins` dictionary
