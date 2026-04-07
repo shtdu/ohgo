@@ -1,11 +1,11 @@
 # REQ-CF-003: Provider Profiles
 
-**Pattern:** Ubiquitous
+**Pattern:** Optional Feature
 **Capability:** Configuration
 
 ## Requirement
 
-The system shall support multiple provider profiles, each defining API connection parameters (base URL, API key, format) for different AI backends.
+Where provider profiles are defined, the system shall connect to AI backends using each profile's specified parameters (base URL, API key, format).
 
 ## Acceptance Criteria
 

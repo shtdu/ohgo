@@ -10,8 +10,9 @@ When the agent queries memory, the system shall search memory files by relevance
 ## Acceptance Criteria
 
 - [ ] Accepts a search query
-- [ ] Returns ranked results by relevance
+- [ ] Returns results ranked by text similarity to the query
 - [ ] Returns file paths and content excerpts
+- [ ] Returns an empty result set with no error when no memories match the query
 
 ## Source Evidence
 

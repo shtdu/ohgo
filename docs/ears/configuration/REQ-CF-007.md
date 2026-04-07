@@ -9,10 +9,12 @@ The system shall discover and merge configuration from multiple layers: user glo
 
 ## Acceptance Criteria
 
-- [ ] Global settings from `~/.openharness/settings.json`
-- [ ] Project settings from `.openharness/` in the working directory
+- [ ] The system reads configuration from the user's global settings file at startup
+- [ ] The system reads project-level settings from the project's configuration directory when present
 - [ ] CLI flags override both layers
-- [ ] Layer precedence is consistent and documented
+- [ ] When the same setting is defined in multiple layers, the value from the highest-precedence layer (CLI flags > project settings > global settings) is used
+- [ ] CLI flag overrides apply only to the current session; the settings file is not modified
+- [ ] On next launch, settings revert to values from the settings file
 
 ## Source Evidence
 

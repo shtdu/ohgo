@@ -12,7 +12,7 @@ When the agent requests web content, the system shall fetch the specified URL an
 - [ ] Accepts a URL parameter
 - [ ] Returns extracted text content, not raw HTML
 - [ ] Supports a configurable maximum character limit
-- [ ] Handles HTTP errors gracefully with descriptive messages
+- [ ] When the requested URL cannot be retrieved, the system returns a descriptive error message indicating the failure reason
 
 ## Source Evidence
 

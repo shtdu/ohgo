@@ -1,17 +1,17 @@
 # REQ-MC-006: Memory Size Limits
 
-**Pattern:** State-Driven
+**Pattern:** Event-Driven
 **Capability:** Memory and Context
 
 ## Requirement
 
-While the memory system is active, the system shall enforce configurable limits on the number and size of memory files to prevent unbounded growth.
+When a memory entry is added, the system shall enforce configurable limits on the number and size of memory entries to prevent unbounded growth.
 
 ## Acceptance Criteria
 
-- [ ] Maximum number of memory files is configurable
-- [ ] Maximum entry point lines is configurable
-- [ ] The system warns when approaching limits
+- [ ] Maximum number of memory files is configurable (default: 200 files)
+- [ ] Maximum content size per entry is configurable (default: 32KB per entry)
+- [ ] When a memory write would exceed a configured limit, the system rejects the write and reports the limit condition to the agent
 
 ## Source Evidence
 

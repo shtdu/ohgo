@@ -11,7 +11,7 @@ When the user requests task output, the system shall return the accumulated outp
 
 - [ ] Returns output from completed or running tasks
 - [ ] Respects a configurable maximum byte limit
-- [ ] Truncates with a clear indication when limit is exceeded
+- [ ] When output exceeds the size limit, the returned content is truncated and includes a note indicating truncation and the original size
 
 ## Source Evidence
 

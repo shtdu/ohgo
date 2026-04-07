@@ -12,7 +12,7 @@ The system shall render a terminal user interface that displays streaming AI res
 - [ ] Responses stream token-by-token to the terminal
 - [ ] Tool invocations are displayed with parameters and results
 - [ ] Progress indicators show during long-running operations
-- [ ] The interface supports multiple visual themes
+- [ ] The interface handles terminal resize events
 
 ## Source Evidence
 

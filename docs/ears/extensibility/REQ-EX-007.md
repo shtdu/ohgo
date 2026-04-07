@@ -5,14 +5,14 @@
 
 ## Requirement
 
-When the user adds or removes an MCP server configuration, the system shall update the MCP client connections and reflect the change in the tool registry.
+When the user adds or removes an MCP server configuration, the system shall persist the configuration change and notify the runtime bridge (per REQ-TL-010).
 
 ## Acceptance Criteria
 
 - [ ] MCP servers are added via CLI (`mcp add`) or settings
 - [ ] MCP servers are removed via CLI (`mcp remove`)
-- [ ] Tool registry updates to include or exclude MCP tools accordingly
-- [ ] Server connection errors are reported without crashing
+- [ ] The configuration of external tool servers is persisted and reflected on next session start or MCP reconnection
+- [ ] Server connection errors are reported without affecting other tools
 
 ## Source Evidence
 

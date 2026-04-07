@@ -11,7 +11,7 @@ When an agent sends a message to another agent, the system shall deliver the mes
 
 - [ ] Messages are addressed by task ID
 - [ ] The target agent receives the message in its input stream
-- [ ] Message delivery is asynchronous and non-blocking for the sender
+- [ ] The sending agent continues execution without waiting for the receiving agent to process the message
 
 ## Source Evidence
 

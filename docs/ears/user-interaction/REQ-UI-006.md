@@ -11,7 +11,8 @@ When the agent needs user input for decisions, confirmations, or selections, the
 
 - [ ] The system can present multiple-choice questions with 2-4 options
 - [ ] The system supports free-text input when the user selects "Other"
-- [ ] Prompts are used for tool approval, ambiguity resolution, and user preferences
+- [ ] Prompts are used for user decisions, ambiguity resolution, and preference selection
+- [ ] Tool execution approval requests are presented through the same prompt mechanism
 - [ ] The prompt blocks agent execution until the user responds
 
 ## Source Evidence

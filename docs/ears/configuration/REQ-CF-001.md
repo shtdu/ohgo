@@ -10,8 +10,8 @@ The system shall read configuration from a JSON settings file at a standard loca
 ## Acceptance Criteria
 
 - [ ] Reads settings from the default user config directory
-- [ ] Supports an alternate settings file via `--settings` flag
-- [ ] Settings file contains all configurable parameters
+- [ ] Supports an alternate settings file location when specified at startup
+- [ ] The settings file schema covers all configuration parameters defined in the Configuration domain requirements (REQ-CF-001 through REQ-CF-007)
 
 ## Source Evidence
 

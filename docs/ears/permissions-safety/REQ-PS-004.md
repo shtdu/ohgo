@@ -12,7 +12,7 @@ While the system is in full auto mode, the system shall execute tools without us
 - [ ] Tools execute without user confirmation
 - [ ] Denied tools list still blocks execution
 - [ ] Path rules still restrict file operations
-- [ ] Dangerous operations may still trigger warnings
+- [ ] Destructive operation warnings (per REQ-PS-007) remain active even in full auto mode
 
 ## Source Evidence
 

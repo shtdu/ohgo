@@ -1,17 +1,17 @@
 # REQ-PS-001: Permission Mode Enforcement
 
-**Pattern:** Ubiquitous
+**Pattern:** State-Driven
 **Capability:** Permissions and Safety
 
 ## Requirement
 
-The system shall enforce tool execution permissions according to the active permission mode (default, plan, or full_auto).
+While a permission mode is active, the system shall enforce tool execution permissions according to that mode's rules.
 
 ## Acceptance Criteria
 
-- [ ] Three modes are available: default, plan, full_auto
-- [ ] The active mode is selectable via CLI flag or settings
-- [ ] Every tool execution passes through the permission checker
+- [ ] The system provides selectable permission modes (default, plan, and full_auto; details per REQ-PS-002, REQ-PS-003, REQ-PS-004)
+- [ ] Every tool invocation is routed through the permission system before execution
+- [ ] The active permission mode can be changed during a session via slash command or settings update
 
 ## Source Evidence
 

@@ -9,8 +9,8 @@ When the agent invokes a skill, the system shall load the skill's markdown conte
 
 ## Acceptance Criteria
 
-- [ ] Skills are loaded from bundled, user, and plugin directories
-- [ ] Skill format: markdown with optional YAML frontmatter (name, description)
+- [ ] Skills are loaded from bundled, user, and plugin sources
+- [ ] Each skill provides a name and description in its metadata
 - [ ] The skill content becomes part of the agent's instructions for execution
 - [ ] Skills are loaded on demand, not all at startup
 

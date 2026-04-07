@@ -1,18 +1,18 @@
 # REQ-EX-006: Hook Type Support
 
-**Pattern:** Ubiquitous
+**Pattern:** Optional Feature
 **Capability:** Extensibility
 
 ## Requirement
 
-The system shall support multiple hook types for lifecycle customization: command hooks (shell), prompt hooks (LLM), URL hooks (fetch), and webhook hooks (HTTP).
+Where a hook of a supported type is configured, the system shall execute it according to its type's semantics: command execution, prompt evaluation, URL retrieval, or webhook notification.
 
 ## Acceptance Criteria
 
-- [ ] Command hooks execute shell commands and capture output
-- [ ] Prompt hooks invoke the LLM with a custom prompt
-- [ ] URL hooks fetch content from a URL
-- [ ] Webhook hooks send HTTP requests to external services
+- [ ] Command-type hooks execute a configured action and return its output
+- [ ] Prompt-type hooks produce an AI-generated response
+- [ ] URL-type hooks retrieve content from a web address
+- [ ] Webhook-type hooks send a notification to an external service
 
 ## Source Evidence
 

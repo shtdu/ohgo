@@ -11,7 +11,7 @@ While the system is in plan mode, the system shall restrict tool execution to re
 
 - [ ] File write, edit, and bash tools are disabled
 - [ ] File read, search, and planning tools remain available
-- [ ] The agent can analyze and plan but not modify the workspace
+- [ ] Any attempt to invoke a write-capable tool while in plan mode is rejected with an informative message
 
 ## Source Evidence
 

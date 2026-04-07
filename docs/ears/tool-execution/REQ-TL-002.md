@@ -12,7 +12,7 @@ The system shall provide tools for reading, writing, and editing files within th
 - [ ] Read tool returns file content with line numbers, supporting offset and limit
 - [ ] Write tool creates or overwrites files with specified content
 - [ ] Edit tool replaces specific text strings in existing files
-- [ ] All file operations enforce path-based permission rules
+- [ ] File operations are subject to path permission rules (per Permissions domain)
 
 ## Source Evidence
 

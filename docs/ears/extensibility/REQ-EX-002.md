@@ -1,18 +1,19 @@
 # REQ-EX-002: Plugin Contribution Registration
 
-**Pattern:** Complex
+**Pattern:** Event-Driven
 **Capability:** Extensibility
 
 ## Requirement
 
-If a plugin provides commands, skills, hooks, or MCP servers, then the system shall register each contribution in the appropriate subsystem during plugin loading.
+When a plugin becomes active (first loaded per REQ-EX-001 or re-enabled per REQ-EX-008), the system shall register each of its contributions for use in the corresponding capability.
 
 ## Acceptance Criteria
 
-- [ ] Plugin commands are registered as slash commands
-- [ ] Plugin skills are added to the skill registry
-- [ ] Plugin hooks are registered for lifecycle events
-- [ ] Plugin MCP servers are connected and tools registered
+- [ ] Plugin commands become available for invocation
+- [ ] Plugin skills can be loaded on demand
+- [ ] Plugin hooks execute at the appropriate execution points
+- [ ] Plugin external tool servers are connected and their tools become available
+- [ ] Contributions are registered when a plugin is first loaded (per REQ-EX-001) and when re-enabled (per REQ-EX-008)
 
 ## Source Evidence
 

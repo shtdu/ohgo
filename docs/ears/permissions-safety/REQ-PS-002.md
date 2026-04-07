@@ -9,9 +9,9 @@ When the permission mode is default and the agent requests a sensitive tool exec
 
 ## Acceptance Criteria
 
-- [ ] Sensitive tools (file write, bash, etc.) require user approval
-- [ ] Read-only tools may bypass confirmation based on configuration
-- [ ] The user can approve, deny, or approve-all for the session
+- [ ] Tools classified as write-capable (file write, file edit, command execution) require user approval
+- [ ] Read-only tools bypass confirmation when that option is enabled in settings; otherwise all tools require confirmation
+- [ ] The user can approve a single action, deny it, or approve all remaining actions for the session
 
 ## Source Evidence
 

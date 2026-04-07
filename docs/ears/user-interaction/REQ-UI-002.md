@@ -1,11 +1,11 @@
 # REQ-UI-002: CLI Flags and Options
 
-**Pattern:** Optional Feature
+**Pattern:** Ubiquitous
 **Capability:** User Interaction
 
 ## Requirement
 
-Where CLI flags are specified, the system shall accept model selection, permission mode, effort level, and output format options that override default settings for the session.
+The system shall accept model selection, permission mode, effort level, and output format options via command-line flags that override default settings for the session.
 
 ## Acceptance Criteria
 
@@ -15,7 +15,7 @@ Where CLI flags are specified, the system shall accept model selection, permissi
 - [ ] `--output-format` sets output format (text, json, stream-json)
 - [ ] `--print` / `-p` prints response and exits (non-interactive)
 - [ ] `--max-turns` limits agentic turns
-- [ ] CLI flags override settings file values for the session duration
+- [ ] CLI flags override values from the settings file for the duration of the session
 
 ## Source Evidence
 

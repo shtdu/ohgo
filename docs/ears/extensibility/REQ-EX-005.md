@@ -11,8 +11,8 @@ When a configured hook event fires (PreToolUse, PostToolUse), the system shall e
 
 - [ ] Hooks fire before and after tool execution
 - [ ] Hooks execute in registration order
-- [ ] Hook output can modify or block tool execution
-- [ ] Hook failures are logged without crashing the agent
+- [ ] A hook can alter the tool input or prevent the tool from executing
+- [ ] A failing hook does not terminate the session; the tool execution proceeds unless the hook explicitly requests cancellation
 
 ## Source Evidence
 

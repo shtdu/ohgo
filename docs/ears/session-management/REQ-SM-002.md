@@ -11,7 +11,7 @@ When the user requests to continue a session (`-c` flag), the system shall load 
 
 - [ ] Finds the most recent session for the current directory
 - [ ] Restores full message history
-- [ ] The agent continues with awareness of prior context
+- [ ] The agent can reference and build upon information from the restored conversation history in subsequent responses
 
 ## Source Evidence
 

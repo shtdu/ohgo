@@ -5,14 +5,14 @@
 
 ## Requirement
 
-When the conversation approaches context window limits, the system shall compact older messages while preserving key information to continue the session.
+When the conversation reaches the compaction threshold (default: 90% of the model's context window capacity), the system shall compact older messages while preserving key information to continue the session.
 
 ## Acceptance Criteria
 
-- [ ] Automatically triggers when context length approaches the model limit
+- [ ] Automatically triggers when token count reaches the compaction threshold (default: 90% of context window capacity)
 - [ ] Preserves recent messages in full
-- [ ] Summarizes older messages to retain key information
-- [ ] The agent continues functioning after compaction without user intervention
+- [ ] Compacted messages are replaced with a summary that is included in the conversation context
+- [ ] The agent continues responding to new prompts using the compacted context
 
 ## Source Evidence
 

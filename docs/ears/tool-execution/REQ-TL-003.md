@@ -5,13 +5,14 @@
 
 ## Requirement
 
-When the agent invokes the bash tool, the system shall execute the specified shell command in the working directory and return captured stdout and stderr output.
+When the agent invokes the command execution tool, the system shall execute the specified command in the configured working directory and return captured output.
 
 ## Acceptance Criteria
 
 - [ ] Commands execute in the configured working directory
-- [ ] The system captures both stdout and stderr
-- [ ] A configurable timeout (1-600 seconds) terminates long-running commands
+- [ ] Captures both standard output and standard error output
+- [ ] Partial output captured before timeout is included in the result
+- [ ] A default timeout applies when no explicit timeout is specified; exceeding it terminates the command and returns a timeout error message
 - [ ] The working directory persists between sequential command invocations
 
 ## Source Evidence

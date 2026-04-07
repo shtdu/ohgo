@@ -12,6 +12,7 @@ The system shall persist conversation state including message history and tool r
 - [ ] Session state is saved automatically during conversation
 - [ ] Sessions are keyed by directory and session ID
 - [ ] Session data survives process termination
+- [ ] A persisted session can be restored to a state where the agent has access to the full conversation history
 
 ## Source Evidence
 

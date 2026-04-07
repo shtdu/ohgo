@@ -11,7 +11,7 @@ Where a theme is configured, the system shall apply the selected visual theme to
 
 - [ ] The system provides at least the themes: default, dark, minimal, cyberpunk, solarized
 - [ ] The theme is selectable via `--theme` flag or settings
-- [ ] Theme changes apply immediately without restart
+- [ ] Theme changes take effect on the next rendered frame without requiring application restart
 
 ## Source Evidence
 

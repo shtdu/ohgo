@@ -12,7 +12,7 @@ When the agent delegates work to a subagent, the system shall create a new agent
 - [ ] Accepts a task description and prompt for the subagent
 - [ ] Supports specifying subagent type (general-purpose, specialized)
 - [ ] Supports model selection per subagent
-- [ ] Returns the subagent's output to the parent agent
+- [ ] Subagent output relay is governed by REQ-AC-005
 
 ## Source Evidence
 

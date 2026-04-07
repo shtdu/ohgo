@@ -12,7 +12,7 @@ When the agent performs a web search, the system shall query a search engine and
 - [ ] Accepts a search query string
 - [ ] Returns results with title, URL, and summary for each match
 - [ ] Supports a configurable maximum number of results
-- [ ] Returns results within a reasonable latency bound
+- [ ] Returns results or an error within a configurable timeout period
 
 ## Source Evidence
 

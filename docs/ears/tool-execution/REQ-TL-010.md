@@ -5,14 +5,14 @@
 
 ## Requirement
 
-Where MCP servers are configured, the system shall discover their available tools, register them in the tool registry, and proxy tool execution requests to the MCP server.
+Where external tool servers are configured, the system shall discover their available tools, make them available alongside built-in tools, and relay execution requests and results between the agent and the external server.
 
 ## Acceptance Criteria
 
-- [ ] MCP tools appear alongside built-in tools in the tool registry
-- [ ] Tool inputs and outputs are translated between the agent and MCP protocol
-- [ ] The system manages MCP server lifecycle (start, connect, disconnect)
-- [ ] MCP tool execution respects the same permission system as built-in tools
+- [ ] External tools appear alongside built-in tools in the tool catalog
+- [ ] External tools accept the same input format and return results in the same output format as built-in tools, regardless of the external server's native format
+- [ ] The system manages external server connections (start, connect, disconnect)
+- [ ] External tool execution respects the same permission system as built-in tools
 
 ## Source Evidence
 

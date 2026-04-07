@@ -11,6 +11,7 @@ When the user requests an export (`/export`), the system shall produce a complet
 
 - [ ] Exports the full message history including tool calls and results
 - [ ] Output is in a readable format (markdown or JSON)
+- [ ] The exported transcript preserves the chronological order of all messages
 
 ## Source Evidence
 

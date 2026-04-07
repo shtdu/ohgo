@@ -11,7 +11,7 @@ When the user initiates authentication with an OAuth provider (e.g., GitHub Copi
 
 - [ ] Displays a verification URL and user code
 - [ ] Polls for token exchange completion
-- [ ] Stores the resulting token securely
+- [ ] The resulting token is stored in the user's configuration directory with file permissions restricted to the owner
 - [ ] Supports login, status check, logout, and account switching
 
 ## Source Evidence

@@ -59,17 +59,17 @@ Permission checks, hooks, and system prompt assembly — everything that wraps t
 
 | # | Python Source | Go Target | Key Types to Port | Depends On | Status |
 |---|---|---|---|---|---|
-| 2.1 | `permissions/modes.py` | `internal/permissions/modes.go` | `Mode` enum, mode behavior matrix | — | TODO |
-| 2.2 | `permissions/checker.py` | `internal/permissions/checker.go` | `Checker` interface, `DefaultChecker`, path rules, command deny patterns | 2.1 | TODO |
-| 2.3 | `hooks/types.py` + `hooks/schemas.py` | `internal/hooks/types.go` | `HookType` (Command/HTTP/Prompt/Agent), `HookDefinition`, pattern matching | — | TODO |
-| 2.4 | `hooks/loader.py` | `internal/hooks/loader.go` | `LoadFromDir()`, parse `hooks.json` manifests | 2.3 | TODO |
-| 2.5 | `hooks/executor.py` | `internal/hooks/executor.go` | `Executor`, `RunPre()`, `RunPost()`, aggregation | 2.3, 2.4 | TODO |
-| 2.6 | `hooks/hot_reload.py` | `internal/hooks/reload.go` | `WatchAndReload()`, fsnotify integration | 2.4 | TODO |
-| 2.7 | `prompts/environment.py` | `internal/prompts/environment.go` | `EnvironmentInfo{OS, Shell, Cwd, GitStatus, Date}` | 1.4 | TODO |
-| 2.8 | `prompts/system_prompt.py` | `internal/prompts/system.go` | `BuildSystemPrompt()`, base prompt template | 2.7 | TODO |
-| 2.9 | `prompts/claudemd.py` | `internal/prompts/claudemd.go` | `DiscoverCLAUDEmd()`, walk up to root, merge | — | TODO |
-| 2.10 | `prompts/context.py` | `internal/prompts/context.go` | `BuildContextPrompt()`, inject environment + CLAUDE.md | 2.8, 2.9 | TODO |
-| 2.11 | `services/compact/` | `internal/engine/compact.go` | `Microcompact()`, `FullCompact()`, token budget check | 1.5, 1.11 | TODO |
+| 2.1 | `permissions/modes.py` | `internal/permissions/modes.go` | `Mode` enum, mode behavior matrix | — | DONE |
+| 2.2 | `permissions/checker.py` | `internal/permissions/checker.go` | `Checker` interface, `DefaultChecker`, path rules, command deny patterns | 2.1 | DONE |
+| 2.3 | `hooks/types.py` + `hooks/schemas.py` | `internal/hooks/types.go` | `HookType` (Command/HTTP/Prompt/Agent), `HookDefinition`, pattern matching | — | DONE |
+| 2.4 | `hooks/loader.py` | `internal/hooks/loader.go` | `LoadFromDir()`, parse `hooks.json` manifests | 2.3 | DONE |
+| 2.5 | `hooks/executor.py` | `internal/hooks/executor.go` | `Executor`, `RunPre()`, `RunPost()`, aggregation | 2.3, 2.4 | DONE |
+| 2.6 | `hooks/hot_reload.py` | `internal/hooks/reload.go` | `WatchAndReload()`, fsnotify integration | 2.4 | DONE |
+| 2.7 | `prompts/environment.py` | `internal/prompts/environment.go` | `EnvironmentInfo{OS, Shell, Cwd, GitStatus, Date}` | 1.4 | DONE |
+| 2.8 | `prompts/system_prompt.py` | `internal/prompts/system.go` | `BuildSystemPrompt()`, base prompt template | 2.7 | DONE |
+| 2.9 | `prompts/claudemd.py` | `internal/prompts/claudemd.go` | `DiscoverCLAUDEmd()`, walk up to root, merge | — | DONE |
+| 2.10 | `prompts/context.py` | `internal/prompts/context.go` | `BuildContextPrompt()`, inject environment + CLAUDE.md | 2.8, 2.9 | DONE |
+| 2.11 | `services/compact/` | `internal/engine/compact.go` | `Microcompact()`, `FullCompact()`, token budget check | 1.5, 1.11 | DONE |
 
 **Phase 1 milestone:** `og` starts, loads config, sends one prompt to Claude API, prints streaming response.
 
@@ -81,17 +81,17 @@ Permission checks, hooks, and system prompt assembly — everything that wraps t
 
 | # | Python Source | Go Target | Key Types to Port | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 2.1 | `permissions/modes.py` | `internal/permissions/modes.go` | `Mode` enum, mode behavior matrix | — | `modes_test.go`: all 3 modes, read-only vs write tool classification | TODO |
-| 2.2 | `permissions/checker.py` | `internal/permissions/checker.go` | `Checker` interface, `DefaultChecker`, path rules, command deny patterns | 2.1 | `checker_test.go`: allow/deny/ask per mode, glob path rules, command deny patterns, explicit tool lists | TODO |
-| 2.3 | `hooks/types.py` + `hooks/schemas.py` | `internal/hooks/types.go` | `HookType` (Command/HTTP/Prompt/Agent), `HookDefinition`, pattern matching | — | `types_test.go`: fnmatch matching, JSON unmarshal hook defs | TODO |
-| 2.4 | `hooks/loader.py` | `internal/hooks/loader.go` | `LoadFromDir()`, parse `hooks.json` manifests | 2.3 | `loader_test.go`: load valid manifest, missing file, malformed JSON, nested dirs | TODO |
-| 2.5 | `hooks/executor.py` | `internal/hooks/executor.go` | `Executor`, `RunPre()`, `RunPost()`, aggregation | 2.3, 2.4 | `executor_test.go`: pre-hook block, pre-hook modify args, post-hook error logging, multiple hooks ordering | TODO |
-| 2.6 | `hooks/hot_reload.py` | `internal/hooks/reload.go` | `WatchAndReload()`, fsnotify integration | 2.4 | `reload_test.go`: write hooks.json, verify reload fires | TODO |
-| 2.7 | `prompts/environment.py` | `internal/prompts/environment.go` | `EnvironmentInfo{OS, Shell, Cwd, GitStatus, Date}` | 1.4 | `environment_test.go`: detect OS/shell, git status in repo vs non-repo | TODO |
-| 2.8 | `prompts/system_prompt.py` | `internal/prompts/system.go` | `BuildSystemPrompt()`, base prompt template | 2.7 | `system_test.go`: prompt contains environment info, custom prompt override | TODO |
-| 2.9 | `prompts/claudemd.py` | `internal/prompts/claudemd.go` | `DiscoverCLAUDEmd()`, walk up to root, merge | — | `claudemd_test.go`: discover in nested dir, merge user+project, missing files | TODO |
-| 2.10 | `prompts/context.py` | `internal/prompts/context.go` | `BuildContextPrompt()`, inject environment + CLAUDE.md | 2.8, 2.9 | `context_test.go`: full prompt assembly, empty CLAUDE.md | TODO |
-| 2.11 | `services/compact/` | `internal/engine/compact.go` | `Microcompact()`, `FullCompact()`, token budget check | 1.5, 1.11 | `compact_test.go`: microcompact removes old tool results, budget exceeded detection | TODO |
+| 2.1 | `permissions/modes.py` | `internal/permissions/modes.go` | `Mode` enum, mode behavior matrix | — | `modes_test.go`: all 3 modes, read-only vs write tool classification | DONE |
+| 2.2 | `permissions/checker.py` | `internal/permissions/checker.go` | `Checker` interface, `DefaultChecker`, path rules, command deny patterns | 2.1 | `checker_test.go`: allow/deny/ask per mode, glob path rules, command deny patterns, explicit tool lists | DONE |
+| 2.3 | `hooks/types.py` + `hooks/schemas.py` | `internal/hooks/types.go` | `HookType` (Command/HTTP/Prompt/Agent), `HookDefinition`, pattern matching | — | `types_test.go`: fnmatch matching, JSON unmarshal hook defs | DONE |
+| 2.4 | `hooks/loader.py` | `internal/hooks/loader.go` | `LoadFromDir()`, parse `hooks.json` manifests | 2.3 | `loader_test.go`: load valid manifest, missing file, malformed JSON, nested dirs | DONE |
+| 2.5 | `hooks/executor.py` | `internal/hooks/executor.go` | `Executor`, `RunPre()`, `RunPost()`, aggregation | 2.3, 2.4 | `executor_test.go`: pre-hook block, pre-hook modify args, post-hook error logging, multiple hooks ordering | DONE |
+| 2.6 | `hooks/hot_reload.py` | `internal/hooks/reload.go` | `WatchAndReload()`, fsnotify integration | 2.4 | `reload_test.go`: write hooks.json, verify reload fires | DONE |
+| 2.7 | `prompts/environment.py` | `internal/prompts/environment.go` | `EnvironmentInfo{OS, Shell, Cwd, GitStatus, Date}` | 1.4 | `environment_test.go`: detect OS/shell, git status in repo vs non-repo | DONE |
+| 2.8 | `prompts/system_prompt.py` | `internal/prompts/system.go` | `BuildSystemPrompt()`, base prompt template | 2.7 | `system_test.go`: prompt contains environment info, custom prompt override | DONE |
+| 2.9 | `prompts/claudemd.py` | `internal/prompts/claudemd.go` | `DiscoverCLAUDEmd()`, walk up to root, merge | — | `claudemd_test.go`: discover in nested dir, merge user+project, missing files | DONE |
+| 2.10 | `prompts/context.py` | `internal/prompts/context.go` | `BuildContextPrompt()`, inject environment + CLAUDE.md | 2.8, 2.9 | `context_test.go`: full prompt assembly, empty CLAUDE.md | DONE |
+| 2.11 | `services/compact/` | `internal/engine/compact.go` | `Microcompact()`, `FullCompact()`, token budget check | 1.5, 1.11 | `compact_test.go`: microcompact removes old tool results, budget exceeded detection | DONE |
 
 ### Phase 2 Manual Test
 

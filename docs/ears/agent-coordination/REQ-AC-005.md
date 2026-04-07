@@ -1,23 +1,19 @@
 # REQ-AC-005: Agent Task Lifecycle
 
-**Pattern:** Ubiquitous
+**Pattern:** Event-Driven
 **Capability:** Agent Coordination
 
 ## Requirement
 
-The system shall manage the full lifecycle of subagent tasks including creation, execution, output collection, and termination.
+When a subagent task is created, the system shall manage its lifecycle including execution in coordination with teams, output relay to the parent agent, and termination.
 
 ## Acceptance Criteria
 
-- [ ] Tasks are created with a unique ID
-- [ ] Task state is trackable (pending, running, completed, failed)
-- [ ] Task output can be retrieved after completion
-- [ ] Tasks can be stopped on user request
+- [ ] Subagent output is relayed to the parent agent upon completion
+- [ ] Subagent execution state (running, completed, failed) is observable via the background task query tools (per REQ-AT-002)
+- [ ] When a subagent task completes, its result is distinguishable from other background task results as originating from a subagent
+- [ ] Subagent tasks can be stopped on user request, relayed through the background task system (per REQ-AT-002)
 
 ## Source Evidence
 
-- `OpenHarness/src/openharness/tools/task_create_tool.py`
-- `OpenHarness/src/openharness/tools/task_get_tool.py`
-- `OpenHarness/src/openharness/tools/task_output_tool.py`
-- `OpenHarness/src/openharness/tools/task_stop_tool.py`
-- `OpenHarness/src/openharness/tools/task_update_tool.py`
+- `OpenHarness/src/openharness/swarm/` — subagent spawning and management

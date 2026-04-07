@@ -1,16 +1,16 @@
 # REQ-AT-001: Background Task Execution
 
-**Pattern:** Ubiquitous
+**Pattern:** Event-Driven
 **Capability:** Task Automation
 
 ## Requirement
 
-The system shall support background task execution for both bash commands and agent prompts, allowing work to proceed independently of the main conversation.
+When a background task is created, the system shall execute it independently of the main conversation.
 
 ## Acceptance Criteria
 
-- [ ] Supports local bash tasks (shell commands)
-- [ ] Supports local agent tasks (subagent prompts)
+- [ ] Tasks can run external commands
+- [ ] Tasks can run agent-driven prompts
 - [ ] Tasks execute independently of the main conversation loop
 - [ ] Task state is queryable at any time
 

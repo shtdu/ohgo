@@ -21,7 +21,7 @@ OpenHarness
 ├── Tool Execution            # How tools are registered, found, executed
 │   ├── Tool registry         # REQ-TL-001
 │   ├── File operations       # REQ-TL-002
-│   ├── Shell execution       # REQ-TL-003, REQ-TL-012
+│   ├── Shell execution       # REQ-TL-003
 │   ├── Search tools          # REQ-TL-004, REQ-TL-005
 │   ├── Web tools             # REQ-TL-006, REQ-TL-007
 │   ├── Dev tools             # REQ-TL-008, REQ-TL-009
@@ -50,7 +50,7 @@ OpenHarness
 │   └── Fail-safe             # REQ-PS-008
 ├── Configuration             # How the system is customized
 │   ├── Settings file         # REQ-CF-001, REQ-CF-007
-│   ├── CLI overrides         # REQ-CF-002, REQ-CF-005
+│   ├── CLI overrides         # REQ-CF-005
 │   ├── Provider profiles     # REQ-CF-003, REQ-CF-004
 │   └── Runtime updates       # REQ-CF-006
 ├── Extensibility             # How the system is extended
@@ -72,20 +72,20 @@ OpenHarness
 
 | Pattern | Count | Percentage |
 |---------|-------|------------|
-| Ubiquitous | 17 | 25% |
-| Event-Driven | 35 | 51% |
-| State-Driven | 4 | 6% |
-| Optional Feature | 8 | 12% |
-| Complex | 5 | 7% |
+| Ubiquitous | 10 | 14% |
+| Event-Driven | 37 | 54% |
+| State-Driven | 5 | 7% |
+| Optional Feature | 15 | 22% |
+| Complex | 1 | 1% |
 | Unwanted Behaviour | 1 | 1% |
-| **Total** | **70** | **100%** |
+| **Total** | **69** | **100%** |
 
 ## Traceability
 
 | Source | Requirements |
 |--------|-------------|
-| `OpenHarness/src/openharness/cli.py` | REQ-UI-001, REQ-UI-002, REQ-UI-007, REQ-SM-002, REQ-SM-003, REQ-PS-001, REQ-PS-005, REQ-CF-001, REQ-CF-002, REQ-CF-003, REQ-CF-004, REQ-AT-003, REQ-AU-001, REQ-AU-002, REQ-AU-004 |
-| `OpenHarness/src/openharness/tools/` | REQ-TL-001..REQ-TL-012, REQ-AC-001..REQ-AC-005, REQ-AT-001..REQ-AT-005 |
+| `OpenHarness/src/openharness/cli.py` | REQ-UI-001, REQ-UI-002, REQ-UI-007, REQ-SM-002, REQ-SM-003, REQ-PS-001, REQ-PS-005, REQ-CF-001, REQ-CF-003, REQ-CF-004, REQ-CF-007, REQ-AT-003, REQ-AU-001, REQ-AU-002, REQ-AU-004 |
+| `OpenHarness/src/openharness/tools/` | REQ-TL-001..REQ-TL-011, REQ-AC-001..REQ-AC-005, REQ-AT-001..REQ-AT-005 |
 | `OpenHarness/src/openharness/permissions/` | REQ-PS-001..REQ-PS-008 |
 | `OpenHarness/src/openharness/memory/` | REQ-MC-001..REQ-MC-006 |
 | `OpenHarness/src/openharness/commands/` | REQ-UI-004, REQ-UI-008, REQ-SM-004..REQ-SM-008, REQ-CF-006 |
@@ -188,7 +188,7 @@ OpenHarness
 - [x] Web fetch/search → REQ-TL-006, REQ-TL-007
 
 ### Tools (43+)
-- [x] bash → REQ-TL-003, REQ-TL-012
+- [x] bash → REQ-TL-003
 - [x] file_read → REQ-TL-002
 - [x] file_write → REQ-TL-002
 - [x] file_edit → REQ-TL-002

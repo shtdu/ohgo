@@ -1,18 +1,18 @@
 # REQ-EX-001: Plugin Discovery and Loading
 
-**Pattern:** Ubiquitous
+**Pattern:** Optional Feature
 **Capability:** Extensibility
 
 ## Requirement
 
-The system shall discover and load plugins from configured plugin directories, reading each plugin's manifest to determine its contributions.
+Where plugin directories are configured, the system shall discover and load plugins from those directories, reading each plugin's manifest to determine its contributions.
 
 ## Acceptance Criteria
 
 - [ ] Discovers plugins from user directory (`~/.ohmo/plugins/`)
 - [ ] Discovers plugins from project directory (`.openharness/plugins/`)
-- [ ] Reads `plugin.json` manifest from each plugin directory
-- [ ] Skips plugins with invalid manifests and logs the error
+- [ ] Each plugin provides a manifest declaring its contributions
+- [ ] Skips plugins with invalid manifests and reports the error
 
 ## Source Evidence
 

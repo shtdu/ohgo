@@ -9,8 +9,9 @@ When the user requests to share a session (`/share`), the system shall create a 
 
 ## Acceptance Criteria
 
-- [ ] Produces a self-contained shareable document
+- [ ] Produces a self-contained document including the full conversation with formatted tool results
 - [ ] Includes the full conversation with formatted tool results
+- [ ] The system provides a confirmation before creating the shareable artifact
 
 ## Source Evidence
 

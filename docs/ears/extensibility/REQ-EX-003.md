@@ -12,7 +12,7 @@ When a plugin is installed or uninstalled via the CLI, the system shall update t
 - [ ] `plugin install` registers a new plugin
 - [ ] `plugin uninstall` removes a plugin
 - [ ] `plugin list` shows installed plugins and status
-- [ ] Plugin changes take effect without full system restart
+- [ ] After install, the plugin's contributions become available
 
 ## Source Evidence
 
