@@ -15,28 +15,33 @@ import (
 
 // Options configures the engine.
 type Options struct {
-	Model      string
-	MaxTokens  int
-	MaxTurns   int
-	System     string
-	Permission permissions.Checker
-	ToolReg    *tools.Registry
-	Hooks      *hooks.Executor
-	APIClient  api.Client
-	EventCh    chan<- EngineEvent
+	Model         string
+	MaxTokens     int
+	MaxTurns      int
+	ContextWindow int
+	System        string
+	Permission    permissions.Checker
+	ToolReg       *tools.Registry
+	Hooks         hooks.HookRunner
+	APIClient     api.Client
+	EventCh       chan<- EngineEvent
 }
 
 // Engine drives the core agent loop.
 type Engine struct {
-	opts        Options
-	messages    []api.Message
-	costTracker *CostTracker
+	opts         Options
+	messages     []api.Message
+	costTracker  *CostTracker
+	compactState AutoCompactState
 }
 
 // New creates a new Engine with the given options.
 func New(opts Options) *Engine {
 	if opts.MaxTurns == 0 {
 		opts.MaxTurns = 200
+	}
+	if opts.ContextWindow == 0 {
+		opts.ContextWindow = 200000
 	}
 	return &Engine{
 		opts:        opts,
@@ -54,6 +59,24 @@ func (e *Engine) Query(ctx context.Context, prompt string) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
+		}
+
+		// Auto-compact if approaching context window limit
+		if ShouldCompact(e.messages, e.opts.ContextWindow) {
+			mcResult := Microcompact(e.messages, defaultKeepRecent)
+			e.messages = mcResult.Messages
+			if ShouldCompact(e.messages, e.opts.ContextWindow) &&
+				e.opts.APIClient != nil &&
+				e.compactState.ConsecutiveFailures < maxConsecutiveFails {
+				compacted, err := FullCompact(ctx, e.messages, e.opts.APIClient, e.opts.Model, e.opts.System, 6)
+				if err == nil {
+					e.messages = compacted
+					e.compactState.Compacted = true
+					e.compactState.ConsecutiveFailures = 0
+				} else {
+					e.compactState.ConsecutiveFailures++
+				}
+			}
 		}
 
 		// Build API request
@@ -153,21 +176,37 @@ func (e *Engine) executeTool(ctx context.Context, call api.ToolCall) (string, bo
 
 	// Run pre-hooks
 	if e.opts.Hooks != nil {
-		hookResp, err := e.opts.Hooks.RunPre(ctx, hooks.HookContext{
-			Event:    hooks.PreToolUse,
-			ToolName: call.Name,
-		})
+		blocked, reason, err := e.opts.Hooks.RunPre(ctx, call.Name, nil)
 		if err != nil {
 			return fmt.Sprintf("hook error: %v", err), true
 		}
-		if hookResp.Block {
-			return fmt.Sprintf("blocked by hook: %s", hookResp.Reason), true
+		if blocked {
+			return fmt.Sprintf("blocked by hook: %s", reason), true
 		}
 	}
 
 	// Check permissions
 	if e.opts.Permission != nil {
-		decision, err := e.opts.Permission.Check(ctx, permissions.Check{ToolName: call.Name})
+		// Extract file path and command from tool args
+		var filePath, command string
+		var args map[string]any
+		if json.Unmarshal(call.Input, &args) == nil {
+			if fp, ok := args["file_path"].(string); ok {
+				filePath = fp
+			}
+			if fp, ok := args["path"].(string); ok && filePath == "" {
+				filePath = fp
+			}
+			if cmd, ok := args["command"].(string); ok {
+				command = cmd
+			}
+		}
+		decision, err := e.opts.Permission.Check(ctx, permissions.Check{
+			ToolName:   call.Name,
+			FilePath:   filePath,
+			Command:    command,
+			IsReadOnly: permissions.ClassifyTool(call.Name) == permissions.CategoryRead,
+		})
 		if err != nil {
 			return fmt.Sprintf("permission check error: %v", err), true
 		}
@@ -188,11 +227,7 @@ func (e *Engine) executeTool(ctx context.Context, call api.ToolCall) (string, bo
 
 	// Run post-hooks
 	if e.opts.Hooks != nil {
-		_ = e.opts.Hooks.RunPost(ctx, hooks.HookContext{
-			Event:    hooks.PostToolUse,
-			ToolName: call.Name,
-			Result:   result,
-		})
+		_ = e.opts.Hooks.RunPost(ctx, call.Name, nil, result)
 	}
 
 	return result.Content, result.IsError

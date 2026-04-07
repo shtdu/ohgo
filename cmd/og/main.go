@@ -16,6 +16,7 @@ import (
 	"github.com/shtdu/ohgo/internal/engine"
 	"github.com/shtdu/ohgo/internal/hooks"
 	"github.com/shtdu/ohgo/internal/permissions"
+	"github.com/shtdu/ohgo/internal/prompts"
 	"github.com/shtdu/ohgo/internal/tools"
 )
 
@@ -77,8 +78,22 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Wire up components
 	registry := tools.NewRegistry()
-	hookExec := hooks.NewExecutor()
-	permChecker := permissions.NewDefaultChecker(permissions.Mode(permModeFlag))
+	hookExec := hooks.NoopRunner()
+
+	// Permission checker from config
+	permSettings := cfg.Permission
+	if permModeFlag != "" {
+		permSettings.Mode = permModeFlag
+	}
+	permChecker := permissions.NewDefaultChecker(permSettings)
+
+	// Build system prompt
+	assembler := prompts.NewAssembler("").WithCustomPrompt(cfg.SystemPrompt)
+	systemPrompt, err := assembler.Build(ctx)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to build system prompt: %v\n", err)
+		systemPrompt = "You are a helpful coding assistant."
+	}
 
 	// Create API client
 	var apiClient api.Client
@@ -99,7 +114,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Model:      cfg.Model,
 		MaxTokens:  cfg.MaxTokens,
 		MaxTurns:   cfg.MaxTurns,
-		System:     "You are a helpful coding assistant.",
+		System:     systemPrompt,
 		Permission: permChecker,
 		ToolReg:    registry,
 		Hooks:      hookExec,
