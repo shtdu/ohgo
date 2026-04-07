@@ -12,19 +12,19 @@ The minimal skeleton that compiles and can make a single LLM API call.
 
 | # | Python Source | Go Target | Key Types to Port | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 1.1 | `config/paths.py` | `internal/config/paths.go` | `ConfigDir()`, `DataDir()`, `ProjectDir()` | — | `paths_test.go`: verify paths exist, env override | TODO |
-| 1.2 | `config/schema.py` | `internal/config/schema.go` | `Settings`, `ProviderProfile`, `PermissionSettings` | 1.1 | `schema_test.go`: JSON round-trip, validation tags | TODO |
-| 1.3 | `config/settings.py` | `internal/config/settings.go` | `Load()`, `Merge()`, layered config resolution | 1.2 | `settings_test.go`: merge precedence, env override, missing file | TODO |
-| 1.4 | `platforms.py` | `internal/config/platform.go` | `OS`, `Arch`, `Shell`, `WorkingDir()` | — | `platform_test.go`: detect current OS, shell, git repo | TODO |
-| 1.5 | `engine/messages.py` | `internal/engine/message.go` | `Message`, `ContentBlock`, `TextBlock`, `ToolUseBlock`, `ToolResultBlock` | — | `message_test.go`: JSON marshal/unmarshal all block types | TODO |
-| 1.6 | `engine/stream_events.py` | `internal/engine/events.go` | `AssistantTextDelta`, `ToolExecutionStarted`, `ToolExecutionCompleted`, `AssistantTurnComplete` | 1.5 | `events_test.go`: event type discrimination, payload access | TODO |
-| 1.7 | `api/errors.py` | `internal/api/errors.go` | `APIError`, `RateLimitError`, `AuthError`, sentinel errors | — | `errors_test.go`: errors.Is, errors.As matching, retryable check | TODO |
-| 1.8 | `api/client.py` | `internal/api/anthropic.go` | `AnthropicClient`, `StreamMessage()`, retry with backoff | 1.5, 1.6, 1.7 | `anthropic_test.go`: mock SSE server, stream parsing, retry on 429, context cancel | TODO |
-| 1.9 | `api/usage.py` | `internal/api/usage.go` | `UsageSnapshot`, `TokenCounts`, cost tracking | 1.6 | `usage_test.go`: token aggregation, cost calculation | TODO |
+| 1.1 | `config/paths.py` | `internal/config/paths.go` | `ConfigDir()`, `DataDir()`, `ProjectDir()` | — | `paths_test.go`: verify paths exist, env override | DONE |
+| 1.2 | `config/schema.py` | `internal/config/schema.go` | `Settings`, `ProviderProfile`, `PermissionSettings` | 1.1 | `schema_test.go`: JSON round-trip, validation tags | DONE |
+| 1.3 | `config/settings.py` | `internal/config/settings.go` | `Load()`, `Merge()`, layered config resolution | 1.2 | `settings_test.go`: merge precedence, env override, missing file | DONE |
+| 1.4 | `platforms.py` | `internal/config/platform.go` | `OS`, `Arch`, `Shell`, `WorkingDir()` | — | `platform_test.go`: detect current OS, shell, git repo | DONE |
+| 1.5 | `engine/messages.py` | `internal/engine/message.go` | `Message`, `ContentBlock`, `TextBlock`, `ToolUseBlock`, `ToolResultBlock` | — | `message_test.go`: JSON marshal/unmarshal all block types | DONE |
+| 1.6 | `engine/stream_events.py` | `internal/engine/events.go` | `AssistantTextDelta`, `ToolExecutionStarted`, `ToolExecutionCompleted`, `AssistantTurnComplete` | 1.5 | `events_test.go`: event type discrimination, payload access | DONE |
+| 1.7 | `api/errors.py` | `internal/api/errors.go` | `APIError`, `RateLimitError`, `AuthError`, sentinel errors | — | `errors_test.go`: errors.Is, errors.As matching, retryable check | DONE |
+| 1.8 | `api/client.py` | `internal/api/anthropic.go` | `AnthropicClient`, `StreamMessage()`, retry with backoff | 1.5, 1.6, 1.7 | `anthropic_test.go`: mock SSE server, stream parsing, retry on 429, context cancel | DONE |
+| 1.9 | `api/usage.py` | `internal/api/usage.go` | `UsageSnapshot`, `TokenCounts`, cost tracking | 1.6 | `usage_test.go`: token aggregation, cost calculation | DONE |
 | 1.10 | `tools/base.py` | `internal/tools/tool.go` | `Tool` interface, `Result`, `Registry` | — | `tool_test.go`: register, get, list, duplicate panic, concurrent access | DONE |
-| 1.11 | `engine/query_engine.py` | `internal/engine/engine.go` | `QueryEngine`, `QueryContext`, `Query()` agent loop | 1.5, 1.6, 1.8, 1.10 | `engine_test.go`: mock API client, verify tool_use loop, max turns, context cancel | TODO |
-| 1.12 | `engine/cost_tracker.go` | `internal/engine/cost.go` | `CostTracker`, turn counting, usage aggregation | 1.6, 1.9 | `cost_test.go`: accumulate usage, track turns | TODO |
-| 1.13 | `cli.py` | `cmd/og/main.go` | cobra root command, flag parsing, REPL entry | 1.3, 1.11 | see manual test below | TODO |
+| 1.11 | `engine/query_engine.py` | `internal/engine/engine.go` | `QueryEngine`, `QueryContext`, `Query()` agent loop | 1.5, 1.6, 1.8, 1.10 | `engine_test.go`: mock API client, verify tool_use loop, max turns, context cancel | DONE |
+| 1.12 | `engine/cost_tracker.go` | `internal/engine/cost.go` | `CostTracker`, turn counting, usage aggregation | 1.6, 1.9 | `cost_test.go`: accumulate usage, track turns | DONE |
+| 1.13 | `cli.py` | `cmd/og/main.go` | cobra root command, flag parsing, REPL entry | 1.3, 1.11 | see manual test below | DONE |
 
 ### Phase 1 Manual Test
 
