@@ -108,15 +108,23 @@ func run(cmd *cobra.Command, args []string) error {
 	})
 
 	// Start event printer
-	go printEvents(eventCh)
+	done := make(chan struct{})
+	go func() {
+		printEvents(eventCh)
+		close(done)
+	}()
 
+	var queryErr error
 	if promptFlag != "" {
 		// One-shot mode
-		return eng.Query(ctx, promptFlag)
+		queryErr = eng.Query(ctx, promptFlag)
+	} else {
+		// Interactive REPL
+		queryErr = runREPL(ctx, eng)
 	}
-
-	// Interactive REPL
-	return runREPL(ctx, eng)
+	close(eventCh)
+	<-done
+	return queryErr
 }
 
 func printEvents(ch <-chan engine.EngineEvent) {
@@ -166,9 +174,6 @@ func runREPL(ctx context.Context, eng *engine.Engine) error {
 
 func resolveAPIKeyFromEnv() string {
 	if key := os.Getenv("ANTHROPIC_API_KEY"); key != "" {
-		return key
-	}
-	if key := os.Getenv("OPENAI_API_KEY"); key != "" {
 		return key
 	}
 	return ""

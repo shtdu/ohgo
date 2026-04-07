@@ -171,8 +171,12 @@ func (e *Engine) executeTool(ctx context.Context, call api.ToolCall) (string, bo
 		if err != nil {
 			return fmt.Sprintf("permission check error: %v", err), true
 		}
-		if decision == permissions.Deny {
+		switch decision {
+		case permissions.Deny:
 			return fmt.Sprintf("tool %s denied by permissions", call.Name), true
+		case permissions.Ask:
+			// No interactive prompt in current implementation — deny with explanation
+			return fmt.Sprintf("tool %s requires user approval (not available in non-interactive mode)", call.Name), true
 		}
 	}
 

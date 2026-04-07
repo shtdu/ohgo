@@ -155,9 +155,9 @@ func (s Settings) ResolveProfile(name string) (string, ProviderProfile) {
 	if p, ok := profiles[profileName]; ok {
 		return profileName, p
 	}
-	// Fallback to first profile
-	for n, p := range profiles {
-		return n, p
+	// Fallback to claude-api default
+	if p, ok := profiles["claude-api"]; ok {
+		return "claude-api", p
 	}
 	return "claude-api", DefaultProviderProfiles()["claude-api"]
 }

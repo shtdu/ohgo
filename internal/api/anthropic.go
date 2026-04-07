@@ -171,6 +171,7 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 
 	var eventType string
 	var contentBlocks []ContentBlock
+	var toolInputParts []string // accumulates input_json_delta fragments
 	var usage UsageSnapshot
 
 	for scanner.Scan() {
@@ -207,6 +208,7 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 			}
 
 		case "content_block_start":
+			toolInputParts = nil
 			var block struct {
 				ContentBlock ContentBlock `json:"content_block"`
 			}
@@ -217,8 +219,9 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 		case "content_block_delta":
 			var delta struct {
 				Delta struct {
-					Type string `json:"type"`
-					Text string `json:"text"`
+					Type        string `json:"type"`
+					Text        string `json:"text"`
+					PartialJSON string `json:"partial_json"`
 				} `json:"delta"`
 				Index int `json:"index"`
 			}
@@ -226,13 +229,18 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 				if delta.Delta.Type == "text_delta" && delta.Delta.Text != "" {
 					ch <- StreamEvent{Type: "text_delta", Data: delta.Delta.Text}
 				}
-				if delta.Delta.Type == "input_json_delta" {
-					// Accumulate tool input - we'll handle this in content_block_stop
+				if delta.Delta.Type == "input_json_delta" && delta.Delta.PartialJSON != "" {
+					toolInputParts = append(toolInputParts, delta.Delta.PartialJSON)
 				}
 			}
 
 		case "content_block_stop":
-			// Tool input accumulation happens here if needed
+			if len(toolInputParts) > 0 && len(contentBlocks) > 0 {
+				combined := strings.Join(toolInputParts, "")
+				idx := len(contentBlocks) - 1
+				contentBlocks[idx].Input = json.RawMessage(combined)
+				toolInputParts = nil
+			}
 
 		case "message_delta":
 			var msgDelta struct {
@@ -261,6 +269,9 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 }
 
 func retryDelay(attempt int) time.Duration {
+	if attempt > 30 {
+		return maxRetryDelay
+	}
 	delay := min(baseRetryDelay*time.Duration(1<<uint(attempt)), maxRetryDelay)
 	jitter := time.Duration(rand.Int64N(int64(delay) / 4))
 	return delay + jitter

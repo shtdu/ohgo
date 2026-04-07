@@ -1,7 +1,6 @@
 package config
 
 import (
-	"os"
 	"runtime"
 	"testing"
 
@@ -65,7 +64,6 @@ func TestIsWSL_FalseOnMac(t *testing.T) {
 func TestIsWSL_WithEnvVar(t *testing.T) {
 	t.Setenv("WSL_DISTRO_NAME", "Ubuntu")
 	assert.True(t, isWSL())
-	os.Unsetenv("WSL_DISTRO_NAME")
 }
 
 func TestHasCommand(t *testing.T) {

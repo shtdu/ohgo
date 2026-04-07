@@ -50,6 +50,26 @@ func NewDefaultChecker(mode Mode) *DefaultChecker {
 
 // Check evaluates tool permissions based on the configured mode.
 func (d *DefaultChecker) Check(ctx context.Context, check Check) (Decision, error) {
-	// TODO: implement mode-based permission logic
-	return Ask, nil
+	switch d.mode {
+	case ModeAuto:
+		return Allow, nil
+	case ModePlan:
+		// In plan mode, deny write tools
+		writeTools := map[string]bool{
+			"write_file": true, "edit_file": true, "bash": true,
+		}
+		if writeTools[check.ToolName] {
+			return Deny, nil
+		}
+		return Allow, nil
+	default:
+		// Default mode: ask for write tools, allow read tools
+		readTools := map[string]bool{
+			"read_file": true, "glob": true, "grep": true,
+		}
+		if readTools[check.ToolName] {
+			return Allow, nil
+		}
+		return Ask, nil
+	}
 }

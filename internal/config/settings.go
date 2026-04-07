@@ -15,7 +15,7 @@ func Save(s Settings, path string) error {
 		return fmt.Errorf("marshal settings: %w", err)
 	}
 	data = append(data, '\n')
-	if err := os.WriteFile(path, data, 0o644); err != nil {
+	if err := os.WriteFile(path, data, 0o600); err != nil {
 		return fmt.Errorf("write settings: %w", err)
 	}
 	return nil
@@ -125,8 +125,6 @@ func applyEnvOverrides(s *Settings) {
 	}
 
 	if v := os.Getenv("ANTHROPIC_API_KEY"); v != "" {
-		s.APIKey = v
-	} else if v := os.Getenv("OPENAI_API_KEY"); v != "" {
 		s.APIKey = v
 	}
 
