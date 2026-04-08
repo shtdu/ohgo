@@ -112,17 +112,24 @@ func (GlobTool) Execute(ctx context.Context, args json.RawMessage) (tools.Result
 
 // globRecursive handles ** patterns using filepath.WalkDir.
 func globRecursive(root, pattern string, limit int) []string {
-	// Extract the file extension or suffix from the pattern after **
-	suffix := ""
+	// Split pattern into prefix (before **) and suffix (after **/).
+	var prefix, suffix string
 	if idx := strings.Index(pattern, "**"); idx >= 0 {
-		suffix = pattern[idx+2:] // everything after **
-		if strings.HasPrefix(suffix, "/") {
-			suffix = suffix[1:]
+		prefix = strings.TrimSuffix(pattern[:idx], "/")
+		suffix = strings.TrimPrefix(pattern[idx+2:], "/")
+	}
+
+	// If there's a prefix, constrain the search root.
+	searchRoot := root
+	if prefix != "" {
+		searchRoot = filepath.Join(root, prefix)
+		if info, err := os.Stat(searchRoot); err != nil || !info.IsDir() {
+			return nil
 		}
 	}
 
 	var matches []string
-	filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+	filepath.WalkDir(searchRoot, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}
@@ -136,7 +143,7 @@ func globRecursive(root, pattern string, limit int) []string {
 			return nil
 		}
 
-		// Match against suffix pattern
+		// Match against suffix pattern using the filename
 		if suffix != "" {
 			matched, _ := filepath.Match(suffix, d.Name())
 			if !matched {

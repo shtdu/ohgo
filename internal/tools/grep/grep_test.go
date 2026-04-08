@@ -109,6 +109,21 @@ func TestGrepTool_InvalidRegex(t *testing.T) {
 	assert.Contains(t, result.Content, "invalid regex")
 }
 
+func TestGrepTool_SubdirectoryGlob(t *testing.T) {
+	dir := setupGrepDir(t)
+	oldWd, _ := os.Getwd()
+	defer os.Chdir(oldWd)
+	os.Chdir(dir)
+
+	tool := GrepTool{}
+	args, _ := json.Marshal(map[string]any{"pattern": "func", "glob": "sub/*.go"})
+	result, err := tool.Execute(context.Background(), args)
+	require.NoError(t, err)
+	assert.False(t, result.IsError)
+	assert.Contains(t, result.Content, "d.go")
+	assert.NotContains(t, result.Content, "a.go")
+}
+
 func TestGrepTool_InvalidJSON(t *testing.T) {
 	tool := GrepTool{}
 	result, err := tool.Execute(context.Background(), json.RawMessage(`{bad`))

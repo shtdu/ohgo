@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/shtdu/ohgo/internal/tools"
@@ -68,7 +67,7 @@ func (ReadTool) Execute(ctx context.Context, args json.RawMessage) (tools.Result
 	}
 
 	// Resolve path
-	path := expandPath(input.Path)
+	path := tools.ResolvePath(input.Path)
 
 	// Check context
 	select {
@@ -148,16 +147,3 @@ func isBinary(data []byte) bool {
 	return bytes.ContainsRune(check, 0)
 }
 
-func expandPath(path string) string {
-	if strings.HasPrefix(path, "~/") {
-		home, _ := os.UserHomeDir()
-		path = filepath.Join(home, path[2:])
-	}
-	if !filepath.IsAbs(path) {
-		abs, err := filepath.Abs(path)
-		if err == nil {
-			path = abs
-		}
-	}
-	return filepath.Clean(path)
-}

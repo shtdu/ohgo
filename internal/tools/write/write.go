@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/shtdu/ohgo/internal/tools"
 )
@@ -57,7 +56,7 @@ func (WriteTool) Execute(ctx context.Context, args json.RawMessage) (tools.Resul
 	}
 
 	// Resolve path
-	path := resolvePath(input.Path)
+	path := tools.ResolvePath(input.Path)
 
 	// Check context
 	select {
@@ -100,16 +99,3 @@ func (WriteTool) Execute(ctx context.Context, args json.RawMessage) (tools.Resul
 	return tools.Result{Content: fmt.Sprintf("Wrote %s", path)}, nil
 }
 
-func resolvePath(path string) string {
-	if strings.HasPrefix(path, "~/") {
-		home, _ := os.UserHomeDir()
-		path = filepath.Join(home, path[2:])
-	}
-	if !filepath.IsAbs(path) {
-		abs, err := filepath.Abs(path)
-		if err == nil {
-			path = abs
-		}
-	}
-	return filepath.Clean(path)
-}

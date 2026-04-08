@@ -55,6 +55,27 @@ func TestGlobTool_RecursiveGo(t *testing.T) {
 	assert.NotContains(t, result.Content, ".git")
 }
 
+func TestGlobTool_RecursiveWithPrefix(t *testing.T) {
+	dir := setupTestDir(t)
+	oldWd, _ := os.Getwd()
+	defer os.Chdir(oldWd)
+	os.Chdir(dir)
+
+	tool := GlobTool{}
+	args, _ := json.Marshal(map[string]string{"pattern": "sub/**/*.go"})
+	result, err := tool.Execute(context.Background(), args)
+	require.NoError(t, err)
+	assert.False(t, result.IsError)
+
+	matches := strings.Split(strings.TrimSpace(result.Content), "\n")
+	sort.Strings(matches)
+	// Should only find files under sub/, not a.go at root
+	assert.NotContains(t, matches, "a.go")
+	assert.Contains(t, matches, filepath.Join("sub", "c.go"))
+	assert.Contains(t, matches, filepath.Join("sub", "deep", "e.go"))
+	assert.NotContains(t, result.Content, ".git")
+}
+
 func TestGlobTool_SimpleStar(t *testing.T) {
 	dir := setupTestDir(t)
 	oldWd, _ := os.Getwd()

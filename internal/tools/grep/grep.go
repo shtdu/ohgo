@@ -153,9 +153,13 @@ func (GrepTool) Execute(ctx context.Context, args json.RawMessage) (tools.Result
 				return nil
 			}
 
-			// Apply glob filter
+			// Apply glob filter against relative path from search root
 			if input.Glob != "" && input.Glob != "**/*" && input.Glob != "*" {
-				if !globMatch(input.Glob, d.Name()) {
+				rel, relErr := filepath.Rel(searchPath, path)
+				if relErr != nil {
+					rel = d.Name()
+				}
+				if !globMatch(input.Glob, rel) {
 					return nil
 				}
 			}

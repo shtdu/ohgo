@@ -67,8 +67,13 @@ func (EditTool) Execute(ctx context.Context, args json.RawMessage) (tools.Result
 		return tools.Result{Content: "old_str must not be empty", IsError: true}, nil
 	}
 
+	// Validate old_str and new_str are different
+	if input.OldStr == input.NewStr {
+		return tools.Result{Content: "old_str and new_str are identical; no change needed", IsError: true}, nil
+	}
+
 	// Resolve path
-	path := resolvePath(input.Path)
+	path := tools.ResolvePath(input.Path)
 
 	// Check context
 	select {
@@ -149,18 +154,3 @@ func (EditTool) Execute(ctx context.Context, args json.RawMessage) (tools.Result
 	return tools.Result{Content: fmt.Sprintf("Updated %s", input.Path)}, nil
 }
 
-// resolvePath expands ~ to the home directory, resolves relative paths to absolute,
-// and cleans the result.
-func resolvePath(path string) string {
-	if strings.HasPrefix(path, "~/") {
-		home, _ := os.UserHomeDir()
-		path = filepath.Join(home, path[2:])
-	}
-	if !filepath.IsAbs(path) {
-		abs, err := filepath.Abs(path)
-		if err == nil {
-			path = abs
-		}
-	}
-	return filepath.Clean(path)
-}

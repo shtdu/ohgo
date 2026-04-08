@@ -102,6 +102,11 @@ func (BashTool) Execute(ctx context.Context, args json.RawMessage) (tools.Result
 	// Kill the process group when the context is done.
 	go func() {
 		<-timeoutCtx.Done()
+		// Send SIGTERM first for graceful shutdown.
+		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM); err == nil {
+			// Give the process a brief grace period before force-killing.
+			time.Sleep(2 * time.Second)
+		}
 		// The process may have already exited; ignore the error.
 		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	}()

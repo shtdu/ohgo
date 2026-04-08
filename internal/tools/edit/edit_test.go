@@ -102,6 +102,24 @@ func TestEditTool_EmptyOldStr(t *testing.T) {
 	assert.Contains(t, result.Content, "old_str must not be empty")
 }
 
+func TestEditTool_IdenticalOldAndNew(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "test.txt")
+	err := os.WriteFile(path, []byte("hello world\n"), 0644)
+	require.NoError(t, err)
+
+	tool := EditTool{}
+	args, _ := json.Marshal(map[string]string{
+		"path":    path,
+		"old_str": "hello",
+		"new_str": "hello",
+	})
+	result, err := tool.Execute(context.Background(), args)
+	require.NoError(t, err)
+	assert.True(t, result.IsError)
+	assert.Contains(t, result.Content, "identical")
+}
+
 func TestEditTool_MultilineReplacement(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "test.txt")
