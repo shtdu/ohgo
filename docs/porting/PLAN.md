@@ -187,23 +187,23 @@ Remaining tools for full feature parity.
 |---|---|---|---|---|---|---|
 | 4.1 | `tools/agent_tool.py` | `internal/tools/agent/agent.go` | Spawn subagent | 3.9, coordinator | `agent_test.go`: mock engine, verify prompt passed, result returned | TODO |
 | 4.2 | `tools/ask_user_question_tool.py` | `internal/tools/ask/ask.go` | Interactive user question | UI | `ask_test.go`: mock UI, verify question rendered, answer returned | TODO |
-| 4.3 | `tools/brief_tool.py` | `internal/tools/brief/brief.go` | Brief mode toggle | — | `brief_test.go`: toggle state | TODO |
-| 4.4 | `tools/config_tool.py` | `internal/tools/config/config.go` | Read/write config from tool | 1.3 | `config_test.go`: read key, write key, missing key | TODO |
-| 4.5 | `tools/cron_create_tool.py` | `internal/tools/cron/create.go` | Create cron job | robfig/cron | `create_test.go`: valid cron expr, invalid expr, duplicate | TODO |
-| 4.6 | `tools/cron_delete_tool.py` | `internal/tools/cron/delete.go` | Delete cron job | robfig/cron | `delete_test.go`: delete existing, delete missing | TODO |
-| 4.7 | `tools/cron_list_tool.py` | `internal/tools/cron/list.go` | List cron jobs | robfig/cron | `list_test.go`: empty list, multiple jobs | TODO |
-| 4.8 | `tools/cron_toggle_tool.py` | `internal/tools/cron/toggle.go` | Enable/disable cron job | robfig/cron | `toggle_test.go`: toggle on→off, off→on | TODO |
-| 4.9 | `tools/enter_plan_mode_tool.py` | `internal/tools/plan/enter.go` | Enter plan mode | 2.1 | `enter_test.go`: mode changes to plan | TODO |
-| 4.10 | `tools/exit_plan_mode_tool.py` | `internal/tools/plan/exit.go` | Exit plan mode | 2.1 | `exit_test.go`: mode changes back to default | TODO |
-| 4.11 | `tools/enter_worktree_tool.py` | `internal/tools/worktree/enter.go` | Create git worktree | — | `enter_test.go`: mock git, verify worktree created | TODO |
-| 4.12 | `tools/exit_worktree_tool.py` | `internal/tools/worktree/exit.go` | Leave git worktree | — | `exit_test.go`: mock git, verify cleanup | TODO |
-| 4.13 | `tools/notebook_edit_tool.py` | `internal/tools/notebook/edit.go` | Jupyter notebook cell editing | — | `edit_test.go`: read .ipynb, replace cell, insert cell, delete cell | TODO |
-| 4.14 | `tools/sleep_tool.py` | `internal/tools/sleep/sleep.go` | Delay execution | — | `sleep_test.go`: short sleep completes, context cancel interrupts | TODO |
+| 4.3 | `tools/brief_tool.py` | `internal/tools/brief/brief.go` | Brief mode toggle | — | `brief_test.go`: toggle state | DONE |
+| 4.4 | `tools/config_tool.py` | `internal/tools/config/config.go` | Read/write config from tool | 1.3 | `config_test.go`: read key, write key, missing key | DONE |
+| 4.5 | `tools/cron_create_tool.py` | `internal/tools/cron/create.go` | Create cron job | robfig/cron | `create_test.go`: valid cron expr, invalid expr, duplicate | DONE |
+| 4.6 | `tools/cron_delete_tool.py` | `internal/tools/cron/delete.go` | Delete cron job | robfig/cron | `delete_test.go`: delete existing, delete missing | DONE |
+| 4.7 | `tools/cron_list_tool.py` | `internal/tools/cron/list.go` | List cron jobs | robfig/cron | `list_test.go`: empty list, multiple jobs | DONE |
+| 4.8 | `tools/cron_toggle_tool.py` | `internal/tools/cron/toggle.go` | Enable/disable cron job | robfig/cron | `toggle_test.go`: toggle on→off, off→on | DONE |
+| 4.9 | `tools/enter_plan_mode_tool.py` | `internal/tools/plan/enter.go` | Enter plan mode | 2.1 | `enter_test.go`: mode changes to plan | DONE |
+| 4.10 | `tools/exit_plan_mode_tool.py` | `internal/tools/plan/exit.go` | Exit plan mode | 2.1 | `exit_test.go`: mode changes back to default | DONE |
+| 4.11 | `tools/enter_worktree_tool.py` | `internal/tools/worktree/enter.go` | Create git worktree | — | `enter_test.go`: mock git, verify worktree created | DONE |
+| 4.12 | `tools/exit_worktree_tool.py` | `internal/tools/worktree/exit.go` | Leave git worktree | — | `exit_test.go`: mock git, verify cleanup | DONE |
+| 4.13 | `tools/notebook_edit_tool.py` | `internal/tools/notebook/edit.go` | Jupyter notebook cell editing | — | `edit_test.go`: read .ipynb, replace cell, insert cell, delete cell | DONE |
+| 4.14 | `tools/sleep_tool.py` | `internal/tools/sleep/sleep.go` | Delay execution | — | `sleep_test.go`: short sleep completes, context cancel interrupts | DONE |
 | 4.15 | `tools/send_message_tool.py` | `internal/tools/message/message.go` | Send message to user | — | `message_test.go`: message captured | TODO |
 | 4.16 | `tools/skill_tool.py` | `internal/tools/skill/skill.go` | Invoke a skill | skills package | `skill_test.go`: mock loader, verify skill loaded | TODO |
 | 4.17 | `tools/remote_trigger_tool.py` | `internal/tools/remote/trigger.go` | Trigger remote action | — | `trigger_test.go`: mock HTTP, verify request | TODO |
-| 4.18 | `tools/todo_write_tool.py` | `internal/tools/todo/todo.go` | Write todo list | — | `todo_test.go`: write todos, clear todos | TODO |
-| 4.19 | `tools/tool_search_tool.py` | `internal/tools/search/search.go` | Search available tools | 3.9 | `search_test.go`: find by name, find by description, no match | TODO |
+| 4.18 | `tools/todo_write_tool.py` | `internal/tools/todo/todo.go` | Write todo list | — | `todo_test.go`: write todos, clear todos | DONE |
+| 4.19 | `tools/tool_search_tool.py` | `internal/tools/search/search.go` | Search available tools | 3.9 | `search_test.go`: find by name, find by description, no match | DONE |
 
 ### Task Tools
 

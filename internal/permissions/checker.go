@@ -88,6 +88,16 @@ func NewDefaultChecker(settings config.PermissionSettings) *DefaultChecker {
 	}
 }
 
+// SetMode updates the permission mode.
+func (d *DefaultChecker) SetMode(mode Mode) {
+	d.mode = mode
+}
+
+// Mode returns the current permission mode.
+func (d *DefaultChecker) Mode() Mode {
+	return d.mode
+}
+
 // Check evaluates tool permissions based on mode + rules.
 // Evaluation order:
 // 1. Explicit deny list -> Deny

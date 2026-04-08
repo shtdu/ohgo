@@ -18,6 +18,8 @@ import (
 	"github.com/shtdu/ohgo/internal/permissions"
 	"github.com/shtdu/ohgo/internal/prompts"
 	"github.com/shtdu/ohgo/internal/tools"
+	"github.com/shtdu/ohgo/internal/tools/builtin"
+	toolcron "github.com/shtdu/ohgo/internal/tools/cron"
 )
 
 var (
@@ -86,6 +88,15 @@ func run(cmd *cobra.Command, args []string) error {
 		permSettings.Mode = permModeFlag
 	}
 	permChecker := permissions.NewDefaultChecker(permSettings)
+
+	// Register tools with dependencies
+	cronMgr := toolcron.NewManager()
+	builtin.RegisterAll(registry, builtin.ToolDeps{
+		Checker:  permChecker,
+		Settings: cfg,
+		Registry: registry,
+		CronMgr:  cronMgr,
+	})
 
 	// Build system prompt
 	assembler := prompts.NewAssembler("").WithCustomPrompt(cfg.SystemPrompt)
