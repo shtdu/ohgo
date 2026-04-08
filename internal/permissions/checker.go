@@ -4,6 +4,7 @@ package permissions
 import (
 	"context"
 	"path/filepath"
+	"sync"
 
 	"github.com/shtdu/ohgo/internal/config"
 )
@@ -57,6 +58,7 @@ type PathRule struct {
 
 // DefaultChecker evaluates tool permissions based on mode and rules.
 type DefaultChecker struct {
+	mu             sync.RWMutex
 	mode           Mode
 	allowedTools   map[string]bool
 	deniedTools    map[string]bool
@@ -90,11 +92,15 @@ func NewDefaultChecker(settings config.PermissionSettings) *DefaultChecker {
 
 // SetMode updates the permission mode.
 func (d *DefaultChecker) SetMode(mode Mode) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	d.mode = mode
 }
 
 // Mode returns the current permission mode.
 func (d *DefaultChecker) Mode() Mode {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 	return d.mode
 }
 
@@ -140,14 +146,17 @@ func (d *DefaultChecker) Check(ctx context.Context, check Check) (Decision, erro
 	}
 
 	// 5. Mode-based
-	switch d.mode {
+	d.mu.RLock()
+	mode := d.mode
+	d.mu.RUnlock()
+	switch mode {
 	case ModeAuto:
 		return Allow, nil
 	default:
 		if check.IsReadOnly {
 			return Allow, nil
 		}
-		if d.mode == ModePlan {
+		if mode == ModePlan {
 			return Deny, nil
 		}
 		return Ask, nil

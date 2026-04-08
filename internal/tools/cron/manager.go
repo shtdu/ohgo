@@ -39,7 +39,8 @@ func ValidateSchedule(expr string) error {
 	return err
 }
 
-// Create adds a new job. Returns an error if the schedule is invalid.
+// Create adds a new job. If a job with the same name already exists, it is
+// replaced (upsert). Returns an error if the schedule is invalid.
 func (m *Manager) Create(job Job) error {
 	if err := ValidateSchedule(job.Schedule); err != nil {
 		return fmt.Errorf("invalid schedule %q: %w", job.Schedule, err)

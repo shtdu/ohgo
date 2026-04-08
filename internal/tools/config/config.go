@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/shtdu/ohgo/internal/config"
 	"github.com/shtdu/ohgo/internal/tools"
@@ -109,7 +110,7 @@ func lookupField(s *config.Settings, key string) (any, error) {
 		tag := field.Tag.Get("json")
 		// Strip omitempty and other options from the tag.
 		name := tag
-		if idx := indexByte(tag, ','); idx >= 0 {
+		if idx := strings.IndexByte(tag, ','); idx >= 0 {
 			name = tag[:idx]
 		}
 		if name == key {
@@ -117,15 +118,4 @@ func lookupField(s *config.Settings, key string) (any, error) {
 		}
 	}
 	return nil, fmt.Errorf("unknown setting key: %q", key)
-}
-
-// indexByte returns the index of the first occurrence of sep in s,
-// or -1 if not present.
-func indexByte(s string, c byte) int {
-	for i := 0; i < len(s); i++ {
-		if s[i] == c {
-			return i
-		}
-	}
-	return -1
 }
