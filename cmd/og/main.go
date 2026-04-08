@@ -16,7 +16,10 @@ import (
 	"github.com/shtdu/ohgo/internal/engine"
 	"github.com/shtdu/ohgo/internal/hooks"
 	"github.com/shtdu/ohgo/internal/permissions"
+	"github.com/shtdu/ohgo/internal/plugins"
 	"github.com/shtdu/ohgo/internal/prompts"
+	"github.com/shtdu/ohgo/internal/skills"
+	"github.com/shtdu/ohgo/internal/tasks"
 	"github.com/shtdu/ohgo/internal/tools"
 	"github.com/shtdu/ohgo/internal/tools/builtin"
 	toolcron "github.com/shtdu/ohgo/internal/tools/cron"
@@ -91,11 +94,44 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Register tools with dependencies
 	cronMgr := toolcron.NewManager()
+
+	// Phase 6: Subsystems
+	skillReg := skills.NewRegistry()
+	taskMgr := tasks.NewManager()
+	pluginMgr := plugins.NewManager()
+
+	// Load user skills
+	skillDir, _ := config.ConfigDir()
+	if skillDir != "" {
+		loader := skills.NewLoader(skillDir + "/skills")
+		userSkills, err := loader.LoadAll(ctx)
+		if err == nil {
+			for _, s := range userSkills {
+				skillReg.Register(s)
+			}
+		}
+	}
+
+	// Discover plugins
+	pluginDirs := []string{}
+	if userPluginDir := skillDir + "/plugins"; userPluginDir != "" {
+		pluginDirs = append(pluginDirs, userPluginDir)
+	}
+	if cwd, err := os.Getwd(); err == nil {
+		pluginDirs = append(pluginDirs, cwd+"/.openharness/plugins")
+	}
+	if len(pluginDirs) > 0 {
+		_ = pluginMgr.Discover(ctx, pluginDirs...)
+	}
+
 	builtin.RegisterAll(registry, builtin.ToolDeps{
-		Checker:  permChecker,
-		Settings: cfg,
-		Registry: registry,
-		CronMgr:  cronMgr,
+		Checker:   permChecker,
+		Settings:  cfg,
+		Registry:  registry,
+		CronMgr:   cronMgr,
+		SkillReg:  skillReg,
+		TaskMgr:   taskMgr,
+		PluginMgr: pluginMgr,
 	})
 
 	// Build system prompt

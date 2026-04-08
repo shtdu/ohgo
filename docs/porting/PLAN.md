@@ -376,23 +376,23 @@ Self-contained subsystems that the engine and tools depend on.
 
 | # | Python Source | Go Target | Key Types to Port | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 6.1 | `skills/` | `internal/skills/loader.go` | `Loader`, `Load()`, YAML frontmatter parsing | 1.3 | `loader_test.go`: parse valid skill, missing frontmatter, malformed YAML, missing file | TODO |
-| 6.2 | `skills/` | `internal/skills/search.go` | Skill discovery from multiple directories | 6.1 | `search_test.go`: discover in multiple dirs, dedup, empty dirs | TODO |
-| 6.3 | `memory/paths.py` | `internal/memory/paths.go` | `MemoryDir()`, `ProjectMemoryDir()` | 1.1 | `paths_test.go`: verify paths constructed correctly | TODO |
-| 6.4 | `memory/types.py` + `scan.py` | `internal/memory/scan.go` | `MemoryHeader`, `ScanMemoryFiles()` | 6.3 | `scan_test.go`: scan temp dir, parse headers, empty dir | TODO |
-| 6.5 | `memory/manager.py` + `memdir.py` | `internal/memory/manager.go` | `Save()`, `Load()`, `Remove()`, `MEMORY.md` index | 6.3, 6.4 | `manager_test.go`: save+load round-trip, remove updates index, max files limit | TODO |
-| 6.6 | `memory/search.py` | `internal/memory/search.go` | `FindRelevant()`, relevance scoring | 6.4 | `search_test.go`: keyword match, no match, multiple matches ranked | TODO |
+| 6.1 | `skills/` | `internal/skills/skills.go` + `parse.go` + `registry.go` | `Loader`, `Load()`, `LoadAll()`, YAML frontmatter parsing, `Registry` | 1.3 | `skills_test.go`, `parse_test.go`, `registry_test.go` | DONE |
+| 6.2 | `skills/` | `internal/skills/skills.go` | Skill discovery from multiple directories | 6.1 | `skills_test.go`: discover in multiple dirs, dedup, empty dirs | DONE |
+| 6.3 | `memory/paths.py` | `internal/memory/paths.go` | `ProjectDir()`, `Entrypoint()` | 1.1 | `paths_test.go`: verify paths constructed correctly | DONE |
+| 6.4 | `memory/types.py` + `scan.py` | `internal/memory/scan.go` + `types.go` | `Header`, `Scan()` | 6.3 | `scan_test.go`: scan temp dir, parse headers, empty dir | DONE |
+| 6.5 | `memory/manager.py` + `memdir.py` | `internal/memory/memory.go` | `Store.Add()`, `Store.Remove()`, `Store.List()`, `Store.LoadPrompt()`, `MEMORY.md` index | 6.3, 6.4 | `memory_test.go`: add+list round-trip, remove updates index, load prompt | DONE |
+| 6.6 | `memory/search.py` | `internal/memory/search.go` | `Find()`, relevance scoring with ASCII + Han tokenization | 6.4 | `search_test.go`: keyword match, no match, Han chars | DONE |
 | 6.7 | `mcp/config.py` | `internal/mcp/config.go` | `McpServerConfig`, load from settings | 1.3 | `config_test.go`: parse valid config, missing server, invalid transport | TODO |
 | 6.8 | `mcp/types.py` | `internal/mcp/types.go` | `McpTool`, `McpResource`, protocol types | — | `types_test.go`: JSON round-trip all types | TODO |
 | 6.9 | `mcp/client.py` | `internal/mcp/client.go` | `Client`, `Connect()`, `CallTool()`, `ListTools()` | 6.7, 6.8, mcp-go | `client_test.go`: mock stdio MCP server, connect, list tools, call tool, error handling | TODO |
-| 6.10 | `plugins/types.py` + `schemas.py` | `internal/plugins/types.go` | `Manifest`, `CommandDef`, `HookDef`, `AgentDef` | — | `types_test.go`: parse valid manifest, missing fields, JSON round-trip | TODO |
-| 6.11 | `plugins/loader.py` | `internal/plugins/loader.go` | `Discover()`, directory scanning | 6.10 | `loader_test.go`: scan temp plugin dir, nested plugins, invalid plugin.json | TODO |
-| 6.12 | `plugins/installer.py` | `internal/plugins/installer.go` | `Install()`, `Uninstall()` | 6.10 | `installer_test.go`: install from URL, uninstall by name, missing plugin | TODO |
+| 6.10 | `plugins/types.py` + `schemas.py` | `internal/plugins/types.go` | `Manifest`, `LoadedPlugin` | — | `types_test.go`: parse valid manifest, missing fields, JSON round-trip | DONE |
+| 6.11 | `plugins/loader.py` | `internal/plugins/loader.go` | `Discover()`, directory scanning | 6.10 | `loader_test.go`: scan temp plugin dir, nested plugins, invalid plugin.json | DONE |
+| 6.12 | `plugins/installer.py` | `internal/plugins/installer.go` | `Install()`, `Uninstall()` | 6.10 | `installer_test.go`: install from source, uninstall by name, missing plugin | DONE |
 | 6.13 | `coordinator/agent_definitions.py` | `internal/coordinator/defs.go` | `AgentDefinition`, YAML loading | 6.1 | `defs_test.go`: parse valid YAML, tool filtering, model override | TODO |
 | 6.14 | `coordinator/coordinator_mode.py` | `internal/coordinator/mode.go` | `CoordinatorMode`, agent lifecycle | 6.13 | `mode_test.go`: spawn agent, verify isolation, cleanup | TODO |
 | 6.15 | `coordinator/registry.py` | `internal/coordinator/registry.go` | Agent registry, spawning | 6.14 | `registry_test.go`: register, lookup, list, concurrent access | TODO |
-| 6.16 | `tasks/` | `internal/tasks/manager.go` | `Manager`, `Start()`, `Stop()`, goroutine tracking | — | `manager_test.go`: start task, get output, stop task, list tasks, context cancel | TODO |
-| 6.17 | `sandbox/adapter.py` | `internal/sandbox/sandbox.go` | Sandbox execution adapter | — | `sandbox_test.go`: exec in sandbox, path restriction | TODO |
+| 6.16 | `tasks/` | `internal/tasks/manager.go` + `types.go` | `Manager`, `CreateShell()`, `Stop()`, `ReadOutput()`, subprocess lifecycle | — | `manager_test.go`: start task, get output, stop task, list tasks, context cancel | DONE |
+| 6.17 | `sandbox/adapter.py` | `internal/sandbox/sandbox.go` | `Availability`, `CheckAvailability()`, `WrapCommand()` | — | `sandbox_test.go`: availability check, wrap command, config generation | DONE |
 
 ### Phase 6 Manual Test
 

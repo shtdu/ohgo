@@ -4,6 +4,9 @@ package builtin
 import (
 	"github.com/shtdu/ohgo/internal/config"
 	"github.com/shtdu/ohgo/internal/permissions"
+	"github.com/shtdu/ohgo/internal/plugins"
+	"github.com/shtdu/ohgo/internal/skills"
+	"github.com/shtdu/ohgo/internal/tasks"
 	"github.com/shtdu/ohgo/internal/tools"
 	"github.com/shtdu/ohgo/internal/tools/bash"
 	"github.com/shtdu/ohgo/internal/tools/brief"
@@ -28,10 +31,13 @@ import (
 // ToolDeps carries shared services needed by stateful tools.
 // Fields may be nil; tools that require a nil dependency are not registered.
 type ToolDeps struct {
-	Checker  *permissions.DefaultChecker
-	Settings *config.Settings
-	Registry *tools.Registry
-	CronMgr  *toolcron.Manager
+	Checker   *permissions.DefaultChecker
+	Settings  *config.Settings
+	Registry  *tools.Registry
+	CronMgr   *toolcron.Manager
+	SkillReg  *skills.Registry
+	TaskMgr   *tasks.Manager
+	PluginMgr *plugins.Manager
 }
 
 // RegisterAll registers all built-in tools into the registry.
