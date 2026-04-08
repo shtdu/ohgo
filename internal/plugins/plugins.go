@@ -4,39 +4,13 @@ package plugins
 
 import (
 	"context"
+	"sync"
 )
-
-// Manifest describes a plugin, loaded from plugin.json.
-type Manifest struct {
-	Name        string            `json:"name"`
-	Version     string            `json:"version"`
-	Description string            `json:"description"`
-	Commands    []CommandDef      `json:"commands,omitempty"`
-	Hooks       []HookDef         `json:"hooks,omitempty"`
-	Agents      []AgentDef        `json:"agents,omitempty"`
-}
-
-// CommandDef describes a plugin-provided command.
-type CommandDef struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
-// HookDef describes a plugin-provided hook.
-type HookDef struct {
-	Event string `json:"event"`
-	Cmd   string `json:"cmd"`
-}
-
-// AgentDef describes a plugin-provided agent.
-type AgentDef struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
 
 // Manager handles plugin discovery and lifecycle.
 type Manager struct {
-	plugins []*Manifest
+	mu      sync.RWMutex
+	plugins []*LoadedPlugin
 }
 
 // NewManager creates a new plugin manager.
@@ -45,7 +19,37 @@ func NewManager() *Manager {
 }
 
 // Discover scans plugin directories and loads manifests.
+// Replaces any previously loaded plugins with the newly discovered set.
 func (m *Manager) Discover(ctx context.Context, dirs ...string) error {
-	// TODO: implement plugin discovery
+	plugins, err := Discover(ctx, dirs)
+	if err != nil {
+		return err
+	}
+
+	m.mu.Lock()
+	m.plugins = plugins
+	m.mu.Unlock()
+
+	return nil
+}
+
+// List returns all loaded plugins sorted by name.
+func (m *Manager) List() []*LoadedPlugin {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	result := make([]*LoadedPlugin, len(m.plugins))
+	copy(result, m.plugins)
+	return result
+}
+
+// Get returns a plugin by name, or nil if not found.
+func (m *Manager) Get(name string) *LoadedPlugin {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, p := range m.plugins {
+		if p.Manifest.Name == name {
+			return p
+		}
+	}
 	return nil
 }
