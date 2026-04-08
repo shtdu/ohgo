@@ -34,13 +34,16 @@ func ParseMode(s string) Mode {
 }
 
 // ClassifyTool returns the category for a given tool name.
-// Known read tools: read_file, glob, grep.
+// Known read tools: read_file, glob, grep, web_fetch, web_search, lsp.
 // All other tools default to CategoryWrite (safe default).
 func ClassifyTool(toolName string) ToolCategory {
 	readTools := map[string]bool{
-		"read_file": true,
-		"glob":      true,
-		"grep":      true,
+		"read_file":   true,
+		"glob":        true,
+		"grep":        true,
+		"web_fetch":   true,
+		"web_search":  true,
+		"lsp":         true,
 	}
 	if readTools[toolName] {
 		return CategoryRead

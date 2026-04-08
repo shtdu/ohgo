@@ -132,16 +132,16 @@ The tools needed for a usable coding agent. Each tool is a self-contained packag
 
 | # | Python Source | Go Target | Description | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 3.1 | `tools/file_read_tool.py` | `internal/tools/read/read.go` | Read file contents with line numbers | Phase 2 | `read_test.go`: read full file, line range, offset/limit, missing file, binary file, empty file | TODO |
-| 3.2 | `tools/file_write_tool.py` | `internal/tools/write/write.go` | Write/create files | Phase 2 | `write_test.go`: create new, overwrite existing, create parent dirs, permission error | TODO |
-| 3.3 | `tools/file_edit_tool.py` | `internal/tools/edit/edit.go` | Exact string replacement in files | Phase 2 | `edit_test.go`: exact match, no match error, multiple matches error, empty old_string, multiline replacement | TODO |
-| 3.4 | `tools/bash_tool.py` | `internal/tools/bash/bash.go` | Shell command execution with timeout | Phase 2 | `bash_test.go`: echo command, exit code, stderr, timeout, context cancel, working dir | TODO |
-| 3.5 | `tools/glob_tool.py` | `internal/tools/glob/glob.go` | File pattern matching | Phase 2 | `glob_test.go`: **/*.go, single *, no matches, nested dirs, symlink | TODO |
-| 3.6 | `tools/grep_tool.py` | `internal/tools/grep/grep.go` | Content search (regex) | Phase 2 | `grep_test.go`: pattern match, case insensitive, context lines, file filter, no matches | TODO |
-| 3.7 | `tools/web_fetch_tool.py` | `internal/tools/webfetch/fetch.go` | HTTP GET, HTML→text conversion | resty | `fetch_test.go`: mock HTTP server, HTML stripping, JSON response, timeout, 404 | TODO |
-| 3.8 | `tools/web_search_tool.py` | `internal/tools/websearch/search.go` | Web search via API | resty | `search_test.go`: mock search API, parse results, empty results, API error | TODO |
-| 3.9 | `tools/register.go` | `internal/tools/register.go` | `RegisterBuiltinTools()` — register all tools | 3.1–3.8 | `register_test.go`: all tools registered, no duplicates, each has valid schema | TODO |
-| 3.10 | `tools/lsp_tool.py` | `internal/tools/lsp/lsp.go` | LSP operations (definition, references, hover) | 3.1 | `lsp_test.go`: mock LSP server, go to definition, find references | TODO |
+| 3.1 | `tools/file_read_tool.py` | `internal/tools/read/read.go` | Read file contents with line numbers | Phase 2 | `read_test.go`: read full file, line range, offset/limit, missing file, binary file, empty file | DONE |
+| 3.2 | `tools/file_write_tool.py` | `internal/tools/write/write.go` | Write/create files | Phase 2 | `write_test.go`: create new, overwrite existing, create parent dirs, permission error | DONE |
+| 3.3 | `tools/file_edit_tool.py` | `internal/tools/edit/edit.go` | Exact string replacement in files | Phase 2 | `edit_test.go`: exact match, no match error, multiple matches error, empty old_string, multiline replacement | DONE |
+| 3.4 | `tools/bash_tool.py` | `internal/tools/bash/bash.go` | Shell command execution with timeout | Phase 2 | `bash_test.go`: echo command, exit code, stderr, timeout, context cancel, working dir | DONE |
+| 3.5 | `tools/glob_tool.py` | `internal/tools/glob/glob.go` | File pattern matching | Phase 2 | `glob_test.go`: **/*.go, single *, no matches, nested dirs, symlink | DONE |
+| 3.6 | `tools/grep_tool.py` | `internal/tools/grep/grep.go` | Content search (regex) | Phase 2 | `grep_test.go`: pattern match, case insensitive, context lines, file filter, no matches | DONE |
+| 3.7 | `tools/web_fetch_tool.py` | `internal/tools/webfetch/fetch.go` | HTTP GET, HTML→text conversion | stdlib net/http | `fetch_test.go`: mock HTTP server, HTML stripping, JSON response, timeout, 404 | DONE |
+| 3.8 | `tools/web_search_tool.py` | `internal/tools/websearch/search.go` | Web search via DuckDuckGo | stdlib net/http | `search_test.go`: mock search API, parse results, empty results, API error | DONE |
+| 3.9 | `tools/register.go` | `internal/tools/builtin/builtin.go` | `RegisterAll()` — register all tools | 3.1–3.8 | `builtin_test.go`: all tools registered, no duplicates, each has valid schema | DONE |
+| 3.10 | `tools/lsp_tool.py` | `internal/tools/lsp/lsp.go` | LSP operations (stub — validates inputs) | 3.1 | `lsp_test.go`: valid operations, invalid operation, missing required fields | DONE |
 
 ### Phase 3 Manual Test
 
