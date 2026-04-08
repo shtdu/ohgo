@@ -200,8 +200,8 @@ Remaining tools for full feature parity.
 | 4.13 | `tools/notebook_edit_tool.py` | `internal/tools/notebook/edit.go` | Jupyter notebook cell editing | — | `edit_test.go`: read .ipynb, replace cell, insert cell, delete cell | DONE |
 | 4.14 | `tools/sleep_tool.py` | `internal/tools/sleep/sleep.go` | Delay execution | — | `sleep_test.go`: short sleep completes, context cancel interrupts | DONE |
 | 4.15 | `tools/send_message_tool.py` | `internal/tools/message/message.go` | Send message to user | — | `message_test.go`: message captured | TODO |
-| 4.16 | `tools/skill_tool.py` | `internal/tools/skill/skill.go` | Invoke a skill | skills package | `skill_test.go`: mock loader, verify skill loaded | TODO |
-| 4.17 | `tools/remote_trigger_tool.py` | `internal/tools/remote/trigger.go` | Trigger remote action | — | `trigger_test.go`: mock HTTP, verify request | TODO |
+| 4.16 | `tools/skill_tool.py` | `internal/tools/skill/skill.go` | Invoke a skill | skills package | `skill_test.go`: mock loader, verify skill loaded | DONE |
+| 4.17 | `tools/remote_trigger_tool.py` | `internal/tools/remote/trigger.go` | Trigger remote action | — | `trigger_test.go`: mock HTTP, verify request | DONE |
 | 4.18 | `tools/todo_write_tool.py` | `internal/tools/todo/todo.go` | Write todo list | — | `todo_test.go`: write todos, clear todos | DONE |
 | 4.19 | `tools/tool_search_tool.py` | `internal/tools/search/search.go` | Search available tools | 3.9 | `search_test.go`: find by name, find by description, no match | DONE |
 
@@ -209,12 +209,12 @@ Remaining tools for full feature parity.
 
 | # | Python Source | Go Target | Description | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 4.20 | `tools/task_create_tool.py` | `internal/tools/task/create.go` | Create background task | tasks package | `create_test.go`: valid create, missing command | TODO |
-| 4.21 | `tools/task_get_tool.py` | `internal/tools/task/get.go` | Get task by ID | tasks package | `get_test.go`: existing task, missing ID | TODO |
-| 4.22 | `tools/task_list_tool.py` | `internal/tools/task/list.go` | List all tasks | tasks package | `list_test.go`: empty list, multiple tasks | TODO |
-| 4.23 | `tools/task_output_tool.go` | `internal/tools/task/output.go` | Read task output | tasks package | `output_test.go`: running task, completed task, missing task | TODO |
-| 4.24 | `tools/task_stop_tool.py` | `internal/tools/task/stop.go` | Stop running task | tasks package | `stop_test.go`: stop running, stop already stopped | TODO |
-| 4.25 | `tools/task_update_tool.py` | `internal/tools/task/update.go` | Update task status | tasks package | `update_test.go`: status transitions | TODO |
+| 4.20 | `tools/task_create_tool.py` | `internal/tools/task/create.go` | Create background task | tasks package | `create_test.go`: valid create, missing command | DONE |
+| 4.21 | `tools/task_get_tool.py` | `internal/tools/task/get.go` | Get task by ID | tasks package | `get_test.go`: existing task, missing ID | DONE |
+| 4.22 | `tools/task_list_tool.py` | `internal/tools/task/list.go` | List all tasks | tasks package | `list_test.go`: empty list, multiple tasks | DONE |
+| 4.23 | `tools/task_output_tool.go` | `internal/tools/task/output.go` | Read task output | tasks package | `output_test.go`: running task, completed task, missing task | DONE |
+| 4.24 | `tools/task_stop_tool.py` | `internal/tools/task/stop.go` | Stop running task | tasks package | `stop_test.go`: stop running, stop already stopped | DONE |
+| 4.25 | `tools/task_update_tool.py` | `internal/tools/task/update.go` | Update task status | tasks package | `update_test.go`: status transitions | DONE |
 
 ### Team Tools
 

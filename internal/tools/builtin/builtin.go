@@ -11,6 +11,7 @@ import (
 	"github.com/shtdu/ohgo/internal/tools/bash"
 	"github.com/shtdu/ohgo/internal/tools/brief"
 	toolconfig "github.com/shtdu/ohgo/internal/tools/config"
+	toolcron "github.com/shtdu/ohgo/internal/tools/cron"
 	"github.com/shtdu/ohgo/internal/tools/edit"
 	"github.com/shtdu/ohgo/internal/tools/glob"
 	"github.com/shtdu/ohgo/internal/tools/grep"
@@ -18,10 +19,12 @@ import (
 	"github.com/shtdu/ohgo/internal/tools/notebook"
 	"github.com/shtdu/ohgo/internal/tools/plan"
 	"github.com/shtdu/ohgo/internal/tools/read"
+	"github.com/shtdu/ohgo/internal/tools/remote"
 	"github.com/shtdu/ohgo/internal/tools/search"
+	"github.com/shtdu/ohgo/internal/tools/skill"
 	"github.com/shtdu/ohgo/internal/tools/sleep"
+	tooltask "github.com/shtdu/ohgo/internal/tools/task"
 	"github.com/shtdu/ohgo/internal/tools/todo"
-	toolcron "github.com/shtdu/ohgo/internal/tools/cron"
 	"github.com/shtdu/ohgo/internal/tools/webfetch"
 	"github.com/shtdu/ohgo/internal/tools/websearch"
 	"github.com/shtdu/ohgo/internal/tools/worktree"
@@ -86,4 +89,22 @@ func RegisterAll(r *tools.Registry, deps ToolDeps) {
 		r.Register(toolcron.ListTool{Mgr: deps.CronMgr})
 		r.Register(toolcron.ToggleTool{Mgr: deps.CronMgr})
 	}
+
+	// Phase 4: Batch 5 — Task tools
+	if deps.TaskMgr != nil {
+		r.Register(tooltask.CreateTool{Mgr: deps.TaskMgr})
+		r.Register(tooltask.GetTool{Mgr: deps.TaskMgr})
+		r.Register(tooltask.ListTool{Mgr: deps.TaskMgr})
+		r.Register(tooltask.OutputTool{Mgr: deps.TaskMgr})
+		r.Register(tooltask.StopTool{Mgr: deps.TaskMgr})
+		r.Register(tooltask.UpdateTool{Mgr: deps.TaskMgr})
+	}
+
+	// Phase 4: Batch 6 — Skill tool
+	if deps.SkillReg != nil {
+		r.Register(skill.SkillTool{SkillReg: deps.SkillReg})
+	}
+
+	// Phase 4: Batch 7 — Remote trigger (stateless)
+	r.Register(remote.RemoteTriggerTool{})
 }

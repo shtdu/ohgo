@@ -7,6 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/shtdu/ohgo/internal/config"
 	"github.com/shtdu/ohgo/internal/permissions"
+	"github.com/shtdu/ohgo/internal/skills"
+	tooltask "github.com/shtdu/ohgo/internal/tasks"
 	toolcron "github.com/shtdu/ohgo/internal/tools/cron"
 	"github.com/shtdu/ohgo/internal/tools"
 )
@@ -20,7 +22,7 @@ func TestRegisterAll_MinimalDeps(t *testing.T) {
 		"read_file", "write_file", "edit_file", "bash",
 		"glob", "grep", "web_fetch", "web_search", "lsp",
 		"sleep", "brief", "todo_write", "enter_worktree",
-		"exit_worktree", "notebook_edit",
+		"exit_worktree", "notebook_edit", "remote_trigger",
 	}
 
 	for _, name := range expectedTools {
@@ -50,15 +52,19 @@ func TestRegisterAll_WithDeps(t *testing.T) {
 	checker := permissions.NewDefaultChecker(config.PermissionSettings{Mode: "default"})
 	cronMgr := toolcron.NewManager()
 	cfg := &config.Settings{Model: "test"}
+	taskMgr := tooltask.NewManager()
+	skillReg := skills.NewRegistry()
 
 	RegisterAll(r, ToolDeps{
 		Checker:  checker,
 		Settings: cfg,
 		Registry: r,
 		CronMgr:  cronMgr,
+		TaskMgr:  taskMgr,
+		SkillReg: skillReg,
 	})
 
-	// All 23 tools should be registered
+	// All tools should be registered
 	expectedTools := []string{
 		// Phase 3
 		"read_file", "write_file", "edit_file", "bash",
@@ -73,6 +79,12 @@ func TestRegisterAll_WithDeps(t *testing.T) {
 		"notebook_edit",
 		// Phase 4: Batch 4
 		"cron_create", "cron_delete", "cron_list", "cron_toggle",
+		// Phase 4: Batch 5
+		"task_create", "task_get", "task_list", "task_output", "task_stop", "task_update",
+		// Phase 4: Batch 6
+		"skill",
+		// Phase 4: Batch 7
+		"remote_trigger",
 	}
 
 	for _, name := range expectedTools {
