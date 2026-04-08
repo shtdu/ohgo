@@ -105,8 +105,7 @@ Some body text.
 `
 	name, desc, body := parseFrontmatter("default", content)
 	assert.Equal(t, "named", name)
-	// Empty description falls back; the fallback loop scans all lines so
-	// the first non-empty non-heading non-delim line is a frontmatter field.
-	assert.Equal(t, "name: named", desc)
+	// Empty description falls back to first body paragraph after frontmatter.
+	assert.Equal(t, "Some body text.", desc)
 	assert.Contains(t, body, "Some body text.")
 }

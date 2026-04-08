@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -103,7 +104,7 @@ func run(cmd *cobra.Command, args []string) error {
 	// Load user skills
 	skillDir, _ := config.ConfigDir()
 	if skillDir != "" {
-		loader := skills.NewLoader(skillDir + "/skills")
+		loader := skills.NewLoader(filepath.Join(skillDir, "skills"))
 		userSkills, err := loader.LoadAll(ctx)
 		if err == nil {
 			for _, s := range userSkills {
@@ -114,14 +115,16 @@ func run(cmd *cobra.Command, args []string) error {
 
 	// Discover plugins
 	pluginDirs := []string{}
-	if userPluginDir := skillDir + "/plugins"; userPluginDir != "" {
+	if userPluginDir := filepath.Join(skillDir, "plugins"); skillDir != "" {
 		pluginDirs = append(pluginDirs, userPluginDir)
 	}
 	if cwd, err := os.Getwd(); err == nil {
-		pluginDirs = append(pluginDirs, cwd+"/.openharness/plugins")
+		pluginDirs = append(pluginDirs, filepath.Join(cwd, ".openharness", "plugins"))
 	}
 	if len(pluginDirs) > 0 {
-		_ = pluginMgr.Discover(ctx, pluginDirs...)
+		if err := pluginMgr.Discover(ctx, pluginDirs...); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: plugin discovery failed: %v\n", err)
+		}
 	}
 
 	builtin.RegisterAll(registry, builtin.ToolDeps{

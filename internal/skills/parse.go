@@ -44,9 +44,9 @@ func parseFrontmatter(defaultName, content string) (name, description, body stri
 		}
 	}
 
-	// Fallback: extract from headings and first paragraph.
+	// Fallback: extract from headings and first paragraph (after frontmatter).
 	if description == "" {
-		for _, line := range lines {
+		for _, line := range lines[bodyStart:] {
 			stripped := strings.TrimSpace(line)
 			if strings.HasPrefix(stripped, "# ") {
 				if name == "" || name == defaultName {
@@ -57,7 +57,7 @@ func parseFrontmatter(defaultName, content string) (name, description, body stri
 				}
 				continue
 			}
-			if stripped != "" && !strings.HasPrefix(stripped, "---") && !strings.HasPrefix(stripped, "#") {
+			if stripped != "" && !strings.HasPrefix(stripped, "#") {
 				if len(stripped) > 200 {
 					description = stripped[:200]
 				} else {

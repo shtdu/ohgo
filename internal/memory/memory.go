@@ -8,11 +8,13 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 )
 
 // Store manages memory files for a project.
 type Store struct {
 	dir string // project memory directory
+	mu  sync.Mutex
 }
 
 // NewStore creates a memory store for the given working directory.
@@ -26,6 +28,8 @@ func NewStore(cwd string) (*Store, error) {
 
 // List returns sorted .md file basenames in the memory directory.
 func (s *Store) List() ([]string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	entries, err := os.ReadDir(s.dir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -47,6 +51,8 @@ var slugRe = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 
 // Add creates a memory file and appends it to the MEMORY.md index.
 func (s *Store) Add(title, content string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	slug := slugRe.ReplaceAllString(strings.ToLower(strings.TrimSpace(title)), "_")
 	slug = strings.Trim(slug, "_")
 	if slug == "" {
@@ -77,6 +83,8 @@ func (s *Store) Add(title, content string) (string, error) {
 
 // Remove deletes a memory file and removes its entry from the MEMORY.md index.
 func (s *Store) Remove(name string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	// Find file by stem or full name.
 	var target string
 	entries, err := os.ReadDir(s.dir)
@@ -120,6 +128,8 @@ func (s *Store) Remove(name string) (bool, error) {
 
 // LoadPrompt reads the MEMORY.md index for prompt injection.
 func (s *Store) LoadPrompt(maxLines int) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	entrypoint := filepath.Join(s.dir, "MEMORY.md")
 	data, err := os.ReadFile(entrypoint)
 	if err != nil {

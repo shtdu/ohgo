@@ -130,21 +130,23 @@ func (m *Manager) CreateShell(_ context.Context, command, description, cwd strin
 		m.mu.Lock()
 		defer m.mu.Unlock()
 
-		if rec.Status == StatusKilled {
+		r, ok := m.tasks[id]
+		if !ok || r.Status == StatusKilled {
 			return
 		}
 		if waitErr != nil {
-			rec.Status = StatusFailed
+			r.Status = StatusFailed
 		} else {
-			rec.Status = StatusCompleted
+			r.Status = StatusCompleted
 		}
 		endNow := time.Now()
-		rec.EndedAt = &endNow
+		r.EndedAt = &endNow
 		if exitErr, ok := waitErr.(*exec.ExitError); ok {
 			rc := exitErr.ExitCode()
-			rec.ReturnCode = &rc
+			r.ReturnCode = &rc
 		}
 		delete(m.processes, id)
+		delete(m.outputMu, id)
 	}()
 
 	return rec, nil
@@ -162,7 +164,8 @@ func (w *syncFileWriter) Write(p []byte) (int, error) {
 	return w.file.Write(p)
 }
 
-// Get retrieves a task record by ID.
+// Get retrieves a copy of a task record by ID.
+// Returns a copy to avoid data races with background goroutines.
 func (m *Manager) Get(id string) (*Record, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -170,10 +173,10 @@ func (m *Manager) Get(id string) (*Record, bool) {
 	if !ok {
 		return nil, false
 	}
-	return rec, true
+	return rec.Copy(), true
 }
 
-// List returns task records, optionally filtered by status.
+// List returns copies of task records, optionally filtered by status.
 // Results are sorted by CreatedAt descending (newest first).
 func (m *Manager) List(status Status) []*Record {
 	m.mu.RLock()
@@ -184,7 +187,7 @@ func (m *Manager) List(status Status) []*Record {
 		if status != "" && rec.Status != status {
 			continue
 		}
-		result = append(result, rec)
+		result = append(result, rec.Copy())
 	}
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].CreatedAt.After(result[j].CreatedAt)
@@ -216,7 +219,7 @@ func (m *Manager) Update(id string, description string, progress int, statusNote
 		}
 		rec.Metadata["progress"] = fmt.Sprintf("%d", progress)
 	}
-	return rec, nil
+	return rec.Copy(), nil
 }
 
 // Stop terminates a running task by sending SIGTERM, then SIGKILL after a grace period.
@@ -268,6 +271,7 @@ func (m *Manager) Stop(_ context.Context, id string) error {
 	}
 	delete(m.processes, id)
 	delete(m.cancelFuncs, id)
+	delete(m.outputMu, id)
 	m.mu.Unlock()
 
 	return nil
@@ -279,14 +283,19 @@ func (m *Manager) Stop(_ context.Context, id string) error {
 func (m *Manager) ReadOutput(id string, maxBytes int) (string, error) {
 	m.mu.RLock()
 	rec, ok := m.tasks[id]
+	outputMu := m.outputMu[id]
 	m.mu.RUnlock()
 	if !ok {
 		return "", fmt.Errorf("task %s not found", id)
 	}
 
-	m.outputMu[id].Lock()
+	if outputMu != nil {
+		outputMu.Lock()
+	}
 	data, err := os.ReadFile(rec.OutputFile)
-	m.outputMu[id].Unlock()
+	if outputMu != nil {
+		outputMu.Unlock()
+	}
 	if err != nil {
 		if os.IsNotExist(err) {
 			return "", nil
