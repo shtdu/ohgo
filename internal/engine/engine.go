@@ -6,12 +6,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/shtdu/ohgo/internal/api"
 	"github.com/shtdu/ohgo/internal/hooks"
 	"github.com/shtdu/ohgo/internal/permissions"
 	"github.com/shtdu/ohgo/internal/tools"
 )
+
+// PermissionPrompter asks the user to approve or deny a tool execution.
+type PermissionPrompter interface {
+	PromptApproval(ctx context.Context, toolName string, details string) (allow bool, remember bool, err error)
+}
 
 // Options configures the engine.
 type Options struct {
@@ -25,6 +31,7 @@ type Options struct {
 	Hooks         hooks.HookRunner
 	APIClient     api.Client
 	EventCh       chan<- EngineEvent
+	PermPrompt    PermissionPrompter
 }
 
 // Engine drives the core agent loop.
@@ -214,8 +221,20 @@ func (e *Engine) executeTool(ctx context.Context, call api.ToolCall) (string, bo
 		case permissions.Deny:
 			return fmt.Sprintf("tool %s denied by permissions", call.Name), true
 		case permissions.Ask:
-			// No interactive prompt in current implementation — deny with explanation
-			return fmt.Sprintf("tool %s requires user approval (not available in non-interactive mode)", call.Name), true
+			if e.opts.PermPrompt != nil {
+				allow, remember, err := e.opts.PermPrompt.PromptApproval(ctx, call.Name, summarizeArgs(call.Input))
+				if err != nil {
+					return fmt.Sprintf("permission prompt error: %v", err), true
+				}
+				if !allow {
+					return fmt.Sprintf("tool %s denied by user", call.Name), true
+				}
+				if remember {
+					fmt.Fprintf(os.Stderr, "[permission: %s allowed for session]\n", call.Name)
+				}
+			} else {
+				return fmt.Sprintf("tool %s requires user approval (not available in non-interactive mode)", call.Name), true
+			}
 		}
 	}
 
@@ -327,3 +346,11 @@ func (e *Engine) LoadMessages(msgs []api.Message) {
 
 // Ensure api.Message, api.UsageSnapshot satisfy the type assertions used in Query
 var _ = json.RawMessage{}
+
+// summarizeArgs returns a short summary of tool arguments for display.
+func summarizeArgs(args json.RawMessage) string {
+	if len(args) > 200 {
+		return string(args[:200]) + "..."
+	}
+	return string(args)
+}
