@@ -14,6 +14,7 @@ import (
 
 	"github.com/shtdu/ohgo/internal/api"
 	"github.com/shtdu/ohgo/internal/auth"
+	"github.com/shtdu/ohgo/internal/bridge"
 	"github.com/shtdu/ohgo/internal/commands"
 	"github.com/shtdu/ohgo/internal/config"
 	"github.com/shtdu/ohgo/internal/engine"
@@ -106,6 +107,11 @@ func run(cmd *cobra.Command, args []string) error {
 	pluginMgr := plugins.NewManager()
 	authMgr := auth.NewManager("")
 
+	// Bridge subsystem
+	bridgeMgr := bridge.NewManager()
+	bridgeMgr.Register(bridge.NewClaudeCLI())
+	bridgeMgr.Register(bridge.NewCodexBridge())
+
 	// Load user skills
 	skillDir, _ := config.ConfigDir()
 	if skillDir != "" {
@@ -180,6 +186,7 @@ func run(cmd *cobra.Command, args []string) error {
 		ToolReg:   registry,
 		CmdReg:    cmdReg,
 		AuthMgr:   authMgr,
+		BridgeMgr: bridgeMgr,
 		Cwd:       cwd,
 		Version:   "dev",
 	}

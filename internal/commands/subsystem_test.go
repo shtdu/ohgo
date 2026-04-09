@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/shtdu/ohgo/internal/config"
+	bridgePkg "github.com/shtdu/ohgo/internal/bridge"
 	"github.com/shtdu/ohgo/internal/memory"
 	"github.com/shtdu/ohgo/internal/plugins"
 	"github.com/shtdu/ohgo/internal/skills"
@@ -263,12 +264,24 @@ func TestMcpCommand(t *testing.T) {
 
 func TestBridgeCommand(t *testing.T) {
 	cmd := bridgeCmd{}
+
+	// Without BridgeMgr, should report not available.
 	res, err := cmd.Run(context.Background(), "", &Deps{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(res.Output, "not yet implemented") {
-		t.Errorf("expected not implemented message, got: %s", res.Output)
+	if !strings.Contains(res.Output, "not available") {
+		t.Errorf("expected not available message, got: %s", res.Output)
+	}
+
+	// With BridgeMgr, should show bridge status.
+	bMgr := bridgePkg.NewManager()
+	res, err = cmd.Run(context.Background(), "", &Deps{BridgeMgr: bMgr})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(res.Output, "no bridges registered") {
+		t.Errorf("expected no bridges message, got: %s", res.Output)
 	}
 }
 
@@ -279,8 +292,8 @@ func TestLoginCommand_NoConfig(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(res.Output, "no configuration available") {
-		t.Errorf("expected no config message, got: %s", res.Output)
+	if !strings.Contains(res.Output, "not authenticated") {
+		t.Errorf("expected not authenticated message, got: %s", res.Output)
 	}
 }
 
@@ -305,8 +318,8 @@ func TestLoginCommand_Authenticated(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(res.Output, "authenticated") {
-		t.Errorf("expected authenticated message, got: %s", res.Output)
+	if !strings.Contains(res.Output, "Session Key:") {
+		t.Errorf("expected session key message, got: %s", res.Output)
 	}
 	// Key should be masked.
 	if strings.Contains(res.Output, "sk-ant-1234567890abcdef") {
@@ -318,12 +331,12 @@ func TestLoginCommand_SetKey(t *testing.T) {
 	cmd := loginCmd{}
 	cfg := &config.Settings{}
 	deps := &Deps{Config: cfg}
-	res, err := cmd.Run(context.Background(), "set my-new-key", deps)
+	res, err := cmd.Run(context.Background(), "set anthropic my-new-key", deps)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(res.Output, "API key updated") {
-		t.Errorf("expected key updated message, got: %s", res.Output)
+	if !strings.Contains(res.Output, "credential stored") {
+		t.Errorf("expected credential stored message, got: %s", res.Output)
 	}
 	if cfg.APIKey != "my-new-key" {
 		t.Errorf("expected API key to be 'my-new-key', got: %s", cfg.APIKey)
