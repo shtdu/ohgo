@@ -61,3 +61,5 @@ func (t StopTool) Execute(ctx context.Context, args json.RawMessage) (tools.Resu
 
 	return tools.Result{Content: fmt.Sprintf("Task %s stopped.", input.TaskID)}, nil
 }
+
+var _ tools.Tool = StopTool{}

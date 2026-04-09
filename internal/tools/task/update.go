@@ -86,3 +86,5 @@ func (t UpdateTool) Execute(ctx context.Context, args json.RawMessage) (tools.Re
 
 	return tools.Result{Content: string(data)}, nil
 }
+
+var _ tools.Tool = UpdateTool{}

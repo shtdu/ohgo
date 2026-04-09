@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/shtdu/ohgo/internal/skills"
 	"github.com/shtdu/ohgo/internal/tools"
@@ -61,8 +62,14 @@ func (t SkillTool) Execute(ctx context.Context, args json.RawMessage) (tools.Res
 		return tools.Result{Content: "skill_name is required", IsError: true}, nil
 	}
 
-	// Look up skill in registry
+	// Look up skill in registry with case-insensitive fallbacks.
 	s := t.SkillReg.Get(input.SkillName)
+	if s == nil {
+		s = t.SkillReg.Get(strings.ToLower(input.SkillName))
+	}
+	if s == nil {
+		s = t.SkillReg.Get(strings.Title(input.SkillName))
+	}
 	if s == nil {
 		return tools.Result{
 			Content: fmt.Sprintf("skill %q not found", input.SkillName),

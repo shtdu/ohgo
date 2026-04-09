@@ -81,3 +81,5 @@ func (t ListTool) Execute(ctx context.Context, args json.RawMessage) (tools.Resu
 
 	return tools.Result{Content: sb.String()}, nil
 }
+
+var _ tools.Tool = ListTool{}

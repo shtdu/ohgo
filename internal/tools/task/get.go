@@ -66,3 +66,5 @@ func (t GetTool) Execute(ctx context.Context, args json.RawMessage) (tools.Resul
 
 	return tools.Result{Content: string(data)}, nil
 }
+
+var _ tools.Tool = GetTool{}

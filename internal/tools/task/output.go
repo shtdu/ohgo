@@ -71,3 +71,5 @@ func (t OutputTool) Execute(ctx context.Context, args json.RawMessage) (tools.Re
 
 	return tools.Result{Content: output}, nil
 }
+
+var _ tools.Tool = OutputTool{}

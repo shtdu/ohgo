@@ -30,11 +30,11 @@ func TestStopTool_RunningTask(t *testing.T) {
 }
 
 func TestStopTool_AlreadyCompleted(t *testing.T) {
-	mgr, _, _, _, _, stop, _ := setup(t)
+	mgr, _, get, _, _, stop, _ := setup(t)
 	id := mustCreateTask(t, mgr, "echo quick", "already done")
 
-	// Wait for the task to finish.
-	time.Sleep(500 * time.Millisecond)
+	// Wait for the task to finish using the robust polling helper.
+	waitForTask(t, id, get)
 
 	args := mustJSON(t, map[string]any{"task_id": id})
 	result, err := stop.Execute(context.Background(), args)

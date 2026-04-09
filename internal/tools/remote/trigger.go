@@ -26,7 +26,17 @@ type triggerInput struct {
 
 // RemoteTriggerTool sends an HTTP request to a specified URL and returns
 // the response status and body.
-type RemoteTriggerTool struct{}
+type RemoteTriggerTool struct {
+	// Client is the HTTP client used for requests. Defaults to http.DefaultClient if nil.
+	Client *http.Client
+}
+
+func (t RemoteTriggerTool) client() *http.Client {
+	if t.Client != nil {
+		return t.Client
+	}
+	return http.DefaultClient
+}
 
 func (RemoteTriggerTool) Name() string { return "remote_trigger" }
 
@@ -122,7 +132,7 @@ func (t RemoteTriggerTool) Execute(ctx context.Context, args json.RawMessage) (t
 		req.Header.Set(k, v)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := t.client().Do(req)
 	if err != nil {
 		return tools.Result{Content: fmt.Sprintf("request failed: %v", err), IsError: true}, nil
 	}
