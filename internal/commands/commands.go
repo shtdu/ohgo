@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/shtdu/ohgo/internal/auth"
 	"github.com/shtdu/ohgo/internal/config"
 	"github.com/shtdu/ohgo/internal/engine"
 	"github.com/shtdu/ohgo/internal/plugins"
@@ -32,6 +33,7 @@ type Deps struct {
 	Plugins   *plugins.Manager
 	ToolReg   *tools.Registry
 	CmdReg    *Registry
+	AuthMgr   *auth.Manager
 	Cwd       string
 	Version   string
 }

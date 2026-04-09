@@ -440,16 +440,16 @@ Additional LLM provider clients and bridges.
 
 | # | Python Source | Go Target | Description | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 7.1 | `api/openai_client.py` | `internal/api/openai.go` | OpenAI-compatible streaming client | 1.5, 1.6 | `openai_test.go`: mock SSE server (OpenAI format), stream parsing, tool_use, retry, context cancel | TODO |
-| 7.2 | `api/provider.py` + `registry.py` | `internal/api/registry.go` | Provider factory, profile → client mapping | 7.1, 1.3 | `registry_test.go`: create client by profile type, unknown profile, missing API key | TODO |
-| 7.3 | `api/copilot_client.py` | `internal/api/copilot.go` | GitHub Copilot client | 7.1, 7.4 | `copilot_test.go`: mock Copilot token exchange, streaming | TODO |
-| 7.4 | `api/copilot_auth.py` | `internal/auth/copilot.go` | Copilot OAuth device flow | 1.7 | `copilot_test.go`: mock OAuth endpoints, device code flow, token refresh | TODO |
-| 7.5 | `auth/manager.py` + `storage.py` | `internal/auth/manager.go` | Auth manager, key storage | — | `manager_test.go`: store key, load key, delete key, encrypted storage | TODO |
-| 7.6 | `auth/flows.py` + `external.py` | `internal/auth/flows.go` | Auth flow orchestration | 7.5 | `flows_test.go`: mock provider auth, flow selection by provider type | TODO |
-| 7.7 | `api/codex_client.py` | `internal/api/codex.go` | Codex CLI bridge client | 7.1 | `codex_test.go`: mock Codex CLI binary, streaming, error handling | TODO |
-| 7.8 | `bridge/types.py` + `manager.py` | `internal/bridge/manager.go` | Bridge manager, lifecycle | 7.7, 7.3 | `manager_test.go`: register bridge, connect all, close all, bridge not found | TODO |
-| 7.9 | `bridge/session_runner.py` | `internal/bridge/session.go` | Bridge session execution | 7.8 | `session_test.go`: run session, capture output, error propagation | TODO |
-| 7.10 | `bridge/work_secret.py` | `internal/bridge/secret.go` | Work secret management | 7.8 | `secret_test.go`: generate, validate, rotate | TODO |
+| 7.1 | `api/openai_client.py` | `internal/api/openai.go` | OpenAI-compatible streaming client | 1.5, 1.6 | `openai_test.go`: mock SSE server (OpenAI format), stream parsing, tool_use, retry, context cancel | DONE |
+| 7.2 | `api/provider.py` + `registry.py` | `internal/api/registry.go` | Provider factory, profile → client mapping | 7.1, 1.3 | `registry_test.go`: create client by profile type, unknown profile, missing API key | DONE |
+| 7.3 | `api/copilot_client.py` | `internal/api/copilot.go` | GitHub Copilot client | 7.1, 7.4 | `copilot_test.go`: mock Copilot token exchange, streaming | DONE |
+| 7.4 | `api/copilot_auth.py` | `internal/auth/copilot.go` | Copilot OAuth device flow | 1.7 | `copilot_test.go`: mock OAuth endpoints, device code flow, token refresh | DONE |
+| 7.5 | `auth/manager.py` + `storage.py` | `internal/auth/manager.go` | Auth manager, key storage | — | `manager_test.go`: store key, load key, delete key, encrypted storage | DONE |
+| 7.6 | `auth/flows.py` + `external.py` | `internal/auth/flows.go` | Auth flow orchestration | 7.5 | `flows_test.go`: mock provider auth, flow selection by provider type | DONE |
+| 7.7 | `api/codex_client.py` | `internal/api/codex.go` | Codex CLI bridge client | 7.1 | `codex_test.go`: mock Codex CLI binary, streaming, error handling | DONE |
+| 7.8 | `bridge/types.py` + `manager.py` | `internal/bridge/manager.go` | Bridge manager, lifecycle | 7.7, 7.3 | `manager_test.go`: register bridge, connect all, close all, bridge not found | DONE |
+| 7.9 | `bridge/session_runner.py` | `internal/bridge/session.go` | Bridge session execution | 7.8 | `session_test.go`: run session, capture output, error propagation | DONE |
+| 7.10 | `bridge/work_secret.py` | `internal/bridge/secret.go` | Work secret management | 7.8 | `secret_test.go`: generate, validate, rotate | DONE |
 
 ### Phase 7 Manual Test
 

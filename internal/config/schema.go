@@ -134,6 +134,22 @@ func DefaultProviderProfiles() map[string]ProviderProfile {
 	}
 }
 
+// EnvKey returns the environment variable name for this profile's auth source.
+func (p ProviderProfile) EnvKey() string {
+	switch p.AuthSource {
+	case "anthropic_api_key":
+		return "ANTHROPIC_API_KEY"
+	case "openai_api_key":
+		return "OPENAI_API_KEY"
+	case "copilot_oauth":
+		return "GITHUB_TOKEN"
+	case "codex_subscription":
+		return "CODEX_API_KEY"
+	default:
+		return ""
+	}
+}
+
 // ResolvedModel returns the active model for this profile.
 func (p ProviderProfile) ResolvedModel() string {
 	if p.LastModel != "" {

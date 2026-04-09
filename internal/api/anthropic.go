@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math/rand/v2"
 	"net/http"
 	"strings"
 	"time"
@@ -17,9 +16,6 @@ import (
 const (
 	defaultBaseURL   = "https://api.anthropic.com/v1/messages"
 	apiVersionHeader = "2023-06-01"
-	maxRetries       = 3
-	baseRetryDelay   = 1 * time.Second
-	maxRetryDelay    = 30 * time.Second
 )
 
 // AnthropicClient implements the Client interface for the Anthropic API.
@@ -268,11 +264,3 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 	}
 }
 
-func retryDelay(attempt int) time.Duration {
-	if attempt > 30 {
-		return maxRetryDelay
-	}
-	delay := min(baseRetryDelay*time.Duration(1<<uint(attempt)), maxRetryDelay)
-	jitter := time.Duration(rand.Int64N(int64(delay) / 4))
-	return delay + jitter
-}

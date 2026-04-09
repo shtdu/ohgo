@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/shtdu/ohgo/internal/api"
+	"github.com/shtdu/ohgo/internal/auth"
 	"github.com/shtdu/ohgo/internal/commands"
 	"github.com/shtdu/ohgo/internal/config"
 	"github.com/shtdu/ohgo/internal/engine"
@@ -77,10 +78,12 @@ func run(cmd *cobra.Command, args []string) error {
 		cfg.MaxTokens = maxTokensFlg
 	}
 
-	// Resolve API key
-	apiKey := cfg.ResolveAPIKey()
-	if apiKey == "" {
-		apiKey = resolveAPIKeyFromEnv()
+	// Create provider registry and resolve API client
+	apiReg := api.NewRegistry()
+	apiClient, err := apiReg.CreateClient(cfg, profileFlag)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to create API client: %v\n", err)
+		apiClient = api.NewAnthropicClient() // fallback
 	}
 
 	// Wire up components
@@ -101,6 +104,7 @@ func run(cmd *cobra.Command, args []string) error {
 	skillReg := skills.NewRegistry()
 	taskMgr := tasks.NewManager()
 	pluginMgr := plugins.NewManager()
+	authMgr := auth.NewManager("")
 
 	// Load user skills
 	skillDir, _ := config.ConfigDir()
@@ -146,17 +150,6 @@ func run(cmd *cobra.Command, args []string) error {
 		systemPrompt = "You are a helpful coding assistant."
 	}
 
-	// Create API client
-	var apiClient api.Client
-	if apiKey != "" {
-		apiClient = api.NewAnthropicClient(
-			api.WithAPIKey(apiKey),
-		)
-	} else {
-		fmt.Fprintf(os.Stderr, "warning: no API key configured. Set ANTHROPIC_API_KEY or configure in settings.\n")
-		apiClient = api.NewAnthropicClient() // will fail on actual requests
-	}
-
 	// Create event channel
 	eventCh := make(chan engine.EngineEvent, 64)
 
@@ -186,6 +179,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Plugins:   pluginMgr,
 		ToolReg:   registry,
 		CmdReg:    cmdReg,
+		AuthMgr:   authMgr,
 		Cwd:       cwd,
 		Version:   "dev",
 	}
@@ -266,11 +260,4 @@ func runREPL(ctx context.Context, eng *engine.Engine, cmdDeps *commands.Deps) er
 		}
 	}
 	return scanner.Err()
-}
-
-func resolveAPIKeyFromEnv() string {
-	if key := os.Getenv("ANTHROPIC_API_KEY"); key != "" {
-		return key
-	}
-	return ""
 }
