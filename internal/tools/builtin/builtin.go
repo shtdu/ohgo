@@ -3,11 +3,15 @@ package builtin
 
 import (
 	"github.com/shtdu/ohgo/internal/config"
+	"github.com/shtdu/ohgo/internal/coordinator"
+	"github.com/shtdu/ohgo/internal/mcp"
 	"github.com/shtdu/ohgo/internal/permissions"
 	"github.com/shtdu/ohgo/internal/plugins"
 	"github.com/shtdu/ohgo/internal/skills"
 	"github.com/shtdu/ohgo/internal/tasks"
 	"github.com/shtdu/ohgo/internal/tools"
+	"github.com/shtdu/ohgo/internal/tools/agent"
+	"github.com/shtdu/ohgo/internal/tools/ask"
 	"github.com/shtdu/ohgo/internal/tools/bash"
 	"github.com/shtdu/ohgo/internal/tools/brief"
 	toolconfig "github.com/shtdu/ohgo/internal/tools/config"
@@ -16,6 +20,8 @@ import (
 	"github.com/shtdu/ohgo/internal/tools/glob"
 	"github.com/shtdu/ohgo/internal/tools/grep"
 	"github.com/shtdu/ohgo/internal/tools/lsp"
+	mcptool "github.com/shtdu/ohgo/internal/tools/mcp"
+	"github.com/shtdu/ohgo/internal/tools/message"
 	"github.com/shtdu/ohgo/internal/tools/notebook"
 	"github.com/shtdu/ohgo/internal/tools/plan"
 	"github.com/shtdu/ohgo/internal/tools/read"
@@ -23,6 +29,7 @@ import (
 	"github.com/shtdu/ohgo/internal/tools/search"
 	"github.com/shtdu/ohgo/internal/tools/skill"
 	"github.com/shtdu/ohgo/internal/tools/sleep"
+	teamtool "github.com/shtdu/ohgo/internal/tools/team"
 	tooltask "github.com/shtdu/ohgo/internal/tools/task"
 	"github.com/shtdu/ohgo/internal/tools/todo"
 	"github.com/shtdu/ohgo/internal/tools/webfetch"
@@ -41,6 +48,10 @@ type ToolDeps struct {
 	SkillReg  *skills.Registry
 	TaskMgr   *tasks.Manager
 	PluginMgr *plugins.Manager
+	MCPMgr    *mcp.Manager
+	Coord     *coordinator.Coordinator
+	AskPrompter ask.Prompter
+	MsgEmitter  func(msg message.Message) error
 }
 
 // RegisterAll registers all built-in tools into the registry.
@@ -107,4 +118,29 @@ func RegisterAll(r *tools.Registry, deps ToolDeps) {
 
 	// Phase 4: Batch 7 — Remote trigger (stateless)
 	r.Register(remote.RemoteTriggerTool{})
+
+	// Phase 4/6: MCP tools
+	if deps.MCPMgr != nil {
+		r.Register(mcptool.CallTool{Mgr: deps.MCPMgr})
+		r.Register(mcptool.ListResources{Mgr: deps.MCPMgr})
+		r.Register(mcptool.ReadResource{Mgr: deps.MCPMgr})
+		r.Register(mcptool.Auth{Mgr: deps.MCPMgr})
+	}
+
+	// Phase 4/6: Coordinator tools
+	if deps.Coord != nil {
+		r.Register(agent.SpawnTool{Coord: deps.Coord})
+		r.Register(teamtool.CreateTool{Coord: deps.Coord})
+		r.Register(teamtool.DeleteTool{Coord: deps.Coord})
+	}
+
+	// Phase 4: Ask user question tool
+	if deps.AskPrompter != nil {
+		r.Register(ask.AskTool{Prompter: deps.AskPrompter})
+	}
+
+	// Phase 4: Send message tool
+	if deps.MsgEmitter != nil {
+		r.Register(message.SendTool{Emitter: deps.MsgEmitter})
+	}
 }

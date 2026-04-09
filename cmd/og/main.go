@@ -17,8 +17,10 @@ import (
 	"github.com/shtdu/ohgo/internal/bridge"
 	"github.com/shtdu/ohgo/internal/commands"
 	"github.com/shtdu/ohgo/internal/config"
+	"github.com/shtdu/ohgo/internal/coordinator"
 	"github.com/shtdu/ohgo/internal/engine"
 	"github.com/shtdu/ohgo/internal/hooks"
+	mpcpkg "github.com/shtdu/ohgo/internal/mcp"
 	"github.com/shtdu/ohgo/internal/permissions"
 	"github.com/shtdu/ohgo/internal/plugins"
 	"github.com/shtdu/ohgo/internal/prompts"
@@ -107,14 +109,32 @@ func run(cmd *cobra.Command, args []string) error {
 	pluginMgr := plugins.NewManager()
 	authMgr := auth.NewManager("")
 
+	// Config directory (used by multiple subsystems)
+	skillDir, _ := config.ConfigDir()
+
 	// Bridge subsystem
 	bridgeMgr := bridge.NewManager()
 	bridgeMgr.Register(bridge.NewClaudeCLI())
 	bridgeMgr.Register(bridge.NewCodexBridge())
 	defer bridgeMgr.CloseAll()
 
+	// MCP subsystem
+	mcpMgr := mpcpkg.NewManager()
+	defer mcpMgr.CloseAll()
+
+	// Coordinator subsystem
+	coordDirs := []string{}
+	if skillDir != "" {
+		coordDirs = append(coordDirs, filepath.Join(skillDir, "agents"))
+	}
+	coordLoader := coordinator.NewLoader(coordDirs...)
+	agentDefs, _ := coordLoader.LoadAll(ctx)
+	ogBinPath, _ := os.Executable()
+	coord := coordinator.New(ogBinPath)
+	coord.RegisterDefs(agentDefs)
+	defer coord.Shutdown()
+
 	// Load user skills
-	skillDir, _ := config.ConfigDir()
 	if skillDir != "" {
 		loader := skills.NewLoader(filepath.Join(skillDir, "skills"))
 		userSkills, err := loader.LoadAll(ctx)
@@ -147,7 +167,16 @@ func run(cmd *cobra.Command, args []string) error {
 		SkillReg:  skillReg,
 		TaskMgr:   taskMgr,
 		PluginMgr: pluginMgr,
+		MCPMgr:    mcpMgr,
+		Coord:     coord,
 	})
+
+	// Connect MCP servers from config.
+	if len(cfg.MCP.Servers) > 0 {
+		if err := mcpMgr.ConnectAll(ctx, cfg.MCP.Servers); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: MCP connect failed: %v\n", err)
+		}
+	}
 
 	// Build system prompt
 	assembler := prompts.NewAssembler("").WithCustomPrompt(cfg.SystemPrompt)

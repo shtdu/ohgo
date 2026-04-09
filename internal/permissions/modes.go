@@ -38,12 +38,15 @@ func ParseMode(s string) Mode {
 // All other tools default to CategoryWrite (safe default).
 func ClassifyTool(toolName string) ToolCategory {
 	readTools := map[string]bool{
-		"read_file":   true,
-		"glob":        true,
-		"grep":        true,
-		"web_fetch":   true,
-		"web_search":  true,
-		"lsp":         true,
+		"read_file":          true,
+		"glob":               true,
+		"grep":               true,
+		"web_fetch":          true,
+		"web_search":         true,
+		"lsp":                true,
+		"mcp_list_resources": true,
+		"mcp_read_resource":  true,
+		"mcp_auth":           true,
 	}
 	if readTools[toolName] {
 		return CategoryRead
