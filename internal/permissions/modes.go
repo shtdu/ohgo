@@ -34,7 +34,9 @@ func ParseMode(s string) Mode {
 }
 
 // ClassifyTool returns the category for a given tool name.
-// Known read tools: read_file, glob, grep, web_fetch, web_search, lsp.
+// Known read tools: read_file, glob, grep, web_fetch, web_search, lsp, mcp_list_resources, mcp_read_resource, mcp_auth.
+// mcp_call_tool is intentionally NOT classified as read — it invokes arbitrary
+// tools on MCP servers which may mutate state, so it defaults to CategoryWrite.
 // All other tools default to CategoryWrite (safe default).
 func ClassifyTool(toolName string) ToolCategory {
 	readTools := map[string]bool{

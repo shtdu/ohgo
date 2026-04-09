@@ -29,6 +29,8 @@ import (
 	"github.com/shtdu/ohgo/internal/tools"
 	"github.com/shtdu/ohgo/internal/tools/builtin"
 	toolcron "github.com/shtdu/ohgo/internal/tools/cron"
+	"github.com/shtdu/ohgo/internal/tools/message"
+	"github.com/shtdu/ohgo/internal/ui"
 )
 
 var (
@@ -100,6 +102,20 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	permChecker := permissions.NewDefaultChecker(permSettings)
 
+	// Interactive UI (for ask_user and permission prompts)
+	termUI := ui.New(os.Stdout, os.Stdin)
+	permPrompt := ui.NewPermissionPrompter(bufio.NewReader(os.Stdin), termUI)
+
+	// Message emitter prints notifications to stderr
+	msgEmitter := func(msg message.Message) error {
+		prefix := "message"
+		if msg.Level != "" {
+			prefix = msg.Level
+		}
+		fmt.Fprintf(os.Stderr, "[%s] %s\n", prefix, msg.Content)
+		return nil
+	}
+
 	// Register tools with dependencies
 	cronMgr := toolcron.NewManager()
 
@@ -160,15 +176,17 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	builtin.RegisterAll(registry, builtin.ToolDeps{
-		Checker:   permChecker,
-		Settings:  cfg,
-		Registry:  registry,
-		CronMgr:   cronMgr,
-		SkillReg:  skillReg,
-		TaskMgr:   taskMgr,
-		PluginMgr: pluginMgr,
-		MCPMgr:    mcpMgr,
-		Coord:     coord,
+		Checker:     permChecker,
+		Settings:    cfg,
+		Registry:    registry,
+		CronMgr:     cronMgr,
+		SkillReg:    skillReg,
+		TaskMgr:     taskMgr,
+		PluginMgr:   pluginMgr,
+		MCPMgr:      mcpMgr,
+		Coord:       coord,
+		AskPrompter: termUI,
+		MsgEmitter:  msgEmitter,
 	})
 
 	// Connect MCP servers from config.
@@ -200,6 +218,7 @@ func run(cmd *cobra.Command, args []string) error {
 		Hooks:      hookExec,
 		APIClient:  apiClient,
 		EventCh:    eventCh,
+		PermPrompt: permPrompt,
 	})
 
 	// Register slash commands

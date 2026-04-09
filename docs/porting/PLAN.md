@@ -185,8 +185,8 @@ Remaining tools for full feature parity.
 
 | # | Python Source | Go Target | Description | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 4.1 | `tools/agent_tool.py` | `internal/tools/agent/agent.go` | Spawn subagent | 3.9, coordinator | `agent_test.go`: mock engine, verify prompt passed, result returned | TODO |
-| 4.2 | `tools/ask_user_question_tool.py` | `internal/tools/ask/ask.go` | Interactive user question | UI | `ask_test.go`: mock UI, verify question rendered, answer returned | TODO |
+| 4.1 | `tools/agent_tool.py` | `internal/tools/agent/spawn.go` | Spawn subagent | 3.9, coordinator | `spawn_test.go`: mock coordinator, verify spawn called | DONE |
+| 4.2 | `tools/ask_user_question_tool.py` | `internal/tools/ask/ask.go` | Interactive user question | UI | `ask_test.go`: mock Prompter, verify question/options passed | DONE |
 | 4.3 | `tools/brief_tool.py` | `internal/tools/brief/brief.go` | Brief mode toggle | — | `brief_test.go`: toggle state | DONE |
 | 4.4 | `tools/config_tool.py` | `internal/tools/config/config.go` | Read/write config from tool | 1.3 | `config_test.go`: read key, write key, missing key | DONE |
 | 4.5 | `tools/cron_create_tool.py` | `internal/tools/cron/create.go` | Create cron job | robfig/cron | `create_test.go`: valid cron expr, invalid expr, duplicate | DONE |
@@ -199,7 +199,7 @@ Remaining tools for full feature parity.
 | 4.12 | `tools/exit_worktree_tool.py` | `internal/tools/worktree/exit.go` | Leave git worktree | — | `exit_test.go`: mock git, verify cleanup | DONE |
 | 4.13 | `tools/notebook_edit_tool.py` | `internal/tools/notebook/edit.go` | Jupyter notebook cell editing | — | `edit_test.go`: read .ipynb, replace cell, insert cell, delete cell | DONE |
 | 4.14 | `tools/sleep_tool.py` | `internal/tools/sleep/sleep.go` | Delay execution | — | `sleep_test.go`: short sleep completes, context cancel interrupts | DONE |
-| 4.15 | `tools/send_message_tool.py` | `internal/tools/message/message.go` | Send message to user | — | `message_test.go`: message captured | TODO |
+| 4.15 | `tools/send_message_tool.py` | `internal/tools/message/send.go` | Send message to user | — | `send_test.go`: message captured by emitter | DONE |
 | 4.16 | `tools/skill_tool.py` | `internal/tools/skill/skill.go` | Invoke a skill | skills package | `skill_test.go`: mock loader, verify skill loaded | DONE |
 | 4.17 | `tools/remote_trigger_tool.py` | `internal/tools/remote/trigger.go` | Trigger remote action | — | `trigger_test.go`: mock HTTP, verify request | DONE |
 | 4.18 | `tools/todo_write_tool.py` | `internal/tools/todo/todo.go` | Write todo list | — | `todo_test.go`: write todos, clear todos | DONE |
@@ -220,17 +220,17 @@ Remaining tools for full feature parity.
 
 | # | Python Source | Go Target | Description | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 4.26 | `tools/team_create_tool.py` | `internal/tools/team/create.go` | Create agent team | coordinator | `create_test.go`: valid team, duplicate name | TODO |
-| 4.27 | `tools/team_delete_tool.py` | `internal/tools/team/delete.go` | Delete agent team | coordinator | `delete_test.go`: delete existing, delete missing | TODO |
+| 4.26 | `tools/team_create_tool.py` | `internal/tools/team/create.go` | Create agent team | coordinator | `create_test.go`: valid team, duplicate name | DONE |
+| 4.27 | `tools/team_delete_tool.py` | `internal/tools/team/delete.go` | Delete agent team | coordinator | `delete_test.go`: delete existing, delete missing | DONE |
 
 ### MCP Tools
 
 | # | Python Source | Go Target | Description | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 4.28 | `tools/mcp_tool.py` | `internal/tools/mcp/call.go` | Call MCP server tool | mcp package | `call_test.go`: mock MCP server, valid call, server error | TODO |
-| 4.29 | `tools/list_mcp_resources_tool.py` | `internal/tools/mcp/list.go` | List MCP resources | mcp package | `list_test.go`: mock server with resources, empty server | TODO |
-| 4.30 | `tools/read_mcp_resource_tool.py` | `internal/tools/mcp/read.go` | Read MCP resource | mcp package | `read_test.go`: mock server, read valid resource | TODO |
-| 4.31 | `tools/mcp_auth_tool.py` | `internal/tools/mcp/auth.go` | MCP authentication | mcp package | `auth_test.go`: mock auth flow | TODO |
+| 4.28 | `tools/mcp_tool.py` | `internal/tools/mcp/call.go` | Call MCP server tool | mcp package | `tools_test.go`: mock manager, valid call, server not found | DONE |
+| 4.29 | `tools/list_mcp_resources_tool.py` | `internal/tools/mcp/list_resources.go` | List MCP resources | mcp package | `tools_test.go`: mock manager, list resources | DONE |
+| 4.30 | `tools/read_mcp_resource_tool.py` | `internal/tools/mcp/read_resource.go` | Read MCP resource | mcp package | `tools_test.go`: mock manager, read valid resource | DONE |
+| 4.31 | `tools/mcp_auth_tool.py` | `internal/tools/mcp/auth.go` | MCP authentication | mcp package | `tools_test.go`: status reporting | DONE |
 
 ### Phase 4 Manual Test
 
@@ -271,7 +271,7 @@ Terminal rendering and slash commands.
 |---|---|---|---|---|---|---|
 | 5.1 | `ui/output.py` | `internal/ui/output.go` | Markdown rendering (glamour), styled output (lipgloss) | — | `output_test.go`: render markdown, render code block, render error, empty input | DONE |
 | 5.2 | `ui/input.py` | `internal/ui/input.go` | Interactive input with history (bubbletea/huh) | — | `input_test.go`: mock stdin, history navigation, empty input, multiline | DONE |
-| 5.3 | `ui/permission_dialog.py` | `internal/ui/permission.go` | Permission approval dialog | 5.2 | `permission_test.go`: mock approve/deny/skip, timeout defaults | TODO |
+| 5.3 | `ui/permission_dialog.py` | `internal/ui/permission.go` | Permission approval dialog | 5.2 | `permission_test.go`: mock approve/deny/always, context cancel | DONE |
 | 5.4 | `keybindings/` | `internal/ui/keybind.go` | Keybinding parser and resolver | — | `keybind_test.go`: parse binding config, resolve key sequence, default fallback | DONE |
 | 5.5 | `output_styles/` | `internal/ui/styles.go` | Output style presets | 5.1 | `styles_test.go`: all preset names valid, each produces non-empty output | DONE |
 
@@ -382,15 +382,15 @@ Self-contained subsystems that the engine and tools depend on.
 | 6.4 | `memory/types.py` + `scan.py` | `internal/memory/scan.go` + `types.go` | `Header`, `Scan()` | 6.3 | `scan_test.go`: scan temp dir, parse headers, empty dir | DONE |
 | 6.5 | `memory/manager.py` + `memdir.py` | `internal/memory/memory.go` | `Store.Add()`, `Store.Remove()`, `Store.List()`, `Store.LoadPrompt()`, `MEMORY.md` index | 6.3, 6.4 | `memory_test.go`: add+list round-trip, remove updates index, load prompt | DONE |
 | 6.6 | `memory/search.py` | `internal/memory/search.go` | `Find()`, relevance scoring with ASCII + Han tokenization | 6.4 | `search_test.go`: keyword match, no match, Han chars | DONE |
-| 6.7 | `mcp/config.py` | `internal/mcp/config.go` | `McpServerConfig`, load from settings | 1.3 | `config_test.go`: parse valid config, missing server, invalid transport | TODO |
-| 6.8 | `mcp/types.py` | `internal/mcp/types.go` | `McpTool`, `McpResource`, protocol types | — | `types_test.go`: JSON round-trip all types | TODO |
-| 6.9 | `mcp/client.py` | `internal/mcp/client.go` | `Client`, `Connect()`, `CallTool()`, `ListTools()` | 6.7, 6.8, mcp-go | `client_test.go`: mock stdio MCP server, connect, list tools, call tool, error handling | TODO |
+| 6.7 | `mcp/config.py` | `internal/config/schema.go` (MCP fields) | `MCPServerConfig`, load from settings | 1.3 | `schema_mcp_test.go`: parse valid config, IsEnabled, JSON round-trip | DONE |
+| 6.8 | `mcp/types.py` | `internal/mcp/manager.go` (ServerConn) | `ServerConn`, protocol types via go-sdk | — | `manager_test.go`: transport creation, validation | DONE |
+| 6.9 | `mcp/client.py` | `internal/mcp/manager.go` | `Manager`, `Connect()`, `CallTool()`, `ListTools()` | 6.7, 6.8, go-sdk | `manager_test.go`: empty manager, connect all, close all | DONE |
 | 6.10 | `plugins/types.py` + `schemas.py` | `internal/plugins/types.go` | `Manifest`, `LoadedPlugin` | — | `types_test.go`: parse valid manifest, missing fields, JSON round-trip | DONE |
 | 6.11 | `plugins/loader.py` | `internal/plugins/loader.go` | `Discover()`, directory scanning | 6.10 | `loader_test.go`: scan temp plugin dir, nested plugins, invalid plugin.json | DONE |
 | 6.12 | `plugins/installer.py` | `internal/plugins/installer.go` | `Install()`, `Uninstall()` | 6.10 | `installer_test.go`: install from source, uninstall by name, missing plugin | DONE |
-| 6.13 | `coordinator/agent_definitions.py` | `internal/coordinator/defs.go` | `AgentDefinition`, YAML loading | 6.1 | `defs_test.go`: parse valid YAML, tool filtering, model override | TODO |
-| 6.14 | `coordinator/coordinator_mode.py` | `internal/coordinator/mode.go` | `CoordinatorMode`, agent lifecycle | 6.13 | `mode_test.go`: spawn agent, verify isolation, cleanup | TODO |
-| 6.15 | `coordinator/registry.py` | `internal/coordinator/registry.go` | Agent registry, spawning | 6.14 | `registry_test.go`: register, lookup, list, concurrent access | TODO |
+| 6.13 | `coordinator/agent_definitions.py` | `internal/coordinator/agent.go` + `loader.go` | `AgentDef`, YAML loading from directories | 6.1 | `loader_test.go`: parse valid YAML, tool filtering, model override | DONE |
+| 6.14 | `coordinator/coordinator_mode.py` | `internal/coordinator/coordinator.go` | `Coordinator`, agent lifecycle via subprocess | 6.13 | `coordinator_test.go`: spawn agent, stop, list, shutdown | DONE |
+| 6.15 | `coordinator/registry.py` | `internal/coordinator/coordinator.go` | Agent registry, team management | 6.14 | `coordinator_test.go`: register defs, create/delete teams | DONE |
 | 6.16 | `tasks/` | `internal/tasks/manager.go` + `types.go` | `Manager`, `CreateShell()`, `Stop()`, `ReadOutput()`, subprocess lifecycle | — | `manager_test.go`: start task, get output, stop task, list tasks, context cancel | DONE |
 | 6.17 | `sandbox/adapter.py` | `internal/sandbox/sandbox.go` | `Availability`, `CheckAvailability()`, `WrapCommand()` | — | `sandbox_test.go`: availability check, wrap command, config generation | DONE |
 

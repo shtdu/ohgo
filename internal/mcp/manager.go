@@ -5,6 +5,7 @@ package mcp
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os/exec"
 	"sync"
 
@@ -170,18 +171,61 @@ func newTransport(cfg config.MCPServerConfig) (mcp.Transport, error) {
 		if cmd == "" {
 			return nil, fmt.Errorf("mcp: stdio transport requires a command")
 		}
-		return &mcp.CommandTransport{Command: exec.Command(cmd, cfg.Args...)}, nil
+		execCmd := exec.Command(cmd, cfg.Args...)
+		// Inject custom environment variables.
+		if len(cfg.Env) > 0 {
+			execCmd.Env = append(execCmd.Environ(), envMapToSlice(cfg.Env)...)
+		}
+		return &mcp.CommandTransport{Command: execCmd}, nil
 	case "streamable_http":
 		if cfg.URL == "" {
 			return nil, fmt.Errorf("mcp: streamable_http transport requires a URL")
 		}
-		return &mcp.StreamableClientTransport{Endpoint: cfg.URL}, nil
+		return &mcp.StreamableClientTransport{
+			Endpoint:   cfg.URL,
+			HTTPClient: httpClientWithHeaders(cfg.Headers),
+		}, nil
 	case "sse":
 		if cfg.URL == "" {
 			return nil, fmt.Errorf("mcp: sse transport requires a URL")
 		}
-		return &mcp.SSEClientTransport{Endpoint: cfg.URL}, nil
+		return &mcp.SSEClientTransport{
+			Endpoint:   cfg.URL,
+			HTTPClient: httpClientWithHeaders(cfg.Headers),
+		}, nil
 	default:
 		return nil, fmt.Errorf("mcp: unknown transport %q", cfg.Transport)
 	}
+}
+
+// envMapToSlice converts a map of environment variables to "KEY=VALUE" slices.
+func envMapToSlice(env map[string]string) []string {
+	s := make([]string, 0, len(env))
+	for k, v := range env {
+		s = append(s, k+"="+v)
+	}
+	return s
+}
+
+// httpClientWithHeaders creates an *http.Client that injects the given headers
+// into every request. Returns nil if headers is empty (so the SDK uses its default).
+func httpClientWithHeaders(headers map[string]string) *http.Client {
+	if len(headers) == 0 {
+		return nil
+	}
+	return &http.Client{
+		Transport: &headerTransport{headers: headers},
+	}
+}
+
+// headerTransport wraps http.DefaultTransport and adds custom headers.
+type headerTransport struct {
+	headers map[string]string
+}
+
+func (t *headerTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	for k, v := range t.headers {
+		req.Header.Set(k, v)
+	}
+	return http.DefaultTransport.RoundTrip(req)
 }

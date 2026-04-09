@@ -47,6 +47,28 @@ func (u *UI) PrintError(msg string) {
 	fmt.Fprintln(u.err, msg)
 }
 
+// AskQuestion prompts the user with a question and optional choices,
+// then returns their answer. It satisfies the ask.Prompter interface.
+func (u *UI) AskQuestion(ctx context.Context, question string, options []string, defaultVal string) (string, error) {
+	fmt.Fprintln(u.out, question)
+	if len(options) > 0 {
+		fmt.Fprintf(u.out, "  Options: %v\n", options)
+	}
+	if defaultVal != "" {
+		fmt.Fprintf(u.out, "  Default: %s\n", defaultVal)
+	}
+	fmt.Fprint(u.out, "  Answer: ")
+
+	answer, err := u.Prompt(ctx, "")
+	if err != nil {
+		return "", err
+	}
+	if answer == "" && defaultVal != "" {
+		return defaultVal, nil
+	}
+	return answer, nil
+}
+
 // Prompt displays a prompt and reads a line of user input.
 func (u *UI) Prompt(ctx context.Context, prompt string) (string, error) {
 	fmt.Fprint(u.out, prompt)

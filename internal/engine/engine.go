@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"unicode/utf8"
 
 	"github.com/shtdu/ohgo/internal/api"
 	"github.com/shtdu/ohgo/internal/hooks"
@@ -349,8 +350,14 @@ var _ = json.RawMessage{}
 
 // summarizeArgs returns a short summary of tool arguments for display.
 func summarizeArgs(args json.RawMessage) string {
-	if len(args) > 200 {
-		return string(args[:200]) + "..."
+	const maxLen = 200
+	if len(args) <= maxLen {
+		return string(args)
 	}
-	return string(args)
+	// Find a safe UTF-8 boundary to avoid splitting multi-byte characters.
+	end := maxLen
+	for end > 0 && !utf8.RuneStart(args[end]) {
+		end--
+	}
+	return string(args[:end]) + "..."
 }
