@@ -19,7 +19,7 @@ cmd/og/          # CLI entrypoint (the `og` binary)
 cmd/ogmo/        # ohmo personal agent binary
 internal/        # private application packages
   engine/        # agent loop, streaming, retry
-  tools/         # 43+ tools (file I/O, shell, search, web, MCP)
+  tools/         # 28 tool packages (file I/O, shell, search, web, MCP, cron, worktree, etc.)
   skills/        # on-demand markdown skill loading
   plugins/       # plugin system (commands, hooks, agents)
   permissions/   # multi-level permission modes and path rules
@@ -34,6 +34,7 @@ internal/        # private application packages
   api/           # Anthropic and OpenAI-compatible API clients
   auth/          # authentication flows (OAuth device flow, etc.)
   bridge/        # subscription bridges (Claude CLI, Codex CLI)
+  sandbox/       # sandboxed command execution
   ui/            # terminal UI
   channels/      # IM channel integrations (Telegram, Slack, Discord, Feishu)
 docs/            # project documentation
@@ -43,30 +44,46 @@ go.sum
 
 ## Build & Development Commands
 
+A Makefile is provided. Prefer `make` targets over raw `go` commands.
+
 ```bash
-# Build
-go build ./cmd/og
+# Build both binaries (output in bin/)
+make            # or make build
 
-# Run
-go run ./cmd/og
+# Build a single binary
+make build-og
+make build-ogmo
 
-# Test all
-go test ./...
+# Run tests
+make test       # all packages
+make test-v     # verbose
 
 # Test a single package
-go test ./internal/engine/...
+make test-pkg PKG=./internal/engine
 
-# Test a specific test
-go test ./internal/engine/ -run TestQueryEngine -v
-
-# Vet
-go vet ./...
-
-# Lint (requires golangci-lint)
-golangci-lint run
+# Static analysis
+make vet        # go vet
+make lint       # golangci-lint (requires golangci-lint)
 
 # Format
-gofmt -w .
+make fmt        # gofmt -w .
+
+# Install to GOPATH/bin
+make install
+
+# Run the main binary
+make run
+
+# Clean build artifacts
+make clean
+```
+
+Raw Go commands still work:
+
+```bash
+go build -o bin/og ./cmd/og
+go test ./...
+go vet ./...
 ```
 
 ## Architecture (Ported from Python)
