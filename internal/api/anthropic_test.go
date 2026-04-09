@@ -89,6 +89,108 @@ func TestAnthropicClient_TextStreaming(t *testing.T) {
 	assert.True(t, gotUsage, "should receive usage event")
 }
 
+func TestAnthropicClient_TextAccumulatedInContentBlock(t *testing.T) {
+	// Verify that text_delta fragments are accumulated into contentBlock.Text
+	// on content_block_stop (the behavior added by the textParts accumulator).
+	sseEvents := []string{
+		"event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":5}}}\n\n",
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"Go\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\" \"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"rewritten\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n",
+		"event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens\":3}}\n\n",
+		"event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n",
+	}
+
+	server := mockSSEServer(sseEvents)
+	defer server.Close()
+
+	client := NewAnthropicClient(
+		WithAPIKey("test-key"),
+		WithBaseURL(server.URL + "/v1/messages"),
+	)
+
+	ch, err := client.Stream(context.Background(), StreamOptions{
+		Model:     "claude-sonnet-4-6",
+		MaxTokens: 100,
+		Messages:  []Message{NewUserTextMessage("hi")},
+	})
+	require.NoError(t, err)
+
+	for event := range ch {
+		if event.Type == "message_complete" {
+			msg := event.Data.(Message)
+			require.Len(t, msg.Content, 1)
+			assert.Equal(t, "Go rewritten", msg.Content[0].Text,
+				"text delta fragments should be accumulated into contentBlock.Text")
+			assert.Equal(t, "text", msg.Content[0].Type)
+		}
+	}
+}
+
+func TestAnthropicClient_MultipleContentBlocks_ResetTextParts(t *testing.T) {
+	// Verify textParts resets between content blocks (text + tool_use + text).
+	sseEvents := []string{
+		"event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":10}}}\n\n",
+
+		// Block 0: text
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"Let me check\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n",
+
+		// Block 1: tool_use with input_json_delta
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"tool_use\",\"id\":\"tool_1\",\"name\":\"bash\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"input_json_delta\",\"partial_json\":\"{\\\"command\\\":\\\"ls\\\"}\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n",
+
+		// Block 2: text (continues after tool result)
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"Done.\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n",
+
+		"event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens\":10}}\n\n",
+		"event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n",
+	}
+
+	server := mockSSEServer(sseEvents)
+	defer server.Close()
+
+	client := NewAnthropicClient(
+		WithAPIKey("test-key"),
+		WithBaseURL(server.URL + "/v1/messages"),
+	)
+
+	ch, err := client.Stream(context.Background(), StreamOptions{
+		Model:     "claude-sonnet-4-6",
+		MaxTokens: 200,
+		Messages:  []Message{NewUserTextMessage("list files")},
+	})
+	require.NoError(t, err)
+
+	for event := range ch {
+		if event.Type == "message_complete" {
+			msg := event.Data.(Message)
+			require.Len(t, msg.Content, 3)
+
+			// Block 0: text
+			assert.Equal(t, "text", msg.Content[0].Type)
+			assert.Equal(t, "Let me check", msg.Content[0].Text)
+
+			// Block 1: tool_use
+			assert.Equal(t, "tool_use", msg.Content[1].Type)
+			assert.Equal(t, "bash", msg.Content[1].Name)
+			assert.Equal(t, "tool_1", msg.Content[1].ID)
+			assert.JSONEq(t, `{"command":"ls"}`, string(msg.Content[1].Input))
+
+			// Block 2: text — verifies textParts was reset between blocks
+			assert.Equal(t, "text", msg.Content[2].Type)
+			assert.Equal(t, "Done.", msg.Content[2].Text,
+				"textParts must reset between content blocks, not leak from block 0")
+		}
+	}
+}
+
 func TestAnthropicClient_AuthError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(401)
