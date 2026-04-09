@@ -178,6 +178,7 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 	var eventType string
 	var contentBlocks []ContentBlock
 	var toolInputParts []string // accumulates input_json_delta fragments
+	var textParts []string     // accumulates text_delta fragments
 	var usage UsageSnapshot
 
 	for scanner.Scan() {
@@ -215,6 +216,7 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 
 		case "content_block_start":
 			toolInputParts = nil
+			textParts = nil
 			var block struct {
 				ContentBlock ContentBlock `json:"content_block"`
 			}
@@ -233,6 +235,7 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 			}
 			if json.Unmarshal([]byte(data), &delta) == nil {
 				if delta.Delta.Type == "text_delta" && delta.Delta.Text != "" {
+					textParts = append(textParts, delta.Delta.Text)
 					ch <- StreamEvent{Type: "text_delta", Data: delta.Delta.Text}
 				}
 				if delta.Delta.Type == "input_json_delta" && delta.Delta.PartialJSON != "" {
@@ -241,11 +244,17 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 			}
 
 		case "content_block_stop":
-			if len(toolInputParts) > 0 && len(contentBlocks) > 0 {
-				combined := strings.Join(toolInputParts, "")
+			if len(contentBlocks) > 0 {
 				idx := len(contentBlocks) - 1
-				contentBlocks[idx].Input = json.RawMessage(combined)
-				toolInputParts = nil
+				if len(textParts) > 0 {
+					contentBlocks[idx].Text = strings.Join(textParts, "")
+					textParts = nil
+				}
+				if len(toolInputParts) > 0 {
+					combined := strings.Join(toolInputParts, "")
+					contentBlocks[idx].Input = json.RawMessage(combined)
+					toolInputParts = nil
+				}
 			}
 
 		case "message_delta":
