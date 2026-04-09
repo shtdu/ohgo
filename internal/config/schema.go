@@ -24,6 +24,28 @@ type MemorySettings struct {
 	MaxEntrypointLines int  `json:"max_entrypoint_lines"`
 }
 
+// MCPServerConfig describes a single MCP server connection.
+type MCPServerConfig struct {
+	Name      string            `json:"name"`
+	Transport string            `json:"transport"`            // "stdio", "sse", "streamable_http"
+	Command   string            `json:"command,omitempty"`    // for stdio
+	Args      []string          `json:"args,omitempty"`       // for stdio
+	URL       string            `json:"url,omitempty"`        // for sse/streamable_http
+	Headers   map[string]string `json:"headers,omitempty"`    // for HTTP transports
+	Env       map[string]string `json:"env,omitempty"`        // extra env vars
+	Enabled   *bool             `json:"enabled,omitempty"`    // nil = true
+}
+
+// IsEnabled returns true if the server is enabled (default true).
+func (c MCPServerConfig) IsEnabled() bool {
+	return c.Enabled == nil || *c.Enabled
+}
+
+// MCPSettings configures MCP server connections.
+type MCPSettings struct {
+	Servers []MCPServerConfig `json:"servers"`
+}
+
 // ProviderProfile is a named provider workflow configuration.
 type ProviderProfile struct {
 	Label         string   `json:"label"`
@@ -63,6 +85,7 @@ type Settings struct {
 	SystemPrompt string             `json:"system_prompt,omitempty"`
 	Permission   PermissionSettings `json:"permission"`
 	Memory       MemorySettings     `json:"memory"`
+	MCP          MCPSettings        `json:"mcp"`
 
 	// UI
 	Theme       string `json:"theme"`
