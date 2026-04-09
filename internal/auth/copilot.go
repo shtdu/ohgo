@@ -13,19 +13,27 @@ import (
 )
 
 const (
-	copilotClientID      = "Iv1.b507a08c87ecfe98"
-	githubDeviceCodeURL  = "https://github.com/login/device/code"
-	githubAccessTokenURL = "https://github.com/login/oauth/access_token"
+	copilotClientID       = "Iv1.b507a08c87ecfe98"
+	defaultDeviceCodeURL  = "https://github.com/login/device/code"
+	defaultAccessTokenURL = "https://github.com/login/oauth/access_token"
 )
 
 // CopilotDeviceFlow implements OAuth 2.0 Device Authorization Grant for GitHub Copilot.
 type CopilotDeviceFlow struct {
-	ClientID string
+	ClientID       string
+	DeviceCodeURL  string
+	AccessTokenURL string
+	httpClient     *http.Client
 }
 
 // NewCopilotDeviceFlow creates a new Copilot device flow.
 func NewCopilotDeviceFlow() *CopilotDeviceFlow {
-	return &CopilotDeviceFlow{ClientID: copilotClientID}
+	return &CopilotDeviceFlow{
+		ClientID:       copilotClientID,
+		DeviceCodeURL:  defaultDeviceCodeURL,
+		AccessTokenURL: defaultAccessTokenURL,
+		httpClient:     http.DefaultClient,
+	}
 }
 
 // Name returns the flow name.
@@ -74,14 +82,14 @@ func (f *CopilotDeviceFlow) requestDeviceCode(ctx context.Context) (*deviceCodeR
 		"scope":     {"copilot"},
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, githubDeviceCodeURL, strings.NewReader(data.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, f.DeviceCodeURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := f.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -102,8 +110,8 @@ func (f *CopilotDeviceFlow) requestDeviceCode(ctx context.Context) (*deviceCodeR
 
 func (f *CopilotDeviceFlow) pollForToken(ctx context.Context, codeResp *deviceCodeResponse) (string, error) {
 	interval := time.Duration(codeResp.Interval) * time.Second
-	if interval < 5*time.Second {
-		interval = 5 * time.Second
+	if interval < 1*time.Second {
+		interval = 1 * time.Second
 	}
 	deadline := time.After(time.Duration(codeResp.ExpiresIn) * time.Second)
 
@@ -116,7 +124,6 @@ func (f *CopilotDeviceFlow) pollForToken(ctx context.Context, codeResp *deviceCo
 		case <-time.After(interval):
 			token, err := f.checkToken(ctx, codeResp.DeviceCode)
 			if err != nil {
-				// "authorization_pending" means user hasn't authorized yet.
 				if strings.Contains(err.Error(), "authorization_pending") {
 					continue
 				}
@@ -137,14 +144,14 @@ func (f *CopilotDeviceFlow) checkToken(ctx context.Context, deviceCode string) (
 		"device_code": {deviceCode},
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, githubAccessTokenURL, strings.NewReader(data.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, f.AccessTokenURL, strings.NewReader(data.Encode()))
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Set("Accept", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := f.httpClient.Do(req)
 	if err != nil {
 		return "", err
 	}

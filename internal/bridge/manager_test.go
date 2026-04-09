@@ -33,6 +33,7 @@ func (m *mockBridge) Close() error {
 	m.connected = false
 	return nil
 }
+func (m *mockBridge) IsConnected() bool { return m.connected }
 
 func TestManager_RegisterAndConnect(t *testing.T) {
 	m := NewManager()

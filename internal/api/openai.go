@@ -141,6 +141,18 @@ func (c *OpenAIClient) buildRequestBody(opts StreamOptions) ([]byte, error) {
 
 // newOpenAIFactory returns a ClientFactory for OpenAI-compatible providers.
 func newOpenAIFactory(profile config.ProviderProfile, apiKey string) (Client, error) {
+	// For codex profiles, try extracting token from Codex CLI config.
+	if profile.AuthSource == "codex_subscription" && apiKey == "" {
+		token, baseURL, err := extractCodexToken()
+		if err != nil {
+			return nil, fmt.Errorf("codex: %w", err)
+		}
+		apiKey = token
+		if profile.BaseURL == "" {
+			profile.BaseURL = baseURL
+		}
+	}
+
 	opts := []OpenAIClientOption{WithOpenAIAPIKey(apiKey)}
 	if profile.BaseURL != "" {
 		opts = append(opts, WithOpenAIBaseURL(profile.BaseURL))

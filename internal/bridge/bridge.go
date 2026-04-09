@@ -13,4 +13,7 @@ type Bridge interface {
 
 	// Close shuts down the bridge connection.
 	Close() error
+
+	// IsConnected reports whether the bridge is currently connected.
+	IsConnected() bool
 }

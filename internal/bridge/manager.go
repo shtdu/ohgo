@@ -67,8 +67,8 @@ func (m *Manager) Status() []BridgeStatus {
 	statuses := make([]BridgeStatus, 0, len(m.bridges))
 	for _, b := range m.bridges {
 		statuses = append(statuses, BridgeStatus{
-			Name: b.Name(),
-			// Connected state is tracked by individual bridge implementations.
+			Name:      b.Name(),
+			Connected: b.IsConnected(),
 		})
 	}
 	return statuses
