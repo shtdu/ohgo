@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"unicode/utf8"
 
@@ -276,7 +276,7 @@ func (e *Engine) emit(event EngineEvent) {
 		select {
 		case e.opts.EventCh <- event:
 		default:
-			log.Printf("engine event channel full, dropping event type %d", event.Type)
+			slog.Warn("engine event channel full, dropping event", "type", event.Type)
 		}
 	}
 }

@@ -47,6 +47,11 @@ func (r *Registry) Register(apiFormat string, factory ClientFactory) {
 func (r *Registry) CreateClient(cfg *config.Settings, profileName string) (Client, error) {
 	_, profile := cfg.ResolveProfile(profileName)
 
+	// Settings-level overrides take precedence over profile values.
+	if cfg.BaseURL != "" {
+		profile.BaseURL = cfg.BaseURL
+	}
+
 	// Resolve API key: settings → profile env var fallback.
 	apiKey := cfg.ResolveAPIKey()
 	if apiKey == "" {

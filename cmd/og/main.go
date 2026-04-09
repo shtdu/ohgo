@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -65,6 +66,13 @@ func main() {
 }
 
 func run(cmd *cobra.Command, args []string) error {
+	// Set up logger based on --verbose flag.
+	logLevel := new(slog.LevelVar)
+	if verboseFlag {
+		logLevel.Set(slog.LevelDebug)
+	}
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel})))
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
@@ -87,7 +95,7 @@ func run(cmd *cobra.Command, args []string) error {
 	apiReg := api.NewRegistry()
 	apiClient, err := apiReg.CreateClient(cfg, profileFlag)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "warning: failed to create API client: %v\n", err)
+		slog.Warn("failed to create API client, using fallback", "error", err)
 		apiClient = api.NewAnthropicClient() // fallback
 	}
 
@@ -171,7 +179,7 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	if len(pluginDirs) > 0 {
 		if err := pluginMgr.Discover(ctx, pluginDirs...); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: plugin discovery failed: %v\n", err)
+			slog.Warn("plugin discovery failed", "error", err)
 		}
 	}
 
@@ -192,7 +200,7 @@ func run(cmd *cobra.Command, args []string) error {
 	// Connect MCP servers from config.
 	if len(cfg.MCP.Servers) > 0 {
 		if err := mcpMgr.ConnectAll(ctx, cfg.MCP.Servers); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: MCP connect failed: %v\n", err)
+			slog.Warn("MCP connect failed", "error", err)
 		}
 	}
 
@@ -200,7 +208,7 @@ func run(cmd *cobra.Command, args []string) error {
 	assembler := prompts.NewAssembler("").WithCustomPrompt(cfg.SystemPrompt)
 	systemPrompt, err := assembler.Build(ctx)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "warning: failed to build system prompt: %v\n", err)
+		slog.Warn("failed to build system prompt, using default", "error", err)
 		systemPrompt = "You are a helpful coding assistant."
 	}
 

@@ -3,7 +3,7 @@ package coordinator
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -48,11 +48,11 @@ func (l *Loader) LoadAll(ctx context.Context) ([]*AgentDef, error) {
 			path := filepath.Join(dir, entry.Name())
 			def, err := parseAgentFile(path)
 			if err != nil {
-				log.Printf("coordinator: skipping invalid agent file %s: %v", path, err)
+				slog.Warn("skipping invalid agent file", "path", path, "error", err)
 				continue
 			}
 			if def.Name == "" {
-				log.Printf("coordinator: skipping agent file %s: missing name", path)
+				slog.Warn("skipping agent file with missing name", "path", path)
 				continue
 			}
 			defs = append(defs, def)

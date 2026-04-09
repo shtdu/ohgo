@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/exec"
@@ -112,7 +112,7 @@ func (e *DefinitionExecutor) executeHooks(ctx context.Context, hookDefs []HookDe
 		case HookTypePrompt, HookTypeAgent:
 			// Stub: prompt/agent hooks require an API client reference.
 			// Full implementation deferred to a later phase.
-			log.Printf("hooks: %s hook '%s' is not yet implemented, skipping", hook.Type, hook.Matcher)
+			slog.Debug("hook type not yet implemented, skipping", "type", hook.Type, "matcher", hook.Matcher)
 			hookResult = HookResult{HookType: hook.Type, Success: true}
 		default:
 			hookResult = HookResult{HookType: hook.Type, Success: true}

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -82,7 +82,7 @@ func (c *AnthropicClient) streamWithRetry(ctx context.Context, opts StreamOption
 				return
 			}
 			delay := retryDelay(attempt)
-			log.Printf("api retry attempt %d/%d after %s: %v", attempt+1, c.maxRetries, delay, err)
+			slog.Warn("api retry", "attempt", attempt+1, "max", c.maxRetries, "delay", delay, "error", err)
 			select {
 			case <-ctx.Done():
 				ch <- StreamEvent{Type: "error", Data: ctx.Err().Error()}
@@ -110,14 +110,24 @@ func (c *AnthropicClient) streamOnce(ctx context.Context, opts StreamOptions, ch
 	req.Header.Set("anthropic-version", apiVersionHeader)
 	req.Header.Set("Accept", "text/event-stream")
 
+	// Mask API key for logging: show first 8 chars + "...".
+	maskedKey := c.apiKey
+	if len(maskedKey) > 8 {
+		maskedKey = maskedKey[:8] + "..."
+	}
+	slog.Debug("anthropic request", "url", c.baseURL, "model", opts.Model, "api_key", maskedKey, "body_len", len(body))
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return &APIError{StatusCode: 0, Message: err.Error(), Retryable: true}
 	}
 	defer resp.Body.Close()
 
+	slog.Debug("anthropic response", "status", resp.StatusCode, "content_type", resp.Header.Get("Content-Type"))
+
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(resp.Body)
+		slog.Debug("anthropic error body", "body", string(respBody))
 		apiErr := TranslateAPIError(resp.StatusCode, string(respBody))
 		return apiErr
 	}

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
@@ -90,7 +90,7 @@ func (c *CopilotClient) streamWithRetry(ctx context.Context, opts StreamOptions,
 				return
 			}
 			delay := retryDelay(attempt)
-			log.Printf("copilot retry attempt %d/%d after %s: %v", attempt+1, c.maxRetries, delay, err)
+			slog.Warn("copilot retry", "attempt", attempt+1, "max", c.maxRetries, "delay", delay, "error", err)
 			select {
 			case <-ctx.Done():
 				ch <- StreamEvent{Type: "error", Data: ctx.Err().Error()}

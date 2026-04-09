@@ -157,3 +157,58 @@ func TestRegistry_DefaultProfile(t *testing.T) {
 	_, ok := client.(*AnthropicClient)
 	assert.True(t, ok)
 }
+
+func TestRegistry_SettingsBaseURLOverridesProfile(t *testing.T) {
+	r := NewRegistry()
+
+	// Profile has its own base URL, but settings should override it.
+	cfg := &config.Settings{
+		APIKey: "sk-test",
+		BaseURL: "https://settings-url.example.com/v1/messages",
+		Profiles: map[string]config.ProviderProfile{
+			"custom": {
+				Label:     "Custom",
+				Provider:  "anthropic",
+				APIFormat: "anthropic",
+				BaseURL:   "https://profile-url.example.com/v1/messages",
+			},
+		},
+		ActiveProfile: "custom",
+	}
+
+	client, err := r.CreateClient(cfg, "custom")
+	require.NoError(t, err)
+	ac, ok := client.(*AnthropicClient)
+	require.True(t, ok)
+	assert.Equal(t, "https://settings-url.example.com/v1/messages", ac.baseURL)
+}
+
+func TestRegistry_SettingsBaseURLWhenProfileHasNone(t *testing.T) {
+	r := NewRegistry()
+
+	// Profile has no base URL; settings provides one.
+	cfg := &config.Settings{
+		APIKey: "sk-test",
+		BaseURL: "https://settings-url.example.com/v1/messages",
+	}
+
+	client, err := r.CreateClient(cfg, "")
+	require.NoError(t, err)
+	ac, ok := client.(*AnthropicClient)
+	require.True(t, ok)
+	assert.Equal(t, "https://settings-url.example.com/v1/messages", ac.baseURL)
+}
+
+func TestRegistry_NoBaseURLUsesDefault(t *testing.T) {
+	r := NewRegistry()
+
+	cfg := &config.Settings{
+		APIKey: "sk-test",
+	}
+
+	client, err := r.CreateClient(cfg, "")
+	require.NoError(t, err)
+	ac, ok := client.(*AnthropicClient)
+	require.True(t, ok)
+	assert.Equal(t, "https://api.anthropic.com/v1/messages", ac.baseURL)
+}
