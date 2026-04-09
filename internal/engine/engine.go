@@ -299,6 +299,26 @@ func (e *Engine) SetMaxTurns(max int) {
 	e.opts.MaxTurns = max
 }
 
+// Model returns the current model name.
+func (e *Engine) Model() string {
+	return e.opts.Model
+}
+
+// MaxTurns returns the maximum turn count.
+func (e *Engine) MaxTurns() int {
+	return e.opts.MaxTurns
+}
+
+// SystemPrompt returns the current system prompt.
+func (e *Engine) SystemPrompt() string {
+	return e.opts.System
+}
+
+// Turns returns the number of completed turns.
+func (e *Engine) Turns() int {
+	return e.costTracker.Turns()
+}
+
 // LoadMessages replaces the conversation history.
 func (e *Engine) LoadMessages(msgs []api.Message) {
 	e.messages = make([]api.Message, len(msgs))

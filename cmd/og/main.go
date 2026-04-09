@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/shtdu/ohgo/internal/api"
+	"github.com/shtdu/ohgo/internal/commands"
 	"github.com/shtdu/ohgo/internal/config"
 	"github.com/shtdu/ohgo/internal/engine"
 	"github.com/shtdu/ohgo/internal/hooks"
@@ -172,6 +173,23 @@ func run(cmd *cobra.Command, args []string) error {
 		EventCh:    eventCh,
 	})
 
+	// Register slash commands
+	cmdReg := commands.NewRegistry()
+	commands.RegisterAll(cmdReg)
+	cwd, _ := os.Getwd()
+	cmdDeps := &commands.Deps{
+		Engine:    eng,
+		Config:    cfg,
+		ConfigMgr: cfgMgr,
+		Skills:    skillReg,
+		Tasks:     taskMgr,
+		Plugins:   pluginMgr,
+		ToolReg:   registry,
+		CmdReg:    cmdReg,
+		Cwd:       cwd,
+		Version:   "dev",
+	}
+
 	// Start event printer
 	done := make(chan struct{})
 	go func() {
@@ -185,7 +203,7 @@ func run(cmd *cobra.Command, args []string) error {
 		queryErr = eng.Query(ctx, promptFlag)
 	} else {
 		// Interactive REPL
-		queryErr = runREPL(ctx, eng)
+		queryErr = runREPL(ctx, eng, cmdDeps)
 	}
 	close(eventCh)
 	<-done
@@ -211,9 +229,9 @@ func printEvents(ch <-chan engine.EngineEvent) {
 	}
 }
 
-func runREPL(ctx context.Context, eng *engine.Engine) error {
+func runREPL(ctx context.Context, eng *engine.Engine, cmdDeps *commands.Deps) error {
 	fmt.Println("og - OpenHarness Go")
-	fmt.Println("Type a prompt and press Enter. Type /exit or Ctrl+C to quit.")
+	fmt.Println("Type a prompt and press Enter. Type /help for commands, /exit to quit.")
 	fmt.Println()
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -226,8 +244,21 @@ func runREPL(ctx context.Context, eng *engine.Engine) error {
 		if line == "" {
 			continue
 		}
-		if line == "/exit" || line == "exit" {
-			break
+
+		// Check for slash commands
+		if cmd, args, ok := cmdDeps.CmdReg.Lookup(line); ok {
+			result, err := cmd.Run(ctx, args, cmdDeps)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			} else {
+				if result.Output != "" {
+					fmt.Println(result.Output)
+				}
+				if result.ShouldExit {
+					break
+				}
+			}
+			continue
 		}
 
 		if err := eng.Query(ctx, line); err != nil {

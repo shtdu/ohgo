@@ -269,11 +269,11 @@ Terminal rendering and slash commands.
 
 | # | Python Source | Go Target | Description | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 5.1 | `ui/output.py` | `internal/ui/output.go` | Markdown rendering (glamour), styled output (lipgloss) | — | `output_test.go`: render markdown, render code block, render error, empty input | TODO |
-| 5.2 | `ui/input.py` | `internal/ui/input.go` | Interactive input with history (bubbletea/huh) | — | `input_test.go`: mock stdin, history navigation, empty input, multiline | TODO |
+| 5.1 | `ui/output.py` | `internal/ui/output.go` | Markdown rendering (glamour), styled output (lipgloss) | — | `output_test.go`: render markdown, render code block, render error, empty input | DONE |
+| 5.2 | `ui/input.py` | `internal/ui/input.go` | Interactive input with history (bubbletea/huh) | — | `input_test.go`: mock stdin, history navigation, empty input, multiline | DONE |
 | 5.3 | `ui/permission_dialog.py` | `internal/ui/permission.go` | Permission approval dialog | 5.2 | `permission_test.go`: mock approve/deny/skip, timeout defaults | TODO |
-| 5.4 | `keybindings/` | `internal/ui/keybind.go` | Keybinding parser and resolver | — | `keybind_test.go`: parse binding config, resolve key sequence, default fallback | TODO |
-| 5.5 | `output_styles/` | `internal/ui/styles.go` | Output style presets | 5.1 | `styles_test.go`: all preset names valid, each produces non-empty output | TODO |
+| 5.4 | `keybindings/` | `internal/ui/keybind.go` | Keybinding parser and resolver | — | `keybind_test.go`: parse binding config, resolve key sequence, default fallback | DONE |
+| 5.5 | `output_styles/` | `internal/ui/styles.go` | Output style presets | 5.1 | `styles_test.go`: all preset names valid, each produces non-empty output | DONE |
 
 ### Slash Commands (54 total)
 
@@ -281,62 +281,62 @@ Commands are tested via a command registry test harness — mock the engine/UI, 
 
 | # | Command | Go Target | Description | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 5.6 | `help` | `internal/commands/help.go` | Show available commands | 5.5 | output contains all registered command names | TODO |
-| 5.7 | `exit` | `internal/commands/exit.go` | Exit the REPL | — | sets exit flag | TODO |
-| 5.8 | `clear` | `internal/commands/clear.go` | Clear conversation history | 1.11 | calls engine.Clear(), verify empty history | TODO |
-| 5.9 | `version` | `internal/commands/version.go` | Show version | — | output matches build version | TODO |
-| 5.10 | `status` | `internal/commands/status.go` | Session status | 1.11 | output has model, turns, tokens | TODO |
-| 5.11 | `context` | `internal/commands/context.go` | Show system prompt | 2.10 | output matches assembled prompt | TODO |
-| 5.12 | `summary` | `internal/commands/summary.go` | Summarize conversation | 1.11 | returns summary text | TODO |
-| 5.13 | `compact` | `internal/commands/compact.go` | Force compaction | 2.11 | calls compact, verify shorter history | TODO |
-| 5.14 | `cost` | `internal/commands/cost.go` | Token usage and cost | 1.12 | output has token counts and estimated cost | TODO |
-| 5.15 | `usage` | `internal/commands/usage.go` | Usage stats | 1.9 | output has usage snapshot | TODO |
-| 5.16 | `stats` | `internal/commands/stats.go` | Session statistics | 1.11 | output has turn count, duration | TODO |
-| 5.17 | `memory` | `internal/commands/memory.go` | Inspect project memory | memory pkg | list memory entries, show entry content | TODO |
-| 5.18 | `hooks` | `internal/commands/hooks.go` | Show configured hooks | 2.5 | lists registered hooks | TODO |
-| 5.19 | `resume` | `internal/commands/resume.go` | Restore saved session | session storage | load from temp dir, verify history restored | TODO |
-| 5.20 | `session` | `internal/commands/session.go` | Inspect session storage | session storage | show session path and size | TODO |
-| 5.21 | `export` | `internal/commands/export.go` | Export transcript | — | writes JSON to temp file, verify structure | TODO |
-| 5.22 | `share` | `internal/commands/share.go` | Shareable transcript | — | creates file, verify content | TODO |
-| 5.23 | `copy` | `internal/commands/copy.go` | Copy to clipboard | atotto/clipboard | mock clipboard, verify content written | TODO |
-| 5.24 | `tag` | `internal/commands/tag.go` | Named session snapshot | session storage | create tag, list tags | TODO |
-| 5.25 | `rewind` | `internal/commands/rewind.go` | Remove last turn(s) | 1.11 | rewind 1 turn, rewind N turns, rewind past start | TODO |
-| 5.26 | `files` | `internal/commands/files.go` | List workspace files | — | list files in test dir | TODO |
-| 5.27 | `init` | `internal/commands/init.go` | Initialize project files | — | creates .openharness dir, verify files | TODO |
-| 5.28 | `bridge` | `internal/commands/bridge.go` | Inspect bridge helpers | bridge pkg | show bridge status | TODO |
-| 5.29 | `login` / `logout` | `internal/commands/auth.go` | Auth status, store/clear API key | auth pkg | mock key store, verify save/clear | TODO |
-| 5.30 | `feedback` | `internal/commands/feedback.go` | Save feedback | — | writes to file | TODO |
-| 5.31 | `onboarding` | `internal/commands/onboarding.go` | Quickstart guide | — | output non-empty | TODO |
-| 5.32 | `skills` | `internal/commands/skills.go` | List/show skills | skills pkg | mock loader, list skills | TODO |
-| 5.33 | `config` | `internal/commands/config.go` | Show/update config | 1.3 | show key, set key, invalid key | TODO |
-| 5.34 | `mcp` | `internal/commands/mcp.go` | MCP status | mcp pkg | show connected servers | TODO |
-| 5.35 | `plugin` | `internal/commands/plugin.go` | Manage plugins | plugins pkg | list, install, remove | TODO |
-| 5.36 | `reload-plugins` | `internal/commands/reload.go` | Reload plugins | plugins pkg | verify re-scan | TODO |
-| 5.37 | `permissions` | `internal/commands/perms.go` | Show/update permissions | 2.2 | show mode, set mode | TODO |
-| 5.38 | `plan` | `internal/commands/plan.go` | Toggle plan mode | 2.1 | toggle on/off | TODO |
-| 5.39 | `fast` | `internal/commands/fast.go` | Fast mode toggle | — | toggle state | TODO |
-| 5.40 | `effort` | `internal/commands/effort.go` | Reasoning effort | — | set valid effort | TODO |
-| 5.41 | `passes` | `internal/commands/passes.go` | Reasoning passes | — | set valid count | TODO |
-| 5.42 | `turns` | `internal/commands/turns.go` | Max turn count | 1.11 | set valid count, reject 0 | TODO |
-| 5.43 | `continue` | `internal/commands/cont.go` | Continue tool loop | 1.11 | resumes engine | TODO |
-| 5.44 | `provider` | `internal/commands/provider.go` | Switch provider profiles | 1.3 | list, switch profile | TODO |
-| 5.45 | `model` | `internal/commands/model.go` | Switch model | 1.3 | list, switch model | TODO |
-| 5.46 | `theme` | `internal/commands/theme.go` | TUI themes | 5.1 | list themes, set valid theme | TODO |
-| 5.47 | `output-style` | `internal/commands/style.go` | Output style | 5.5 | list styles, set valid style | TODO |
-| 5.48 | `keybindings` | `internal/commands/keybind.go` | Show keybindings | 5.4 | output bindings | TODO |
-| 5.49 | `vim` | `internal/commands/vim.go` | Vim mode toggle | 5.2 | toggle state | TODO |
-| 5.50 | `voice` | `internal/commands/voice.go` | Voice mode toggle | — | toggle state | TODO |
-| 5.51 | `doctor` | `internal/commands/doctor.go` | Environment diagnostics | 1.4 | output has OS, shell, go version | TODO |
-| 5.52 | `diff` | `internal/commands/diff.go` | Git diff | — | output matches `git diff` | TODO |
-| 5.53 | `branch` | `internal/commands/branch.go` | Git branch info | — | output has current branch | TODO |
-| 5.54 | `commit` | `internal/commands/commit.go` | Git commit workflow | — | mock git, verify commit message | TODO |
-| 5.55 | `issue` | `internal/commands/issue.go` | Issue context | — | output issue list | TODO |
-| 5.56 | `pr_comments` | `internal/commands/pr.go` | PR comments context | — | mock gh, output comments | TODO |
-| 5.57 | `privacy-settings` | `internal/commands/privacy.go` | Privacy settings | — | show, toggle | TODO |
-| 5.58 | `release-notes` | `internal/commands/releases.go` | Release notes | — | output non-empty | TODO |
-| 5.59 | `upgrade` | `internal/commands/upgrade.go` | Upgrade instructions | — | output non-empty | TODO |
-| 5.60 | `agents` | `internal/commands/agents.go` | List agent tasks | coordinator | output agent list | TODO |
-| 5.61 | `tasks` | `internal/commands/tasks.go` | Manage background tasks | tasks pkg | output task list | TODO |
+| 5.6 | `help` | `internal/commands/help.go` | Show available commands | 5.5 | output contains all registered command names | DONE |
+| 5.7 | `exit` | `internal/commands/exit.go` | Exit the REPL | — | sets exit flag | DONE |
+| 5.8 | `clear` | `internal/commands/clear.go` | Clear conversation history | 1.11 | calls engine.Clear(), verify empty history | DONE |
+| 5.9 | `version` | `internal/commands/version.go` | Show version | — | output matches build version | DONE |
+| 5.10 | `status` | `internal/commands/status.go` | Session status | 1.11 | output has model, turns, tokens | DONE |
+| 5.11 | `context` | `internal/commands/context.go` | Show system prompt | 2.10 | output matches assembled prompt | DONE |
+| 5.12 | `summary` | `internal/commands/summary.go` | Summarize conversation | 1.11 | returns summary text | DONE |
+| 5.13 | `compact` | `internal/commands/compact.go` | Force compaction | 2.11 | calls compact, verify shorter history | DONE |
+| 5.14 | `cost` | `internal/commands/cost.go` | Token usage and cost | 1.12 | output has token counts and estimated cost | DONE |
+| 5.15 | `usage` | `internal/commands/usage.go` | Usage stats | 1.9 | output has usage snapshot | DONE |
+| 5.16 | `stats` | `internal/commands/stats.go` | Session statistics | 1.11 | output has turn count, duration | DONE |
+| 5.17 | `memory` | `internal/commands/memory.go` | Inspect project memory | memory pkg | list memory entries, show entry content | DONE |
+| 5.18 | `hooks` | `internal/commands/hooks.go` | Show configured hooks | 2.5 | lists registered hooks | DONE |
+| 5.19 | `resume` | `internal/commands/resume.go` | Restore saved session | session storage | load from temp dir, verify history restored | DONE |
+| 5.20 | `session` | `internal/commands/session.go` | Inspect session storage | session storage | show session path and size | DONE |
+| 5.21 | `export` | `internal/commands/export.go` | Export transcript | — | writes JSON to temp file, verify structure | DONE |
+| 5.22 | `share` | `internal/commands/share.go` | Shareable transcript | — | creates file, verify content | DONE |
+| 5.23 | `copy` | `internal/commands/copy.go` | Copy to clipboard | atotto/clipboard | mock clipboard, verify content written | DONE |
+| 5.24 | `tag` | `internal/commands/tag.go` | Named session snapshot | session storage | create tag, list tags | DONE |
+| 5.25 | `rewind` | `internal/commands/rewind.go` | Remove last turn(s) | 1.11 | rewind 1 turn, rewind N turns, rewind past start | DONE |
+| 5.26 | `files` | `internal/commands/files.go` | List workspace files | — | list files in test dir | DONE |
+| 5.27 | `init` | `internal/commands/init.go` | Initialize project files | — | creates .openharness dir, verify files | DONE |
+| 5.28 | `bridge` | `internal/commands/bridge.go` | Inspect bridge helpers | bridge pkg | show bridge status | DONE |
+| 5.29 | `login` / `logout` | `internal/commands/auth.go` | Auth status, store/clear API key | auth pkg | mock key store, verify save/clear | DONE |
+| 5.30 | `feedback` | `internal/commands/feedback.go` | Save feedback | — | writes to file | DONE |
+| 5.31 | `onboarding` | `internal/commands/onboarding.go` | Quickstart guide | — | output non-empty | DONE |
+| 5.32 | `skills` | `internal/commands/skills.go` | List/show skills | skills pkg | mock loader, list skills | DONE |
+| 5.33 | `config` | `internal/commands/config.go` | Show/update config | 1.3 | show key, set key, invalid key | DONE |
+| 5.34 | `mcp` | `internal/commands/mcp.go` | MCP status | mcp pkg | show connected servers | DONE |
+| 5.35 | `plugin` | `internal/commands/plugin.go` | Manage plugins | plugins pkg | list, install, remove | DONE |
+| 5.36 | `reload-plugins` | `internal/commands/reload.go` | Reload plugins | plugins pkg | verify re-scan | DONE |
+| 5.37 | `permissions` | `internal/commands/perms.go` | Show/update permissions | 2.2 | show mode, set mode | DONE |
+| 5.38 | `plan` | `internal/commands/plan.go` | Toggle plan mode | 2.1 | toggle on/off | DONE |
+| 5.39 | `fast` | `internal/commands/fast.go` | Fast mode toggle | — | toggle state | DONE |
+| 5.40 | `effort` | `internal/commands/effort.go` | Reasoning effort | — | set valid effort | DONE |
+| 5.41 | `passes` | `internal/commands/passes.go` | Reasoning passes | — | set valid count | DONE |
+| 5.42 | `turns` | `internal/commands/turns.go` | Max turn count | 1.11 | set valid count, reject 0 | DONE |
+| 5.43 | `continue` | `internal/commands/cont.go` | Continue tool loop | 1.11 | resumes engine | DONE |
+| 5.44 | `provider` | `internal/commands/provider.go` | Switch provider profiles | 1.3 | list, switch profile | DONE |
+| 5.45 | `model` | `internal/commands/model.go` | Switch model | 1.3 | list, switch model | DONE |
+| 5.46 | `theme` | `internal/commands/theme.go` | TUI themes | 5.1 | list themes, set valid theme | DONE |
+| 5.47 | `output-style` | `internal/commands/style.go` | Output style | 5.5 | list styles, set valid style | DONE |
+| 5.48 | `keybindings` | `internal/commands/keybind.go` | Show keybindings | 5.4 | output bindings | DONE |
+| 5.49 | `vim` | `internal/commands/vim.go` | Vim mode toggle | 5.2 | toggle state | DONE |
+| 5.50 | `voice` | `internal/commands/voice.go` | Voice mode toggle | — | toggle state | DONE |
+| 5.51 | `doctor` | `internal/commands/doctor.go` | Environment diagnostics | 1.4 | output has OS, shell, go version | DONE |
+| 5.52 | `diff` | `internal/commands/diff.go` | Git diff | — | output matches `git diff` | DONE |
+| 5.53 | `branch` | `internal/commands/branch.go` | Git branch info | — | output has current branch | DONE |
+| 5.54 | `commit` | `internal/commands/commit.go` | Git commit workflow | — | mock git, verify commit message | DONE |
+| 5.55 | `issue` | `internal/commands/issue.go` | Issue context | — | output issue list | DONE |
+| 5.56 | `pr_comments` | `internal/commands/pr.go` | PR comments context | — | mock gh, output comments | DONE |
+| 5.57 | `privacy-settings` | `internal/commands/privacy.go` | Privacy settings | — | show, toggle | DONE |
+| 5.58 | `release-notes` | `internal/commands/releases.go` | Release notes | — | output non-empty | DONE |
+| 5.59 | `upgrade` | `internal/commands/upgrade.go` | Upgrade instructions | — | output non-empty | DONE |
+| 5.60 | `agents` | `internal/commands/agents.go` | List agent tasks | coordinator | output agent list | DONE |
+| 5.61 | `tasks` | `internal/commands/tasks.go` | Manage background tasks | tasks pkg | output task list | DONE |
 
 ### Phase 5 Manual Test
 
