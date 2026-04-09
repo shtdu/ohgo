@@ -16,12 +16,12 @@ func (prCommentsCmd) ShortHelp() string {
 	return "List recent GitHub pull requests (requires gh CLI)"
 }
 
-func (prCommentsCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
+func (prCommentsCmd) Run(ctx context.Context, _ string, deps *Deps) (Result, error) {
 	if _, err := exec.LookPath("gh"); err != nil {
 		return Result{}, fmt.Errorf("gh CLI not found: install from https://cli.github.com")
 	}
 
-	out, err := runCmd("gh", []string{"pr", "list", "--limit", "5"}, deps.Cwd)
+	out, err := runCmd(ctx, "gh", []string{"pr", "list", "--limit", "5"}, deps.Cwd)
 	if err != nil {
 		return Result{}, fmt.Errorf("gh pr list: %w", err)
 	}

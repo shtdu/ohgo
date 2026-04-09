@@ -16,12 +16,12 @@ func (issueCmd) ShortHelp() string {
 	return "List recent GitHub issues (requires gh CLI)"
 }
 
-func (issueCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
+func (issueCmd) Run(ctx context.Context, _ string, deps *Deps) (Result, error) {
 	if _, err := exec.LookPath("gh"); err != nil {
 		return Result{}, fmt.Errorf("gh CLI not found: install from https://cli.github.com")
 	}
 
-	out, err := runCmd("gh", []string{"issue", "list", "--limit", "10"}, deps.Cwd)
+	out, err := runCmd(ctx, "gh", []string{"issue", "list", "--limit", "10"}, deps.Cwd)
 	if err != nil {
 		return Result{}, fmt.Errorf("gh issue list: %w", err)
 	}

@@ -44,6 +44,19 @@ func (exportCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
 }
 
 // sessionDir returns the directory used for session snapshots.
+// Uses the user's config directory to avoid collisions between processes.
 func sessionDir() string {
+	if cfgDir, err := configDir(); err == nil && cfgDir != "" {
+		return filepath.Join(cfgDir, "sessions")
+	}
 	return filepath.Join(os.TempDir(), "ohgo-sessions")
+}
+
+// configDir returns the user's ohgo config directory.
+func configDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(home, ".openharness"), nil
 }

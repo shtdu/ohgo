@@ -16,22 +16,22 @@ func (branchCmd) ShortHelp() string {
 	return "Show current git branch and short status"
 }
 
-func (branchCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
-	branch, err := runCmd("git", []string{"branch", "--show-current"}, deps.Cwd)
+func (branchCmd) Run(ctx context.Context, _ string, deps *Deps) (Result, error) {
+	branch, err := runCmd(ctx, "git", []string{"branch", "--show-current"}, deps.Cwd)
 	if err != nil {
 		return Result{}, fmt.Errorf("git branch: %w", err)
 	}
 	branch = strings.TrimSpace(branch)
 	if branch == "" {
 		// Likely detached HEAD; try rev-parse instead.
-		sha, err2 := runCmd("git", []string{"rev-parse", "--short", "HEAD"}, deps.Cwd)
+		sha, err2 := runCmd(ctx, "git", []string{"rev-parse", "--short", "HEAD"}, deps.Cwd)
 		if err2 != nil {
 			return Result{}, fmt.Errorf("git branch: %w", err2)
 		}
 		branch = "DETACHED at " + strings.TrimSpace(sha)
 	}
 
-	status, err := runCmd("git", []string{"status", "--short"}, deps.Cwd)
+	status, err := runCmd(ctx, "git", []string{"status", "--short"}, deps.Cwd)
 	if err != nil {
 		return Result{}, fmt.Errorf("git status: %w", err)
 	}

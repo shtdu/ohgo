@@ -15,8 +15,8 @@ func (diffCmd) ShortHelp() string {
 	return "Show git diff for the working tree"
 }
 
-func (diffCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
-	out, err := runCmd("git", []string{"diff"}, deps.Cwd)
+func (diffCmd) Run(ctx context.Context, _ string, deps *Deps) (Result, error) {
+	out, err := runCmd(ctx, "git", []string{"diff"}, deps.Cwd)
 	if err != nil {
 		return Result{}, fmt.Errorf("git diff: %w", err)
 	}

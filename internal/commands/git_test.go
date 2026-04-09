@@ -22,9 +22,10 @@ func skipIfNoGit(t *testing.T) {
 func initGitRepo(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	runCmd("git", []string{"init"}, dir)
-	runCmd("git", []string{"config", "user.email", "test@test.com"}, dir)
-	runCmd("git", []string{"config", "user.name", "Test"}, dir)
+	ctx := context.Background()
+	runCmd(ctx, "git", []string{"init"}, dir)
+	runCmd(ctx, "git", []string{"config", "user.email", "test@test.com"}, dir)
+	runCmd(ctx, "git", []string{"config", "user.name", "Test"}, dir)
 	return dir
 }
 
@@ -133,8 +134,8 @@ func TestDiff_CleanRepo(t *testing.T) {
 	dir := initGitRepo(t)
 	// Commit an initial file so the repo is not empty.
 	require.NoError(t, os.WriteFile(dir+"/README.md", []byte("# test"), 0o644))
-	runCmd("git", []string{"add", "-A"}, dir)
-	runCmd("git", []string{"commit", "-m", "init"}, dir)
+	runCmd(context.Background(), "git", []string{"add", "-A"}, dir)
+	runCmd(context.Background(), "git", []string{"commit", "-m", "init"}, dir)
 
 	cmd := diffCmd{}
 	deps := &Deps{Cwd: dir}
@@ -162,8 +163,8 @@ func TestBranch_CleanRepo(t *testing.T) {
 	skipIfNoGit(t)
 	dir := initGitRepo(t)
 	require.NoError(t, os.WriteFile(dir+"/README.md", []byte("# test"), 0o644))
-	runCmd("git", []string{"add", "-A"}, dir)
-	runCmd("git", []string{"commit", "-m", "init"}, dir)
+	runCmd(context.Background(), "git", []string{"add", "-A"}, dir)
+	runCmd(context.Background(), "git", []string{"commit", "-m", "init"}, dir)
 
 	cmd := branchCmd{}
 	deps := &Deps{Cwd: dir}
@@ -198,6 +199,8 @@ func TestCommit_WithMessage(t *testing.T) {
 	skipIfNoGit(t)
 	dir := initGitRepo(t)
 	require.NoError(t, os.WriteFile(dir+"/hello.txt", []byte("world"), 0o644))
+	// Stage the file first — /commit no longer auto-stages.
+	runCmd(context.Background(), "git", []string{"add", "-A"}, dir)
 
 	cmd := commitCmd{}
 	deps := &Deps{Cwd: dir}
@@ -259,14 +262,14 @@ func TestUpgrade_Run(t *testing.T) {
 // --- helpers test ---
 
 func TestRunCmd_NotFound(t *testing.T) {
-	_, err := runCmd("nonexistent_binary_12345", nil, t.TempDir())
+	_, err := runCmd(context.Background(), "nonexistent_binary_12345", nil, t.TempDir())
 	require.Error(t, err)
 }
 
 func TestRunCmd_Echo(t *testing.T) {
 	skipIfNoGit(t)
 	// Use a command we know exists on macOS and Linux.
-	out, err := runCmd("echo", []string{"hello", "world"}, t.TempDir())
+	out, err := runCmd(context.Background(), "echo", []string{"hello", "world"}, t.TempDir())
 	require.NoError(t, err)
 	assert.Equal(t, "hello world\n", out)
 }

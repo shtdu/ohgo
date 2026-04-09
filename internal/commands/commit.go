@@ -16,20 +16,20 @@ func (commitCmd) ShortHelp() string {
 	return "Git commit workflow: no args shows status+diff; with args commits all changes"
 }
 
-func (commitCmd) Run(_ context.Context, args string, deps *Deps) (Result, error) {
+func (commitCmd) Run(ctx context.Context, args string, deps *Deps) (Result, error) {
 	msg := strings.TrimSpace(args)
 
 	if msg == "" {
 		// Show status and diff so the user can review before committing.
-		status, err := runCmd("git", []string{"status", "--short"}, deps.Cwd)
+		status, err := runCmd(ctx, "git", []string{"status", "--short"}, deps.Cwd)
 		if err != nil {
 			return Result{}, fmt.Errorf("git status: %w", err)
 		}
-		diff, err := runCmd("git", []string{"diff"}, deps.Cwd)
+		diff, err := runCmd(ctx, "git", []string{"diff"}, deps.Cwd)
 		if err != nil {
 			return Result{}, fmt.Errorf("git diff: %w", err)
 		}
-		diffStaged, err := runCmd("git", []string{"diff", "--cached"}, deps.Cwd)
+		diffStaged, err := runCmd(ctx, "git", []string{"diff", "--cached"}, deps.Cwd)
 		if err != nil {
 			return Result{}, fmt.Errorf("git diff --cached: %w", err)
 		}
@@ -53,11 +53,8 @@ func (commitCmd) Run(_ context.Context, args string, deps *Deps) (Result, error)
 		return Result{Output: b.String()}, nil
 	}
 
-	// Stage all changes and commit.
-	if _, err := runCmd("git", []string{"add", "-A"}, deps.Cwd); err != nil {
-		return Result{}, fmt.Errorf("git add -A: %w", err)
-	}
-	out, err := runCmd("git", []string{"commit", "-m", msg}, deps.Cwd)
+	// Commit only already-staged changes. User should stage files explicitly.
+	out, err := runCmd(ctx, "git", []string{"commit", "-m", msg}, deps.Cwd)
 	if err != nil {
 		return Result{}, fmt.Errorf("git commit: %s%s", out, err)
 	}

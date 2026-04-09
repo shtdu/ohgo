@@ -19,7 +19,7 @@ func (doctorCmd) ShortHelp() string {
 	return "Show environment diagnostics (OS, Go, Git, shell, cwd)"
 }
 
-func (doctorCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
+func (doctorCmd) Run(ctx context.Context, _ string, deps *Deps) (Result, error) {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, "ohgo version : %s\n", deps.Version)
@@ -36,21 +36,21 @@ func (doctorCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
 	fmt.Fprintf(&b, "Working dir   : %s\n", deps.Cwd)
 
 	// Go version from toolchain.
-	if out, err := runCmd("go", []string{"version"}, deps.Cwd); err == nil {
+	if out, err := runCmd(ctx, "go", []string{"version"}, deps.Cwd); err == nil {
 		fmt.Fprintf(&b, "Go (toolchain): %s\n", strings.TrimSpace(out))
 	} else {
 		fmt.Fprintln(&b, "Go (toolchain): not found")
 	}
 
 	// Git version.
-	if out, err := runCmd("git", []string{"--version"}, deps.Cwd); err == nil {
+	if out, err := runCmd(ctx, "git", []string{"--version"}, deps.Cwd); err == nil {
 		fmt.Fprintf(&b, "Git           : %s\n", strings.TrimSpace(out))
 	} else {
 		fmt.Fprintln(&b, "Git           : not found")
 	}
 
 	// Check if inside a git repo.
-	if _, err := runCmd("git", []string{"rev-parse", "--is-inside-work-tree"}, deps.Cwd); err == nil {
+	if _, err := runCmd(ctx, "git", []string{"rev-parse", "--is-inside-work-tree"}, deps.Cwd); err == nil {
 		fmt.Fprintln(&b, "Git repo      : yes")
 	} else {
 		fmt.Fprintln(&b, "Git repo      : no")
@@ -58,7 +58,7 @@ func (doctorCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
 
 	// Check gh CLI.
 	if _, err := exec.LookPath("gh"); err == nil {
-		if out, err := runCmd("gh", []string{"--version"}, deps.Cwd); err == nil {
+		if out, err := runCmd(ctx, "gh", []string{"--version"}, deps.Cwd); err == nil {
 			line := strings.SplitN(out, "\n", 2)[0]
 			fmt.Fprintf(&b, "GitHub CLI    : %s\n", strings.TrimSpace(line))
 		}
