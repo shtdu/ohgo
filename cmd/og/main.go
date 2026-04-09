@@ -111,6 +111,7 @@ func run(cmd *cobra.Command, args []string) error {
 	bridgeMgr := bridge.NewManager()
 	bridgeMgr.Register(bridge.NewClaudeCLI())
 	bridgeMgr.Register(bridge.NewCodexBridge())
+	defer bridgeMgr.CloseAll()
 
 	// Load user skills
 	skillDir, _ := config.ConfigDir()

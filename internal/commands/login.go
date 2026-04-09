@@ -44,8 +44,14 @@ func handleLogout(ctx context.Context, deps *Deps) (Result, error) {
 		return Result{Output: "login: no stored credentials to clear"}, nil
 	}
 
+	var anyErr bool
 	for _, c := range creds {
-		_ = deps.AuthMgr.Delete(ctx, c.Provider)
+		if err := deps.AuthMgr.Delete(ctx, c.Provider); err != nil {
+			anyErr = true
+		}
+	}
+	if anyErr {
+		return Result{Output: "login: some credentials could not be cleared"}, nil
 	}
 	return Result{Output: "login: all stored credentials cleared"}, nil
 }
