@@ -21,7 +21,7 @@ func TestCopilotClient_TextStreaming(t *testing.T) {
 		atomic.AddInt32(&tokenRequests, 1)
 		assert.Equal(t, "Bearer gh-oauth-token", r.Header.Get("Authorization"))
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"token":"tid=copilot-token;exp=%d","expires_at":%d}`, time.Now().Add(10*time.Minute).Unix(), time.Now().Add(10*time.Minute).Unix())
+		fmt.Fprintf(w, `{"token":"tid=copilot-token;exp=%d","expires_at":%d}`, time.Now().Add(10*time.Minute).Unix(), time.Now().Add(10*time.Minute).Unix()) //nolint:errcheck
 	}))
 	defer tokenServer.Close()
 
@@ -33,7 +33,7 @@ data: [DONE]
 		assert.Equal(t, "Bearer tid=copilot-token;exp="+fmt.Sprintf("%d", time.Now().Add(10*time.Minute).Unix()), r.Header.Get("Authorization"))
 		assert.Equal(t, "ohgo/1.0", r.Header.Get("Editor-Version"))
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprint(w, sseData)
+		_, _ = fmt.Fprint(w, sseData)
 	}))
 	defer apiServer.Close()
 
@@ -64,7 +64,7 @@ func TestCopilotClient_TokenCaching(t *testing.T) {
 	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(&tokenRequests, 1)
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"token":"cached-token","expires_at":%d}`, time.Now().Add(10*time.Minute).Unix())
+		fmt.Fprintf(w, `{"token":"cached-token","expires_at":%d}`, time.Now().Add(10*time.Minute).Unix()) //nolint:errcheck
 	}))
 	defer tokenServer.Close()
 
@@ -72,7 +72,7 @@ func TestCopilotClient_TokenCaching(t *testing.T) {
 	apiServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		atomic.AddInt32(&apiRequests, 1)
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprint(w, `data: {"choices":[{"delta":{"content":"ok"}}]}\n\ndata: [DONE]\n`)
+		_, _ = fmt.Fprint(w, `data: {"choices":[{"delta":{"content":"ok"}}]}\n\ndata: [DONE]\n`)
 	}))
 	defer apiServer.Close()
 
@@ -100,7 +100,7 @@ func TestCopilotClient_TokenCaching(t *testing.T) {
 func TestCopilotClient_AuthError(t *testing.T) {
 	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprint(w, "unauthorized")
+		_, _ = fmt.Fprint(w, "unauthorized")
 	}))
 	defer tokenServer.Close()
 

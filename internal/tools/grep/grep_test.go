@@ -33,8 +33,8 @@ func TestGrepTool_Name(t *testing.T) {
 func TestGrepTool_PatternMatch(t *testing.T) {
 	dir := setupGrepDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GrepTool{}
 	args, _ := json.Marshal(map[string]string{"pattern": "func main"})
@@ -48,8 +48,8 @@ func TestGrepTool_PatternMatch(t *testing.T) {
 func TestGrepTool_CaseInsensitive(t *testing.T) {
 	dir := setupGrepDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GrepTool{}
 	args, _ := json.Marshal(map[string]any{"pattern": "hello", "case_sensitive": false})
@@ -63,8 +63,8 @@ func TestGrepTool_CaseInsensitive(t *testing.T) {
 func TestGrepTool_FileFilter(t *testing.T) {
 	dir := setupGrepDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GrepTool{}
 	args, _ := json.Marshal(map[string]any{"pattern": "func", "glob": "*.go"})
@@ -79,8 +79,8 @@ func TestGrepTool_FileFilter(t *testing.T) {
 func TestGrepTool_NoMatches(t *testing.T) {
 	dir := setupGrepDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GrepTool{}
 	args, _ := json.Marshal(map[string]string{"pattern": "nonexistent_pattern_xyz"})
@@ -112,8 +112,8 @@ func TestGrepTool_InvalidRegex(t *testing.T) {
 func TestGrepTool_SubdirectoryGlob(t *testing.T) {
 	dir := setupGrepDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GrepTool{}
 	args, _ := json.Marshal(map[string]any{"pattern": "func", "glob": "sub/*.go"})
@@ -134,8 +134,8 @@ func TestGrepTool_InvalidJSON(t *testing.T) {
 func TestGrepTool_RecursiveSearch(t *testing.T) {
 	dir := setupGrepDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GrepTool{}
 	args, _ := json.Marshal(map[string]string{"pattern": "package"})

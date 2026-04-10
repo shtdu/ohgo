@@ -121,7 +121,9 @@ func (s *Store) Remove(name string) (bool, error) {
 			kept = append(kept, line)
 		}
 	}
-	os.WriteFile(entrypoint, []byte(strings.TrimRight(strings.Join(kept, "\n"), "\n")+"\n"), 0o644)
+	if err := os.WriteFile(entrypoint, []byte(strings.TrimRight(strings.Join(kept, "\n"), "\n")+"\n"), 0o644); err != nil {
+		return false, fmt.Errorf("write entrypoint: %w", err)
+	}
 
 	return true, nil
 }

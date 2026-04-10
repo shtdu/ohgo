@@ -428,7 +428,7 @@ func TestMaskKey(t *testing.T) {
 
 func TestSubsystemCompileTimeChecks(t *testing.T) {
 	// Verify all commands satisfy the interface via compile-time checks.
-	var cmds []Command = []Command{
+	var cmds = []Command{
 		memoryCmd{},
 		hooksCmd{},
 		skillsCmd{},

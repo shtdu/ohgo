@@ -109,9 +109,10 @@ func (e *Engine) Query(ctx context.Context, prompt string) error {
 		for event := range eventCh {
 			switch data := event.Data.(type) {
 			case string:
-				if event.Type == "text_delta" {
+				switch event.Type {
+				case "text_delta":
 					e.emit(EngineEvent{Type: EventTextDelta, Data: AssistantTextDelta{Text: data}})
-				} else if event.Type == "error" {
+				case "error":
 					e.emit(EngineEvent{Type: EventError, Data: ErrorEvent{Message: data, Recoverable: false}})
 					return fmt.Errorf("api error: %s", data)
 				}

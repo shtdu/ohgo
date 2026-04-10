@@ -136,7 +136,7 @@ func (GrepTool) Execute(ctx context.Context, args json.RawMessage) (tools.Result
 		matches = append(matches, fileMatches...)
 	} else {
 		// Walk directory
-		filepath.WalkDir(searchPath, func(path string, d os.DirEntry, err error) error {
+		_ = filepath.WalkDir(searchPath, func(path string, d os.DirEntry, err error) error {
 			if err != nil {
 				return nil
 			}
@@ -203,7 +203,7 @@ func searchFile(path string, re *regexp.Regexp, cwd string, limit int) []match {
 	if err != nil {
 		return nil
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	// Binary check
 	buf := make([]byte, binaryCheckSize)
@@ -211,7 +211,7 @@ func searchFile(path string, re *regexp.Regexp, cwd string, limit int) []match {
 	if n > 0 && bytes.ContainsRune(buf[:n], 0) {
 		return nil
 	}
-	f.Seek(0, 0)
+	_, _ = f.Seek(0, 0)
 
 	relPath, err := filepath.Rel(cwd, path)
 	if err != nil {

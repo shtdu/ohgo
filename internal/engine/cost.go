@@ -24,6 +24,8 @@ func (t *CostTracker) Add(u api.UsageSnapshot) {
 	defer t.mu.Unlock()
 	t.usage.InputTokens += u.InputTokens
 	t.usage.OutputTokens += u.OutputTokens
+	t.usage.CacheReadInputTokens += u.CacheReadInputTokens
+	t.usage.CacheCreationInputTokens += u.CacheCreationInputTokens
 }
 
 // Total returns the aggregated usage.

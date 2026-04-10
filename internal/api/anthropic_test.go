@@ -19,7 +19,7 @@ func mockSSEServer(events []string) *httptest.Server {
 		// Verify auth header
 		if r.Header.Get("x-api-key") == "" {
 			w.WriteHeader(401)
-			fmt.Fprint(w, "missing api key")
+			_, _ = fmt.Fprint(w, "missing api key")
 			return
 		}
 
@@ -32,7 +32,7 @@ func mockSSEServer(events []string) *httptest.Server {
 		}
 
 		for _, event := range events {
-			fmt.Fprint(w, event)
+			_, _ = fmt.Fprint(w, event)
 			flusher.Flush()
 		}
 	}))
@@ -194,7 +194,7 @@ func TestAnthropicClient_MultipleContentBlocks_ResetTextParts(t *testing.T) {
 func TestAnthropicClient_AuthError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(401)
-		fmt.Fprint(w, "invalid api key")
+		_, _ = fmt.Fprint(w, "invalid api key")
 	}))
 	defer server.Close()
 
@@ -226,21 +226,21 @@ func TestAnthropicClient_RetryOn429(t *testing.T) {
 		calls++
 		if calls <= 1 {
 			w.WriteHeader(429)
-			fmt.Fprint(w, "rate limited")
+			_, _ = fmt.Fprint(w, "rate limited")
 			return
 		}
 		// Success on second call
 		w.Header().Set("Content-Type", "text/event-stream")
 		flusher := w.(http.Flusher)
-		fmt.Fprint(w, "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":5}}}\n\n")
+		_, _ = fmt.Fprint(w, "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":5}}}\n\n")
 		flusher.Flush()
-		fmt.Fprint(w, "event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"ok\"}}\n\n")
+		_, _ = fmt.Fprint(w, "event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"ok\"}}\n\n")
 		flusher.Flush()
-		fmt.Fprint(w, "event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n")
+		_, _ = fmt.Fprint(w, "event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n")
 		flusher.Flush()
-		fmt.Fprint(w, "event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens\":2}}\n\n")
+		_, _ = fmt.Fprint(w, "event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens\":2}}\n\n")
 		flusher.Flush()
-		fmt.Fprint(w, "event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n")
+		_, _ = fmt.Fprint(w, "event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n")
 		flusher.Flush()
 	}))
 	defer server.Close()

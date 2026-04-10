@@ -35,14 +35,14 @@ func (filesCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
 		}
 
 		if e.IsDir() {
-			fmt.Fprintf(tw, "%s/\t(dir)\n", name)
+			_, _ = fmt.Fprintf(tw, "%s/\t(dir)\n", name)
 		} else {
 			info, err := e.Info()
 			if err != nil {
-				fmt.Fprintf(tw, "%s\t(unknown)\n", name)
+				_, _ = fmt.Fprintf(tw, "%s\t(unknown)\n", name)
 				continue
 			}
-			fmt.Fprintf(tw, "%s\t%d B\n", name, info.Size())
+			_, _ = fmt.Fprintf(tw, "%s\t%d B\n", name, info.Size())
 		}
 	}
 

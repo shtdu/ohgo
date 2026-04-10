@@ -37,7 +37,7 @@ func (feedbackCmd) Run(_ context.Context, args string, _ *Deps) (Result, error) 
 	if err != nil {
 		return Result{}, fmt.Errorf("feedback: cannot write file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	if _, err := f.WriteString(entry); err != nil {
 		return Result{}, fmt.Errorf("feedback: write failed: %w", err)

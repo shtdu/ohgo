@@ -9,6 +9,8 @@ import (
 
 	"github.com/shtdu/ohgo/internal/skills"
 	"github.com/shtdu/ohgo/internal/tools"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type skillInput struct {
@@ -68,7 +70,7 @@ func (t SkillTool) Execute(ctx context.Context, args json.RawMessage) (tools.Res
 		s = t.SkillReg.Get(strings.ToLower(input.SkillName))
 	}
 	if s == nil {
-		s = t.SkillReg.Get(strings.Title(input.SkillName))
+		s = t.SkillReg.Get(cases.Title(language.English).String(input.SkillName))
 	}
 	if s == nil {
 		return tools.Result{

@@ -33,7 +33,7 @@ func (f *APIKeyFlow) Authenticate(ctx context.Context) (*Credential, error) {
 	var key string
 	ch := make(chan string, 1)
 	go func() {
-		fmt.Fscanln(os.Stdin, &key)
+		_, _ = fmt.Fscanln(os.Stdin, &key)
 		ch <- key
 	}()
 

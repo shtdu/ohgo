@@ -126,7 +126,7 @@ func TestTodoWriteTool_DefaultPath(t *testing.T) {
 	// Change to temp dir so default TODO.md lands there
 	origDir, _ := os.Getwd()
 	require.NoError(t, os.Chdir(dir))
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	tool := TodoWriteTool{}
 	args, _ := json.Marshal(map[string]any{

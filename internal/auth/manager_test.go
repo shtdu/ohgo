@@ -28,7 +28,7 @@ func TestManager_StoreAndLoad(t *testing.T) {
 	err := mgr.Store(context.Background(), cred)
 	require.NoError(t, err)
 
-	loaded, err := mgr.Load(context.Background(), "anthropic")
+	loaded, _ := mgr.Load(context.Background(), "anthropic")
 	require.NoError(t, assertCredential(cred, loaded))
 }
 

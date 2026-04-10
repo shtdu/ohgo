@@ -19,7 +19,7 @@ func TestFetchTool_Name(t *testing.T) {
 func TestFetchTool_HTMLContent(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<html><head><title>Test</title><style>body{}</style></head><body><h1>Hello</h1><p>World</p></body></html>`))
+		_, _ = w.Write([]byte(`<html><head><title>Test</title><style>body{}</style></head><body><h1>Hello</h1><p>World</p></body></html>`))
 	}))
 	defer server.Close()
 
@@ -37,7 +37,7 @@ func TestFetchTool_HTMLContent(t *testing.T) {
 func TestFetchTool_JSONContent(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"key": "value"}`))
+		_, _ = w.Write([]byte(`{"key": "value"}`))
 	}))
 	defer server.Close()
 
@@ -95,7 +95,7 @@ func TestFetchTool_Truncation(t *testing.T) {
 	}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
-		w.Write([]byte(longBody))
+		_, _ = w.Write([]byte(longBody))
 	}))
 	defer server.Close()
 

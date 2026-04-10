@@ -58,7 +58,7 @@ func TestEnterWorktreeTool_CreatesWorktree(t *testing.T) {
 	// Override git root detection by running from the test repo
 	origDir, _ := os.Getwd()
 	require.NoError(t, os.Chdir(dir))
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	result, err := tool.Execute(context.Background(), args)
 	require.NoError(t, err)
@@ -90,7 +90,7 @@ func TestEnterWorktreeTool_CreatesWorktreeWithoutBranch(t *testing.T) {
 	})
 	origDir, _ := os.Getwd()
 	require.NoError(t, os.Chdir(dir))
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	result, err := tool.Execute(context.Background(), args)
 	require.NoError(t, err)
@@ -124,7 +124,7 @@ func TestEnterWorktreeTool_CustomPath(t *testing.T) {
 	})
 	origDir, _ := os.Getwd()
 	require.NoError(t, os.Chdir(dir))
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	result, err := tool.Execute(context.Background(), args)
 	require.NoError(t, err)
@@ -173,7 +173,7 @@ func TestExitWorktreeTool_RemovesWorktree(t *testing.T) {
 	// Change to test repo so gitRoot resolves correctly
 	origDir, _ := os.Getwd()
 	require.NoError(t, os.Chdir(dir))
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	// Now remove it
 	tool := ExitWorktreeTool{}
@@ -265,7 +265,7 @@ func TestExitWorktreeTool_ForceRemove(t *testing.T) {
 	// Change to test repo so gitRoot resolves correctly
 	origDir, _ := os.Getwd()
 	require.NoError(t, os.Chdir(dir))
-	defer os.Chdir(origDir)
+	defer func() { _ = os.Chdir(origDir) }()
 
 	// Force remove
 	tool := ExitWorktreeTool{}

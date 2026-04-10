@@ -134,7 +134,7 @@ func FullCompact(ctx context.Context, messages []api.Message, client api.Client,
 	// Build conversation text for summarization
 	var convText strings.Builder
 	for _, msg := range older {
-		convText.WriteString(fmt.Sprintf("[%s]: ", msg.Role))
+		fmt.Fprintf(&convText, "[%s]: ", msg.Role)
 		for _, block := range msg.Content {
 			switch block.Type {
 			case "text":

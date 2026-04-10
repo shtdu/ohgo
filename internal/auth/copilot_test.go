@@ -23,7 +23,7 @@ func newTestFlow(deviceCodeServer, accessTokenServer *httptest.Server) *CopilotD
 func TestCopilotDeviceFlow_Success(t *testing.T) {
 	codeServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"device_code":"dc_123","user_code":"ABCD-1234","verification_uri":"https://github.com/login/device","interval":1,"expires_in":900}`)
+		fmt.Fprintf(w, `{"device_code":"dc_123","user_code":"ABCD-1234","verification_uri":"https://github.com/login/device","interval":1,"expires_in":900}`) //nolint:errcheck
 	}))
 	defer codeServer.Close()
 
@@ -32,9 +32,9 @@ func TestCopilotDeviceFlow_Success(t *testing.T) {
 		count := atomic.AddInt32(&pollCount, 1)
 		w.Header().Set("Content-Type", "application/json")
 		if count < 3 {
-			fmt.Fprintf(w, `{"error":"authorization_pending"}`)
+			_, _ = fmt.Fprintf(w, `{"error":"authorization_pending"}`)
 		} else {
-			fmt.Fprintf(w, `{"access_token":"ghu_test_token_123"}`)
+			_, _ = fmt.Fprintf(w, `{"access_token":"ghu_test_token_123"}`)
 		}
 	}))
 	defer tokenServer.Close()
@@ -51,7 +51,7 @@ func TestCopilotDeviceFlow_Success(t *testing.T) {
 func TestCopilotDeviceFlow_SlowDown(t *testing.T) {
 	codeServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"device_code":"dc_123","user_code":"ABCD-1234","verification_uri":"https://github.com/login/device","interval":1,"expires_in":900}`)
+		fmt.Fprintf(w, `{"device_code":"dc_123","user_code":"ABCD-1234","verification_uri":"https://github.com/login/device","interval":1,"expires_in":900}`) //nolint:errcheck
 	}))
 	defer codeServer.Close()
 
@@ -60,9 +60,9 @@ func TestCopilotDeviceFlow_SlowDown(t *testing.T) {
 		count := atomic.AddInt32(&pollCount, 1)
 		w.Header().Set("Content-Type", "application/json")
 		if count == 1 {
-			fmt.Fprintf(w, `{"error":"slow_down"}`)
+			_, _ = fmt.Fprintf(w, `{"error":"slow_down"}`)
 		} else {
-			fmt.Fprintf(w, `{"access_token":"ghu_after_slowdown"}`)
+			_, _ = fmt.Fprintf(w, `{"access_token":"ghu_after_slowdown"}`)
 		}
 	}))
 	defer tokenServer.Close()
@@ -76,13 +76,13 @@ func TestCopilotDeviceFlow_SlowDown(t *testing.T) {
 func TestCopilotDeviceFlow_ExpiredDeviceCode(t *testing.T) {
 	codeServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"device_code":"dc_123","user_code":"ABCD-1234","verification_uri":"https://github.com/login/device","interval":1,"expires_in":1}`)
+		fmt.Fprintf(w, `{"device_code":"dc_123","user_code":"ABCD-1234","verification_uri":"https://github.com/login/device","interval":1,"expires_in":1}`) //nolint:errcheck
 	}))
 	defer codeServer.Close()
 
 	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"error":"authorization_pending"}`)
+		fmt.Fprintf(w, `{"error":"authorization_pending"}`) //nolint:errcheck
 	}))
 	defer tokenServer.Close()
 
@@ -95,13 +95,13 @@ func TestCopilotDeviceFlow_ExpiredDeviceCode(t *testing.T) {
 func TestCopilotDeviceFlow_ContextCancel(t *testing.T) {
 	codeServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"device_code":"dc_123","user_code":"ABCD-1234","verification_uri":"https://github.com/login/device","interval":1,"expires_in":900}`)
+		fmt.Fprintf(w, `{"device_code":"dc_123","user_code":"ABCD-1234","verification_uri":"https://github.com/login/device","interval":1,"expires_in":900}`) //nolint:errcheck
 	}))
 	defer codeServer.Close()
 
 	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"error":"authorization_pending"}`)
+		fmt.Fprintf(w, `{"error":"authorization_pending"}`) //nolint:errcheck
 	}))
 	defer tokenServer.Close()
 
@@ -117,7 +117,7 @@ func TestCopilotDeviceFlow_ContextCancel(t *testing.T) {
 func TestCopilotDeviceFlow_DeviceCodeRequestFailure(t *testing.T) {
 	codeServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(w, `{"error":"invalid_client"}`)
+		fmt.Fprintf(w, `{"error":"invalid_client"}`) //nolint:errcheck
 	}))
 	defer codeServer.Close()
 
@@ -133,13 +133,13 @@ func TestCopilotDeviceFlow_DeviceCodeRequestFailure(t *testing.T) {
 func TestCopilotDeviceFlow_AccessTokenError(t *testing.T) {
 	codeServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"device_code":"dc_123","user_code":"ABCD-1234","verification_uri":"https://github.com/login/device","interval":1,"expires_in":900}`)
+		fmt.Fprintf(w, `{"device_code":"dc_123","user_code":"ABCD-1234","verification_uri":"https://github.com/login/device","interval":1,"expires_in":900}`) //nolint:errcheck
 	}))
 	defer codeServer.Close()
 
 	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"error":"expired_token","error_description":"device code has expired"}`)
+		fmt.Fprintf(w, `{"error":"expired_token","error_description":"device code has expired"}`) //nolint:errcheck
 	}))
 	defer tokenServer.Close()
 

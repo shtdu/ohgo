@@ -214,7 +214,7 @@ func (e *DefinitionExecutor) runHTTPHook(ctx context.Context, hook HookDefinitio
 			Reason:   fmt.Sprintf("http request: %v", err),
 		}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	success := resp.StatusCode >= 200 && resp.StatusCode < 300
 	return HookResult{

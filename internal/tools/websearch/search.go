@@ -111,7 +111,7 @@ func (s SearchTool) Execute(ctx context.Context, args json.RawMessage) (tools.Re
 	if err != nil {
 		return tools.Result{Content: fmt.Sprintf("search error: %v", err), IsError: true}, nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return tools.Result{Content: fmt.Sprintf("search HTTP %d", resp.StatusCode), IsError: true}, nil

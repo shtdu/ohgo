@@ -17,7 +17,7 @@ type mockWriter struct {
 }
 
 func (m *mockWriter) Printf(format string, args ...any) {
-	m.buf.WriteString(fmt.Sprintf(format, args...))
+	fmt.Fprintf(&m.buf, format, args...)
 }
 
 func TestPermissionPrompter_Allow(t *testing.T) {

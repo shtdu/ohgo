@@ -140,11 +140,11 @@ func run(cmd *cobra.Command, args []string) error {
 	bridgeMgr := bridge.NewManager()
 	bridgeMgr.Register(bridge.NewClaudeCLI())
 	bridgeMgr.Register(bridge.NewCodexBridge())
-	defer bridgeMgr.CloseAll()
+	defer func() { _ = bridgeMgr.CloseAll() }()
 
 	// MCP subsystem
 	mcpMgr := mpcpkg.NewManager()
-	defer mcpMgr.CloseAll()
+	defer func() { _ = mcpMgr.CloseAll() }()
 
 	// Coordinator subsystem
 	coordDirs := []string{}

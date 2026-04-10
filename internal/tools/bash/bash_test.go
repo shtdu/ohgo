@@ -121,8 +121,8 @@ func TestBashTool_WorkingDirectory(t *testing.T) {
 
 	oldWd, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	result, err := tool.Execute(context.Background(), args)
 	require.NoError(t, err)

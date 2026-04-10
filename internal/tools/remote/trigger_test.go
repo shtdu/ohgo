@@ -36,7 +36,7 @@ func TestRemoteTrigger_PostWithBody(t *testing.T) {
 		body := make([]byte, r.ContentLength)
 		_, _ = r.Body.Read(body)
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "got: %s", string(body))
+		_, _ = fmt.Fprintf(w, "got: %s", string(body))
 	}))
 	defer srv.Close()
 
@@ -55,7 +55,7 @@ func TestRemoteTrigger_GetWithoutBody(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodGet, r.Method)
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "hello")
+		_, _ = fmt.Fprint(w, "hello")
 	}))
 	defer srv.Close()
 
@@ -75,7 +75,7 @@ func TestRemoteTrigger_CustomHeaders(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "Bearer test-token", r.Header.Get("Authorization"))
 		w.WriteHeader(http.StatusAccepted)
-		fmt.Fprint(w, "accepted")
+		_, _ = fmt.Fprint(w, "accepted")
 	}))
 	defer srv.Close()
 
@@ -159,7 +159,7 @@ func TestRemoteTrigger_ResponseTruncation(t *testing.T) {
 	longBody := strings.Repeat("x", 10000)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, longBody)
+		_, _ = fmt.Fprint(w, longBody)
 	}))
 	defer srv.Close()
 
@@ -178,7 +178,7 @@ func TestRemoteTrigger_DefaultMethodIsPost(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, http.MethodPost, r.Method)
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "ok")
+		_, _ = fmt.Fprint(w, "ok")
 	}))
 	defer srv.Close()
 

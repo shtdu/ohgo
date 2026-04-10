@@ -170,12 +170,12 @@ func TestFullCompact_WithMockAPI(t *testing.T) {
 	// Mock SSE server that returns a summary
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprintf(w, "event: message_start\ndata: {\"message\":{\"usage\":{\"input_tokens\":10,\"output_tokens\":0}}}\n\n")
-		fmt.Fprintf(w, "event: content_block_start\ndata: {\"type\":\"text\",\"text\":\"\"}\n\n")
-		fmt.Fprintf(w, "event: content_block_delta\ndata: {\"delta\":{\"type\":\"text_delta\",\"text\":\"Summary of conversation\"}}\n\n")
-		fmt.Fprintf(w, "event: content_block_stop\ndata: {}\n\n")
-		fmt.Fprintf(w, "event: message_delta\ndata: {\"usage\":{\"output_tokens\":10}}\n\n")
-		fmt.Fprintf(w, "event: message_stop\ndata: {}\n\n")
+		fmt.Fprintf(w, "event: message_start\ndata: {\"message\":{\"usage\":{\"input_tokens\":10,\"output_tokens\":0}}}\n\n") //nolint:errcheck
+		fmt.Fprintf(w, "event: content_block_start\ndata: {\"type\":\"text\",\"text\":\"\"}\n\n") //nolint:errcheck
+		fmt.Fprintf(w, "event: content_block_delta\ndata: {\"delta\":{\"type\":\"text_delta\",\"text\":\"Summary of conversation\"}}\n\n") //nolint:errcheck
+		fmt.Fprintf(w, "event: content_block_stop\ndata: {}\n\n") //nolint:errcheck
+		fmt.Fprintf(w, "event: message_delta\ndata: {\"usage\":{\"output_tokens\":10}}\n\n") //nolint:errcheck
+		fmt.Fprintf(w, "event: message_stop\ndata: {}\n\n") //nolint:errcheck
 		w.(http.Flusher).Flush()
 	}))
 	defer server.Close()

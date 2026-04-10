@@ -178,7 +178,7 @@ func TestEffortCmd_Valid(t *testing.T) {
 	}
 
 	// Verify it persists.
-	res, err = cmd.Run(context.Background(), "", deps)
+	res, _ = cmd.Run(context.Background(), "", deps)
 	if !strings.Contains(res.Output, "high") {
 		t.Errorf("expected effort to remain 'high', got %q", res.Output)
 	}

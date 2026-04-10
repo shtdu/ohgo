@@ -129,7 +129,7 @@ func globRecursive(root, pattern string, limit int) []string {
 	}
 
 	var matches []string
-	filepath.WalkDir(searchRoot, func(path string, d os.DirEntry, err error) error {
+	_ = filepath.WalkDir(searchRoot, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}

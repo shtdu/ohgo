@@ -24,8 +24,8 @@ func TestScan_WithFiles(t *testing.T) {
 	require.NoError(t, os.MkdirAll(memDir, 0o755))
 
 	// Write test files.
-	os.WriteFile(filepath.Join(memDir, "alpha.md"), []byte("---\nname: Alpha\n---\nAlpha body\n"), 0o644)
-	os.WriteFile(filepath.Join(memDir, "beta.md"), []byte("Beta content without frontmatter\n"), 0o644)
+	require.NoError(t, os.WriteFile(filepath.Join(memDir, "alpha.md"), []byte("---\nname: Alpha\n---\nAlpha body\n"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(memDir, "beta.md"), []byte("Beta content without frontmatter\n"), 0o644))
 
 	// We can't easily test Scan with a custom dir since it uses ProjectDir internally.
 	// Instead test parseFile directly.

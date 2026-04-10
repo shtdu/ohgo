@@ -136,7 +136,7 @@ func (t RemoteTriggerTool) Execute(ctx context.Context, args json.RawMessage) (t
 	if err != nil {
 		return tools.Result{Content: fmt.Sprintf("request failed: %v", err), IsError: true}, nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

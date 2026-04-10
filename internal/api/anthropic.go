@@ -110,20 +110,15 @@ func (c *AnthropicClient) streamOnce(ctx context.Context, opts StreamOptions, ch
 	req.Header.Set("anthropic-version", apiVersionHeader)
 	req.Header.Set("Accept", "text/event-stream")
 
-	// Mask API key for logging: show first 8 chars + "...".
-	maskedKey := c.apiKey
-	if len(maskedKey) > 8 {
-		maskedKey = maskedKey[:8] + "..."
-	}
-	slog.Debug("anthropic request", "url", c.baseURL, "model", opts.Model, "api_key", maskedKey, "body_len", len(body))
+	slog.Debug("anthropic request", "url", c.baseURL, "model", opts.Model)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return &APIError{StatusCode: 0, Message: err.Error(), Retryable: true}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
-	slog.Debug("anthropic response", "status", resp.StatusCode, "content_type", resp.Header.Get("Content-Type"))
+	slog.Debug("anthropic response", "status", resp.StatusCode)
 
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(resp.Body)
@@ -205,13 +200,18 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 			var msg struct {
 				Message struct {
 					Usage struct {
-						InputTokens  int `json:"input_tokens"`
-						OutputTokens int `json:"output_tokens"`
+						InputTokens              int `json:"input_tokens"`
+						OutputTokens             int `json:"output_tokens"`
+						CacheReadInputTokens     int `json:"cache_read_input_tokens"`
+						CacheCreationInputTokens int `json:"cache_creation_input_tokens"`
 					} `json:"usage"`
 				} `json:"message"`
 			}
 			if json.Unmarshal([]byte(data), &msg) == nil {
 				usage.InputTokens = msg.Message.Usage.InputTokens
+				usage.OutputTokens = msg.Message.Usage.OutputTokens
+				usage.CacheReadInputTokens = msg.Message.Usage.CacheReadInputTokens
+				usage.CacheCreationInputTokens = msg.Message.Usage.CacheCreationInputTokens
 			}
 
 		case "content_block_start":
@@ -263,11 +263,17 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 					StopReason string `json:"stop_reason"`
 				} `json:"delta"`
 				Usage struct {
-					OutputTokens int `json:"output_tokens"`
+					InputTokens              int `json:"input_tokens"`
+					OutputTokens             int `json:"output_tokens"`
+					CacheReadInputTokens     int `json:"cache_read_input_tokens"`
+					CacheCreationInputTokens int `json:"cache_creation_input_tokens"`
 				} `json:"usage"`
 			}
 			if json.Unmarshal([]byte(data), &msgDelta) == nil {
-				usage.OutputTokens = msgDelta.Usage.OutputTokens
+				usage.InputTokens += msgDelta.Usage.InputTokens
+				usage.OutputTokens += msgDelta.Usage.OutputTokens
+				usage.CacheReadInputTokens += msgDelta.Usage.CacheReadInputTokens
+				usage.CacheCreationInputTokens += msgDelta.Usage.CacheCreationInputTokens
 			}
 
 		case "message_stop":
@@ -275,6 +281,8 @@ func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent
 			msg := NewAssistantMessage(contentBlocks)
 			ch <- StreamEvent{Type: "message_complete", Data: msg}
 			ch <- StreamEvent{Type: "usage", Data: usage}
+			slog.Debug("anthropic usage", "input", usage.InputTokens, "output", usage.OutputTokens,
+				"cache_read", usage.CacheReadInputTokens, "cache_created", usage.CacheCreationInputTokens)
 		}
 
 		if line == "" {

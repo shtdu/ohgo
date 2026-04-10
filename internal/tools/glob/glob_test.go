@@ -38,8 +38,8 @@ func TestGlobTool_Name(t *testing.T) {
 func TestGlobTool_RecursiveGo(t *testing.T) {
 	dir := setupTestDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GlobTool{}
 	args, _ := json.Marshal(map[string]string{"pattern": "**/*.go"})
@@ -58,8 +58,8 @@ func TestGlobTool_RecursiveGo(t *testing.T) {
 func TestGlobTool_RecursiveWithPrefix(t *testing.T) {
 	dir := setupTestDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GlobTool{}
 	args, _ := json.Marshal(map[string]string{"pattern": "sub/**/*.go"})
@@ -79,8 +79,8 @@ func TestGlobTool_RecursiveWithPrefix(t *testing.T) {
 func TestGlobTool_SimpleStar(t *testing.T) {
 	dir := setupTestDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GlobTool{}
 	args, _ := json.Marshal(map[string]string{"pattern": "*.go"})
@@ -94,8 +94,8 @@ func TestGlobTool_SimpleStar(t *testing.T) {
 func TestGlobTool_NoMatches(t *testing.T) {
 	dir := setupTestDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GlobTool{}
 	args, _ := json.Marshal(map[string]string{"pattern": "*.xyz"})
@@ -108,8 +108,8 @@ func TestGlobTool_NoMatches(t *testing.T) {
 func TestGlobTool_LimitExceeded(t *testing.T) {
 	dir := setupTestDir(t)
 	oldWd, _ := os.Getwd()
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := GlobTool{}
 	args, _ := json.Marshal(map[string]any{"pattern": "**/*", "limit": 2})

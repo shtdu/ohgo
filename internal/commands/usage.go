@@ -15,6 +15,7 @@ func (usageCmd) ShortHelp() string { return "Show usage snapshot for this sessio
 
 func (usageCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
 	usage := deps.Engine.TotalUsage()
-	return Result{Output: fmt.Sprintf("Usage: %d input, %d output, %d total tokens",
-		usage.InputTokens, usage.OutputTokens, usage.TotalTokens())}, nil
+	return Result{Output: fmt.Sprintf("Usage: %d input, %d output, %d total tokens (cache: %d read, %d created)",
+		usage.InputTokens, usage.OutputTokens, usage.TotalTokens(),
+		usage.CacheReadInputTokens, usage.CacheCreationInputTokens)}, nil
 }

@@ -64,8 +64,10 @@ func TestStore_Remove_Missing(t *testing.T) {
 func TestStore_List(t *testing.T) {
 	s := setupStore(t)
 
-	s.Add("Alpha", "first")
-	s.Add("Beta", "second")
+	_, err := s.Add("Alpha", "first")
+	require.NoError(t, err)
+	_, err = s.Add("Beta", "second")
+	require.NoError(t, err)
 
 	names, err := s.List()
 	require.NoError(t, err)
@@ -77,7 +79,8 @@ func TestStore_List(t *testing.T) {
 func TestStore_LoadPrompt(t *testing.T) {
 	s := setupStore(t)
 
-	s.Add("Test", "memory content")
+	_, err := s.Add("Test", "memory content")
+	require.NoError(t, err)
 
 	prompt, err := s.LoadPrompt(0)
 	require.NoError(t, err)

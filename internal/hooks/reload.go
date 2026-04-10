@@ -117,7 +117,7 @@ func (r *Reloader) scanModTimes() {
 
 func (r *Reloader) scanModTimesCurrent() map[string]time.Time {
 	times := make(map[string]time.Time)
-	filepath.WalkDir(r.dir, func(path string, d os.DirEntry, err error) error {
+	_ = filepath.WalkDir(r.dir, func(path string, d os.DirEntry, err error) error {
 		if err != nil || d.IsDir() || d.Name() != "hooks.json" {
 			return nil
 		}

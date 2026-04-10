@@ -88,7 +88,7 @@ data: [DONE]
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "Bearer test-key", r.Header.Get("Authorization"))
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprint(w, sseData)
+		_, _ = fmt.Fprint(w, sseData)
 	}))
 	defer server.Close()
 
@@ -140,7 +140,7 @@ data: [DONE]
 `
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprint(w, sseData)
+		_, _ = fmt.Fprint(w, sseData)
 	}))
 	defer server.Close()
 
@@ -175,7 +175,7 @@ data: [DONE]
 func TestOpenAIClient_AuthError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprint(w, `{"error":{"message":"Invalid API key"}}`)
+		_, _ = fmt.Fprint(w, `{"error":{"message":"Invalid API key"}}`)
 	}))
 	defer server.Close()
 
@@ -203,11 +203,11 @@ func TestOpenAIClient_RetryOn429(t *testing.T) {
 		attempts++
 		if attempts < 3 {
 			w.WriteHeader(http.StatusTooManyRequests)
-			fmt.Fprint(w, `{"error":{"message":"Rate limit exceeded"}}`)
+			_, _ = fmt.Fprint(w, `{"error":{"message":"Rate limit exceeded"}}`)
 			return
 		}
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprint(w, `data: {"id":"chatcmpl-1","choices":[{"index":0,"delta":{"content":"OK"},"finish_reason":null}]}`+"\n\ndata: [DONE]\n")
+		_, _ = fmt.Fprint(w, `data: {"id":"chatcmpl-1","choices":[{"index":0,"delta":{"content":"OK"},"finish_reason":null}]}`+"\n\ndata: [DONE]\n")
 	}))
 	defer server.Close()
 
@@ -278,7 +278,7 @@ data: [DONE]
 `
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprint(w, sseData)
+		_, _ = fmt.Fprint(w, sseData)
 	}))
 	defer server.Close()
 
@@ -338,7 +338,7 @@ data: [DONE]
 `
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprint(w, sseData)
+		_, _ = fmt.Fprint(w, sseData)
 	}))
 	defer server.Close()
 
@@ -380,7 +380,7 @@ data: [DONE]
 `
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprint(w, sseData)
+		_, _ = fmt.Fprint(w, sseData)
 	}))
 	defer server.Close()
 
@@ -418,7 +418,7 @@ data: [DONE]
 `
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprint(w, sseData)
+		_, _ = fmt.Fprint(w, sseData)
 	}))
 	defer server.Close()
 

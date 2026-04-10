@@ -132,7 +132,7 @@ func (c *CopilotClient) streamOnce(ctx context.Context, opts StreamOptions, ch c
 	if err != nil {
 		return &APIError{StatusCode: 0, Message: err.Error(), Retryable: true}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(resp.Body)
@@ -171,7 +171,7 @@ func (c *CopilotClient) getCopilotToken(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", &APIError{StatusCode: 0, Message: err.Error(), Retryable: true}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)

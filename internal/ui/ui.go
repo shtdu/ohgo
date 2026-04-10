@@ -29,35 +29,35 @@ func (u *UI) WithErrWriter(w io.Writer) *UI {
 
 // Print writes a message to the terminal output.
 func (u *UI) Print(msg string) {
-	fmt.Fprint(u.out, msg)
+	_, _ = fmt.Fprint(u.out, msg)
 }
 
 // Printf writes a formatted message to the terminal output.
 func (u *UI) Printf(format string, args ...any) {
-	fmt.Fprintf(u.out, format, args...)
+	_, _ = fmt.Fprintf(u.out, format, args...)
 }
 
 // Println writes a message with a newline to the terminal output.
 func (u *UI) Println(msg string) {
-	fmt.Fprintln(u.out, msg)
+	_, _ = fmt.Fprintln(u.out, msg)
 }
 
 // PrintError writes an error message to the error writer.
 func (u *UI) PrintError(msg string) {
-	fmt.Fprintln(u.err, msg)
+	_, _ = fmt.Fprintln(u.err, msg)
 }
 
 // AskQuestion prompts the user with a question and optional choices,
 // then returns their answer. It satisfies the ask.Prompter interface.
 func (u *UI) AskQuestion(ctx context.Context, question string, options []string, defaultVal string) (string, error) {
-	fmt.Fprintln(u.out, question)
+	_, _ = fmt.Fprintln(u.out, question)
 	if len(options) > 0 {
-		fmt.Fprintf(u.out, "  Options: %v\n", options)
+		_, _ = fmt.Fprintf(u.out, "  Options: %v\n", options)
 	}
 	if defaultVal != "" {
-		fmt.Fprintf(u.out, "  Default: %s\n", defaultVal)
+		_, _ = fmt.Fprintf(u.out, "  Default: %s\n", defaultVal)
 	}
-	fmt.Fprint(u.out, "  Answer: ")
+	_, _ = fmt.Fprint(u.out, "  Answer: ")
 
 	answer, err := u.Prompt(ctx, "")
 	if err != nil {
@@ -71,7 +71,7 @@ func (u *UI) AskQuestion(ctx context.Context, question string, options []string,
 
 // Prompt displays a prompt and reads a line of user input.
 func (u *UI) Prompt(ctx context.Context, prompt string) (string, error) {
-	fmt.Fprint(u.out, prompt)
+	_, _ = fmt.Fprint(u.out, prompt)
 	lineCh := make(chan string, 1)
 	errCh := make(chan error, 1)
 	go func() {

@@ -96,7 +96,7 @@ func (f FetchTool) Execute(ctx context.Context, args json.RawMessage) (tools.Res
 	if err != nil {
 		return tools.Result{Content: fmt.Sprintf("fetch error: %v", err), IsError: true}, nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return tools.Result{Content: fmt.Sprintf("HTTP %d: %s", resp.StatusCode, resp.Status), IsError: true}, nil

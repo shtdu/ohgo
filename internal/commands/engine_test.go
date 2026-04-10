@@ -174,7 +174,7 @@ func TestExportCmd(t *testing.T) {
 	assert.Contains(t, res.Output, "saved to")
 
 	// Extract path from output and verify file exists
-	parts := strings.SplitN(res.Output, " ", -1)
+	parts := strings.Split(res.Output, " ")
 	path := parts[len(parts)-1]
 	data, err := os.ReadFile(path)
 	require.NoError(t, err)
@@ -275,7 +275,7 @@ func TestTagAndResumeCmd(t *testing.T) {
 	assert.Equal(t, 4, len(deps.Engine.Messages()))
 
 	// Cleanup
-	os.Remove(tagPath)
+	_ = os.Remove(tagPath)
 }
 
 func TestTagCmd_ListEmpty(t *testing.T) {
@@ -341,7 +341,7 @@ func TestTruncateText(t *testing.T) {
 
 func TestCommandInterface(t *testing.T) {
 	// Verify all commands satisfy the interface
-	var cmds []Command = []Command{
+	var cmds = []Command{
 		compactCmd{},
 		contextCmd{},
 		summaryCmd{},

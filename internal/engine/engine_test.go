@@ -218,7 +218,7 @@ func TestEngine_ContextCancel(t *testing.T) {
 
 	// Query should complete (the slow client returns empty stream on cancel)
 	// No assertion on error — the test verifies no deadlock/hang
-	eng.Query(ctx, "hello")
+	_ = eng.Query(ctx, "hello")
 }
 
 type slowAPIClient struct{}

@@ -64,7 +64,7 @@ func (m *Manager) Connect(ctx context.Context, cfg config.MCPServerConfig) error
 	m.mu.Lock()
 	// Close existing connection if replacing.
 	if existing, ok := m.connections[cfg.Name]; ok {
-		existing.Session.Close()
+		_ = existing.Session.Close()
 	}
 	m.connections[cfg.Name] = &ServerConn{
 		Name:    cfg.Name,

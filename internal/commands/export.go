@@ -32,7 +32,7 @@ func (exportCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
 	if err != nil {
 		return Result{}, fmt.Errorf("export: create temp file: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	if _, err := f.Write(data); err != nil {
 		return Result{}, fmt.Errorf("export: write: %w", err)

@@ -100,7 +100,7 @@ func TestWriteTool_ReadOnlyDirectory(t *testing.T) {
 	err := os.MkdirAll(readOnlyDir, 0555)
 	require.NoError(t, err)
 	// Ensure we can clean up after the test
-	defer os.Chmod(readOnlyDir, 0755)
+	defer func() { _ = os.Chmod(readOnlyDir, 0755) }()
 
 	path := filepath.Join(readOnlyDir, "file.txt")
 

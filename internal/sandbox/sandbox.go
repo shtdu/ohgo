@@ -46,10 +46,7 @@ func CheckAvailability() Availability {
 			}
 		}
 	case "darwin":
-		if _, err := exec.LookPath("sandbox-exec"); err != nil {
-			// sandbox-exec might not be required on all macOS versions
-			// Just note it but don't block
-		}
+		// sandbox-exec availability is optional on macOS
 	}
 
 	return Availability{
@@ -79,10 +76,10 @@ func WrapCommand(argv []string) ([]string, string, error) {
 	if err != nil {
 		return nil, "", fmt.Errorf("create temp config: %w", err)
 	}
-	defer tmpFile.Close()
+	defer func() { _ = tmpFile.Close() }()
 
 	if _, err := tmpFile.Write(config); err != nil {
-		os.Remove(tmpFile.Name())
+		_ = os.Remove(tmpFile.Name())
 		return nil, "", fmt.Errorf("write sandbox config: %w", err)
 	}
 

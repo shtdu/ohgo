@@ -106,7 +106,7 @@ func (m *Manager) CreateShell(_ context.Context, command, description, cwd strin
 	cmd.Stderr = syncWriter
 
 	if err := cmd.Start(); err != nil {
-		outputFile.Close()
+		_ = outputFile.Close()
 		cancel()
 		m.mu.Lock()
 		delete(m.tasks, id)
@@ -125,7 +125,7 @@ func (m *Manager) CreateShell(_ context.Context, command, description, cwd strin
 		waitErr := cmd.Wait()
 
 		// Close the output file now that the process is done writing.
-		outputFile.Close()
+		_ = outputFile.Close()
 
 		m.mu.Lock()
 		defer m.mu.Unlock()

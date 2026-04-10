@@ -42,7 +42,7 @@ func TestSearchTool_WithMockServer(t *testing.T) {
 			t.Errorf("expected POST, got %s", r.Method)
 		}
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(testDDGHTML))
+		_, _ = w.Write([]byte(testDDGHTML))
 	}))
 	defer server.Close()
 
@@ -58,7 +58,7 @@ func TestSearchTool_WithMockServer(t *testing.T) {
 
 func TestSearchTool_MaxResults(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(testDDGHTML))
+		_, _ = w.Write([]byte(testDDGHTML))
 	}))
 	defer server.Close()
 
@@ -73,7 +73,7 @@ func TestSearchTool_MaxResults(t *testing.T) {
 
 func TestSearchTool_EmptyResults(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("<html><body>No results here.</body></html>"))
+		_, _ = w.Write([]byte("<html><body>No results here.</body></html>"))
 	}))
 	defer server.Close()
 

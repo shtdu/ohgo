@@ -129,8 +129,8 @@ func TestReadTool_RelativePath(t *testing.T) {
 
 	oldWd, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(oldWd)
-	os.Chdir(dir)
+	defer func() { _ = os.Chdir(oldWd) }()
+	require.NoError(t, os.Chdir(dir))
 
 	tool := ReadTool{}
 	args, _ := json.Marshal(map[string]string{"path": "rel.txt"})

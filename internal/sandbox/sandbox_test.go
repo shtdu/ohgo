@@ -42,7 +42,7 @@ func TestWrapCommand_NotActive(t *testing.T) {
 		// srt installed: wrapped
 		assert.Contains(t, wrapped[0], "srt")
 		assert.NotEmpty(t, tmpFile)
-		os.Remove(tmpFile)
+		_ = os.Remove(tmpFile)
 	}
 }
 

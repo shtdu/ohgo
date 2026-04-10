@@ -124,30 +124,30 @@ func (EditTool) Execute(ctx context.Context, args json.RawMessage) (tools.Result
 	tmpPath := tmpFile.Name()
 
 	if _, err := tmpFile.WriteString(newContent); err != nil {
-		tmpFile.Close()
-		os.Remove(tmpPath)
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpPath)
 		return tools.Result{Content: fmt.Sprintf("Cannot write temp file: %v", err), IsError: true}, nil
 	}
 
 	if err := tmpFile.Close(); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return tools.Result{Content: fmt.Sprintf("Cannot close temp file: %v", err), IsError: true}, nil
 	}
 
 	// Preserve original file permissions
 	info, err := os.Stat(path)
 	if err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return tools.Result{Content: fmt.Sprintf("Cannot stat original file: %v", err), IsError: true}, nil
 	}
 
 	if err := os.Chmod(tmpPath, info.Mode()); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return tools.Result{Content: fmt.Sprintf("Cannot set file permissions: %v", err), IsError: true}, nil
 	}
 
 	if err := os.Rename(tmpPath, path); err != nil {
-		os.Remove(tmpPath)
+		_ = os.Remove(tmpPath)
 		return tools.Result{Content: fmt.Sprintf("Cannot rename temp file: %v", err), IsError: true}, nil
 	}
 
