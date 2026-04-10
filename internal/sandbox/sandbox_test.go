@@ -9,9 +9,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// skipIfNoSrt skips the test if srt is not available on the system.
+func skipIfNoSrt(t *testing.T) {
+	t.Helper()
+	if !CheckAvailability().Active() {
+		t.Skip("srt not available")
+	}
+}
+
 func TestCheckAvailability(t *testing.T) {
+	skipIfNoSrt(t)
 	avail := CheckAvailability()
-	// srt is installed (per README prerequisites)
 	assert.True(t, avail.Available, "srt should be available")
 	assert.True(t, avail.Enabled, "srt should be enabled")
 	assert.NotEmpty(t, avail.Command, "should have srt path")
@@ -38,6 +46,7 @@ func TestAvailability_Active(t *testing.T) {
 }
 
 func TestWrapCommand_Active(t *testing.T) {
+	skipIfNoSrt(t)
 	// srt is installed, so WrapCommand should wrap the command
 	argv := []string{"echo", "hello"}
 	wrapped, tmpFile, err := WrapCommand(argv)
@@ -56,6 +65,7 @@ func TestWrapCommand_Active(t *testing.T) {
 }
 
 func TestWrapCommand_Active_TempFileIsValid(t *testing.T) {
+	skipIfNoSrt(t)
 	argv := []string{"ls"}
 	wrapped, tmpFile, err := WrapCommand(argv)
 	require.NoError(t, err)
@@ -88,6 +98,7 @@ func TestWrapCommand_NotActive(t *testing.T) {
 }
 
 func TestWrapCommand_EmptyArgv(t *testing.T) {
+	skipIfNoSrt(t)
 	wrapped, tmpFile, err := WrapCommand([]string{})
 	require.NoError(t, err)
 	defer func() { _ = os.Remove(tmpFile) }()
@@ -100,6 +111,7 @@ func TestWrapCommand_EmptyArgv(t *testing.T) {
 }
 
 func TestWrapCommand_NilArgv(t *testing.T) {
+	skipIfNoSrt(t)
 	wrapped, tmpFile, err := WrapCommand(nil)
 	require.NoError(t, err)
 	defer func() { _ = os.Remove(tmpFile) }()
@@ -109,6 +121,7 @@ func TestWrapCommand_NilArgv(t *testing.T) {
 }
 
 func TestWrapCommand_ComplexArgv(t *testing.T) {
+	skipIfNoSrt(t)
 	argv := []string{"bash", "-c", "echo 'hello world' && ls -la"}
 	wrapped, tmpFile, err := WrapCommand(argv)
 	require.NoError(t, err)
