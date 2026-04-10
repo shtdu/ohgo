@@ -128,3 +128,257 @@ func TestParseBoolEnv(t *testing.T) {
 		assert.Equal(t, tt.want, parseBoolEnv(tt.input))
 	}
 }
+
+// --- Environment Override Tests (via Manager.Load) ---
+
+func TestLoad_AnthropicBaseURL(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("ANTHROPIC_MODEL", "")
+	t.Setenv("ANTHROPIC_BASE_URL", "https://custom.api.com")
+
+	mgr := NewManager(tmp)
+	s, err := mgr.Load(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, "https://custom.api.com", s.BaseURL)
+}
+
+func TestLoad_OpenHarnessBaseURL(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("ANTHROPIC_MODEL", "")
+	t.Setenv("ANTHROPIC_BASE_URL", "")
+	t.Setenv("OPENHARNESS_BASE_URL", "https://oh.api.com")
+
+	mgr := NewManager(tmp)
+	s, err := mgr.Load(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, "https://oh.api.com", s.BaseURL)
+}
+
+func TestLoad_AnthropicBaseURLPreferred(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("ANTHROPIC_MODEL", "")
+	t.Setenv("ANTHROPIC_BASE_URL", "https://anthropic.api.com")
+	t.Setenv("OPENHARNESS_BASE_URL", "https://oh.api.com")
+
+	mgr := NewManager(tmp)
+	s, err := mgr.Load(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, "https://anthropic.api.com", s.BaseURL)
+}
+
+func TestLoad_APIFormat(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("ANTHROPIC_MODEL", "")
+	t.Setenv("OPENHARNESS_API_FORMAT", "openai")
+
+	mgr := NewManager(tmp)
+	s, err := mgr.Load(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, "openai", s.APIFormat)
+}
+
+func TestLoad_Provider(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("ANTHROPIC_MODEL", "")
+	t.Setenv("OPENHARNESS_PROVIDER", "openai")
+
+	mgr := NewManager(tmp)
+	s, err := mgr.Load(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, "openai", s.Provider)
+}
+
+func TestLoad_MaxTurns(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("ANTHROPIC_MODEL", "")
+	t.Setenv("OPENHARNESS_MAX_TURNS", "100")
+
+	mgr := NewManager(tmp)
+	s, err := mgr.Load(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 100, s.MaxTurns)
+}
+
+func TestLoad_InvalidMaxTokens(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("ANTHROPIC_MODEL", "")
+	t.Setenv("OPENHARNESS_MAX_TOKENS", "notanumber")
+
+	mgr := NewManager(tmp)
+	s, err := mgr.Load(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 16384, s.MaxTokens, "should stay at default when env value is invalid")
+}
+
+func TestLoad_AnthropicModelPreferred(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("ANTHROPIC_MODEL", "claude-opus-4-6")
+	t.Setenv("OPENHARNESS_MODEL", "gpt-4")
+
+	mgr := NewManager(tmp)
+	s, err := mgr.Load(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, "claude-opus-4-6", s.Model)
+}
+
+// --- Merge Settings Tests ---
+
+func TestMergeSettings_Profiles(t *testing.T) {
+	base := DefaultSettings()
+	base.Profiles = nil
+
+	override := Settings{
+		Profiles: map[string]ProviderProfile{
+			"custom": {
+				Label:        "Custom Profile",
+				Provider:     "custom",
+				APIFormat:    "openai",
+				DefaultModel: "custom-model",
+			},
+		},
+	}
+
+	result := mergeSettings(base, override)
+	require.NotNil(t, result.Profiles)
+	assert.Contains(t, result.Profiles, "custom")
+	assert.Equal(t, "Custom Profile", result.Profiles["custom"].Label)
+}
+
+func TestMergeSettings_Permission(t *testing.T) {
+	base := DefaultSettings()
+
+	override := Settings{
+		Permission: PermissionSettings{
+			Mode:        "auto",
+			DeniedTools: []string{"rm"},
+		},
+	}
+
+	result := mergeSettings(base, override)
+	assert.Equal(t, "auto", result.Permission.Mode)
+	assert.Equal(t, []string{"rm"}, result.Permission.DeniedTools)
+}
+
+func TestMergeSettings_VimMode(t *testing.T) {
+	base := DefaultSettings()
+
+	override := Settings{
+		VimMode: true,
+	}
+
+	result := mergeSettings(base, override)
+	assert.True(t, result.VimMode)
+}
+
+func TestMergeSettings_Verbose(t *testing.T) {
+	base := DefaultSettings()
+
+	override := Settings{
+		Verbose: true,
+	}
+
+	result := mergeSettings(base, override)
+	assert.True(t, result.Verbose)
+}
+
+func TestMergeSettings_EmptyOverride(t *testing.T) {
+	base := DefaultSettings()
+	override := Settings{}
+
+	result := mergeSettings(base, override)
+	assert.Equal(t, base.Model, result.Model)
+	assert.Equal(t, base.MaxTokens, result.MaxTokens)
+	assert.Equal(t, base.MaxTurns, result.MaxTurns)
+	assert.Equal(t, base.ActiveProfile, result.ActiveProfile)
+	assert.Equal(t, base.APIFormat, result.APIFormat)
+	assert.Equal(t, base.Theme, result.Theme)
+	assert.Equal(t, base.OutputStyle, result.OutputStyle)
+	assert.False(t, result.VimMode)
+	assert.False(t, result.Verbose)
+}
+
+func TestMergeSettings_BaseURL(t *testing.T) {
+	base := DefaultSettings()
+
+	override := Settings{
+		BaseURL: "https://custom.api.com",
+	}
+
+	result := mergeSettings(base, override)
+	assert.Equal(t, "https://custom.api.com", result.BaseURL)
+}
+
+func TestMergeSettings_ActiveProfile(t *testing.T) {
+	base := DefaultSettings()
+
+	override := Settings{
+		ActiveProfile: "openai-compatible",
+	}
+
+	result := mergeSettings(base, override)
+	assert.Equal(t, "openai-compatible", result.ActiveProfile)
+}
+
+func TestMergeSettings_SystemPrompt(t *testing.T) {
+	base := DefaultSettings()
+
+	override := Settings{
+		SystemPrompt: "You are a helpful assistant.",
+	}
+
+	result := mergeSettings(base, override)
+	assert.Equal(t, "You are a helpful assistant.", result.SystemPrompt)
+}
+
+func TestMergeSettings_Theme(t *testing.T) {
+	base := DefaultSettings()
+
+	override := Settings{
+		Theme: "dark",
+	}
+
+	result := mergeSettings(base, override)
+	assert.Equal(t, "dark", result.Theme)
+}
+
+func TestMergeSettings_OutputStyle(t *testing.T) {
+	base := DefaultSettings()
+
+	override := Settings{
+		OutputStyle: "json",
+	}
+
+	result := mergeSettings(base, override)
+	assert.Equal(t, "json", result.OutputStyle)
+}
+
+// --- Save Error Tests ---
+
+func TestSave_InvalidPath(t *testing.T) {
+	s := DefaultSettings()
+	err := Save(s, "/nonexistent/deeply/nested/dir/settings.json")
+	assert.Error(t, err)
+}

@@ -1,8 +1,10 @@
 package memory
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -60,4 +62,107 @@ func TestParseKV(t *testing.T) {
 
 	_, _, ok = parseKV("key:")
 	assert.False(t, ok)
+}
+
+func TestScan_SkipNonMdFiles(t *testing.T) {
+	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	cwd := t.TempDir()
+	memDir, err := ProjectDir(cwd)
+	require.NoError(t, err)
+
+	require.NoError(t, os.WriteFile(filepath.Join(memDir, "notes.txt"), []byte("text file\n"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(memDir, "data.json"), []byte("{}\n"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(memDir, "notes.md"), []byte("---\nname: Notes\n---\nSome notes\n"), 0o644))
+
+	headers, err := Scan(cwd, 50)
+	require.NoError(t, err)
+	require.Len(t, headers, 1)
+	assert.Equal(t, "Notes", headers[0].Title)
+}
+
+func TestScan_SkipDirectories(t *testing.T) {
+	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	cwd := t.TempDir()
+	memDir, err := ProjectDir(cwd)
+	require.NoError(t, err)
+
+	require.NoError(t, os.MkdirAll(filepath.Join(memDir, "subdir"), 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(memDir, "subdir", "nested.md"), []byte("nested\n"), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(memDir, "test.md"), []byte("---\nname: Test\n---\nTest body\n"), 0o644))
+
+	headers, err := Scan(cwd, 50)
+	require.NoError(t, err)
+	require.Len(t, headers, 1)
+	assert.Equal(t, "Test", headers[0].Title)
+}
+
+func TestScan_MaxFilesCap(t *testing.T) {
+	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	cwd := t.TempDir()
+	memDir, err := ProjectDir(cwd)
+	require.NoError(t, err)
+
+	for i := 0; i < 5; i++ {
+		name := fmt.Sprintf("file%d.md", i)
+		content := fmt.Sprintf("---\nname: File%d\n---\nBody %d\n", i, i)
+		require.NoError(t, os.WriteFile(filepath.Join(memDir, name), []byte(content), 0o644))
+	}
+
+	headers, err := Scan(cwd, 3)
+	require.NoError(t, err)
+	assert.Len(t, headers, 3)
+}
+
+func TestScan_MaxFilesZero(t *testing.T) {
+	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	cwd := t.TempDir()
+	memDir, err := ProjectDir(cwd)
+	require.NoError(t, err)
+
+	for i := 0; i < 3; i++ {
+		name := fmt.Sprintf("file%d.md", i)
+		content := fmt.Sprintf("---\nname: File%d\n---\nBody %d\n", i, i)
+		require.NoError(t, os.WriteFile(filepath.Join(memDir, name), []byte(content), 0o644))
+	}
+
+	headers, err := Scan(cwd, 0)
+	require.NoError(t, err)
+	assert.Len(t, headers, 3)
+}
+
+func TestParseFile_LongDescription(t *testing.T) {
+	longLine := strings.Repeat("a", 250)
+	h := parseFile("/tmp/long.md", longLine+"\nother line\n", time.Now())
+	assert.Len(t, h.Description, 200)
+	assert.Equal(t, strings.Repeat("a", 200), h.Description)
+}
+
+func TestParseFile_LongBodyPreview(t *testing.T) {
+	var lines []string
+	for i := 0; i < 100; i++ {
+		lines = append(lines, "word"+fmt.Sprintf("%d", i))
+	}
+	content := strings.Join(lines, "\n")
+	h := parseFile("/tmp/longbody.md", content, time.Now())
+	assert.LessOrEqual(t, len(h.BodyPreview), 300)
+}
+
+func TestParseFile_TypeField(t *testing.T) {
+	h := parseFile("/tmp/typed.md", "---\nname: Typed\ntype: feedback\n---\nBody text\n", time.Now())
+	assert.Equal(t, "feedback", h.MemoryType)
+}
+
+func TestParseFile_EmptyContent(t *testing.T) {
+	h := parseFile("/tmp/empty.md", "", time.Now())
+	assert.NotPanics(t, func() {
+		_ = parseFile("/tmp/empty.md", "", time.Now())
+	})
+	assert.Empty(t, h.BodyPreview)
+}
+
+func TestParseKV_WsKey(t *testing.T) {
+	key, val, ok := parseKV("  key  :  value  ")
+	assert.True(t, ok)
+	assert.Equal(t, "key", key)
+	assert.Equal(t, "value", val)
 }

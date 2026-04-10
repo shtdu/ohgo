@@ -2,6 +2,8 @@ package mcp
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -142,4 +144,88 @@ func TestNewTransport_Unknown(t *testing.T) {
 	_, err := newTransport(cfg)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unknown transport")
+}
+
+func TestEnvMapToSlice_Empty(t *testing.T) {
+	result := envMapToSlice(map[string]string{})
+	assert.NotNil(t, result)
+	assert.Empty(t, result)
+}
+
+func TestEnvMapToSlice_WithEntries(t *testing.T) {
+	input := map[string]string{"KEY1": "val1", "KEY2": "val2"}
+	result := envMapToSlice(input)
+	assert.Len(t, result, 2)
+
+	got := map[string]bool{
+		"KEY1=val1": false,
+		"KEY2=val2": false,
+	}
+	for _, entry := range result {
+		got[entry] = true
+	}
+	for k, v := range got {
+		assert.True(t, v, "expected entry %q in result", k)
+	}
+}
+
+func TestHttpClientWithHeaders_Nil(t *testing.T) {
+	client := httpClientWithHeaders(nil)
+	assert.Nil(t, client)
+}
+
+func TestHttpClientWithHeaders_Empty(t *testing.T) {
+	client := httpClientWithHeaders(map[string]string{})
+	assert.Nil(t, client)
+}
+
+func TestHttpClientWithHeaders_WithHeaders(t *testing.T) {
+	client := httpClientWithHeaders(map[string]string{"Authorization": "Bearer test"})
+	require.NotNil(t, client)
+	transport, ok := client.Transport.(*headerTransport)
+	require.True(t, ok, "expected Transport to be *headerTransport")
+	assert.Equal(t, "Bearer test", transport.headers["Authorization"])
+}
+
+func TestHeaderTransport_RoundTrip(t *testing.T) {
+	var receivedHeaders http.Header
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedHeaders = r.Header.Clone()
+	}))
+	defer srv.Close()
+
+	transport := &headerTransport{headers: map[string]string{"X-Custom": "test-value"}}
+	client := &http.Client{Transport: transport}
+	resp, err := client.Get(srv.URL)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, "test-value", receivedHeaders.Get("X-Custom"))
+}
+
+func TestNewTransport_WithEnv(t *testing.T) {
+	cfg := config.MCPServerConfig{
+		Transport: "stdio",
+		Command:   "echo",
+		Args:      []string{"hello"},
+		Env:       map[string]string{"FOO": "bar", "BAZ": "qux"},
+	}
+	_, err := newTransport(cfg)
+	assert.NoError(t, err)
+}
+
+func TestManager_ConnectAll_EnabledError(t *testing.T) {
+	m := NewManager()
+	enabled := true
+	servers := []config.MCPServerConfig{
+		{
+			Name:      "bad-server",
+			Transport: "stdio",
+			Command:   "nonexistent-command-that-does-not-exist",
+			Enabled:   &enabled,
+		},
+	}
+	err := m.ConnectAll(context.Background(), servers)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "bad-server")
 }

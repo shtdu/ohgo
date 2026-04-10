@@ -247,3 +247,99 @@ func TestDiscoverSkipsPluginWithoutName(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, plugins)
 }
+
+func TestManager_List_Empty(t *testing.T) {
+	m := NewManager()
+	result := m.List()
+	assert.Empty(t, result)
+}
+
+func TestManager_Get_NotFound(t *testing.T) {
+	m := NewManager()
+	p := m.Get("nonexistent")
+	assert.Nil(t, p)
+}
+
+func TestManager_DiscoverAndList(t *testing.T) {
+	root := t.TempDir()
+
+	pluginDir := filepath.Join(root, "list-plugin")
+	require.NoError(t, os.MkdirAll(pluginDir, 0o755))
+	helperWritePluginJSON(t, pluginDir, Manifest{
+		Name:    "list-plugin",
+		Version: "1.0.0",
+	})
+
+	m := NewManager()
+	require.NoError(t, m.Discover(context.Background(), root))
+
+	list := m.List()
+	require.Len(t, list, 1)
+	assert.Equal(t, "list-plugin", list[0].Manifest.Name)
+}
+
+func TestManager_Get_AfterDiscover(t *testing.T) {
+	root := t.TempDir()
+
+	pluginDir := filepath.Join(root, "get-plugin")
+	require.NoError(t, os.MkdirAll(pluginDir, 0o755))
+	helperWritePluginJSON(t, pluginDir, Manifest{
+		Name:    "get-plugin",
+		Version: "2.0.0",
+	})
+
+	m := NewManager()
+	require.NoError(t, m.Discover(context.Background(), root))
+
+	p := m.Get("get-plugin")
+	require.NotNil(t, p)
+	assert.Equal(t, "get-plugin", p.Manifest.Name)
+	assert.Equal(t, "2.0.0", p.Manifest.Version)
+
+	assert.Nil(t, m.Get("wrong-name"))
+}
+
+func TestManager_List_ReturnsCopy(t *testing.T) {
+	root := t.TempDir()
+
+	pluginDir := filepath.Join(root, "copy-plugin")
+	require.NoError(t, os.MkdirAll(pluginDir, 0o755))
+	helperWritePluginJSON(t, pluginDir, Manifest{
+		Name: "copy-plugin",
+	})
+
+	m := NewManager()
+	require.NoError(t, m.Discover(context.Background(), root))
+
+	first := m.List()
+	require.Len(t, first, 1)
+
+	// Mutate the returned slice.
+	first = append(first, nil)
+
+	// List again and verify the internal state is unchanged.
+	second := m.List()
+	assert.Len(t, second, 1)
+	assert.Equal(t, "copy-plugin", second[0].Manifest.Name)
+}
+
+func TestManager_Discover_Overwrites(t *testing.T) {
+	dirA := t.TempDir()
+
+	pluginDir := filepath.Join(dirA, "plugin-a")
+	require.NoError(t, os.MkdirAll(pluginDir, 0o755))
+	helperWritePluginJSON(t, pluginDir, Manifest{
+		Name: "plugin-a",
+	})
+
+	m := NewManager()
+	require.NoError(t, m.Discover(context.Background(), dirA))
+	require.Len(t, m.List(), 1)
+
+	// Discover from an empty directory replaces the previous plugins.
+	dirB := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(dirB, "empty"), 0o755))
+
+	require.NoError(t, m.Discover(context.Background(), dirB))
+	assert.Empty(t, m.List())
+}

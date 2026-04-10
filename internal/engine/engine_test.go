@@ -3,8 +3,10 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -276,4 +278,108 @@ func TestEngine_SetMethods(t *testing.T) {
 
 	eng.SetMaxTurns(42)
 	assert.Equal(t, 42, eng.opts.MaxTurns)
+}
+
+func TestSummarizeArgs(t *testing.T) {
+	longCmd := strings.Repeat("x", 201)
+
+	longJSON := `{"file_path":"` + strings.Repeat("a", 300) + `"}`
+	invalidJSON := `{bad json`
+
+	tests := []struct {
+		name     string
+		args     json.RawMessage
+		want     string
+		checkFunc func(t *testing.T, got string)
+	}{
+		{
+			name: "command field",
+			args: json.RawMessage(`{"command":"ls -la"}`),
+			want: "ls -la",
+		},
+		{
+			name: "command field truncated",
+			args: json.RawMessage(`{"command":"` + longCmd + `"}`),
+			want: strings.Repeat("x", 200) + "...",
+		},
+		{
+			name: "no command field falls back to raw json",
+			args: json.RawMessage(`{"file_path":"/some/path"}`),
+			want: `{"file_path":"/some/path"}`,
+		},
+		{
+			name: "raw json truncated",
+			args: json.RawMessage(longJSON),
+			checkFunc: func(t *testing.T, got string) {
+				t.Helper()
+				assert.True(t, utf8.ValidString(got), "result should be valid UTF-8")
+				assert.True(t, strings.HasSuffix(got, "..."), "result should end with \"...\"")
+				assert.LessOrEqual(t, len(got), 203, "result should be at most 200 chars + \"...\"")
+			},
+		},
+		{
+			name: "invalid json falls back",
+			args: json.RawMessage(invalidJSON),
+			want: invalidJSON,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := summarizeArgs(tt.args)
+			if tt.checkFunc != nil {
+				tt.checkFunc(t, got)
+			} else {
+				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func TestEngine_LoadMessages(t *testing.T) {
+	eng := New(Options{MaxTurns: 10})
+	msgs := []api.Message{
+		api.NewUserTextMessage("hello"),
+		api.NewUserTextMessage("world"),
+	}
+	eng.LoadMessages(msgs)
+
+	got := eng.Messages()
+	require.Len(t, got, 2)
+	assert.Equal(t, "hello", got[0].Content[0].Text)
+	assert.Equal(t, "world", got[1].Content[0].Text)
+}
+
+func TestEngine_LoadMessages_Nil(t *testing.T) {
+	eng := New(Options{MaxTurns: 10})
+	eng.messages = []api.Message{api.NewUserTextMessage("old")}
+	eng.LoadMessages(nil)
+	assert.Empty(t, eng.Messages())
+}
+
+func TestEngine_Accessors(t *testing.T) {
+	eng := New(Options{
+		Model:    "gpt-5",
+		MaxTurns: 50,
+		System:   "you are helpful",
+	})
+
+	assert.Equal(t, "gpt-5", eng.Model())
+	assert.Equal(t, 50, eng.MaxTurns())
+	assert.Equal(t, "you are helpful", eng.SystemPrompt())
+	assert.Equal(t, 0, eng.Turns())
+}
+
+func TestEngine_New_Defaults(t *testing.T) {
+	eng := New(Options{})
+	assert.Equal(t, 200, eng.MaxTurns())
+}
+
+func TestEngine_SetAPIClient(t *testing.T) {
+	eng := New(Options{})
+	assert.Nil(t, eng.opts.APIClient)
+
+	mock := &mockAPIClient{}
+	eng.SetAPIClient(mock)
+	assert.Equal(t, mock, eng.opts.APIClient)
 }

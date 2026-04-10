@@ -76,3 +76,61 @@ func TestUI_Prompt_EmptyInput(t *testing.T) {
 		assert.Empty(t, line) // empty string on EOF
 	}
 }
+
+func TestAskQuestion_WithAnswer(t *testing.T) {
+	in := strings.NewReader("my answer\n")
+	var out bytes.Buffer
+	u := New(&out, in)
+	answer, err := u.AskQuestion(context.Background(), "What is your name?", nil, "")
+	require.NoError(t, err)
+	assert.Equal(t, "my answer", answer)
+	assert.Contains(t, out.String(), "What is your name?")
+}
+
+func TestAskQuestion_WithOptions(t *testing.T) {
+	in := strings.NewReader("red\n")
+	var out bytes.Buffer
+	u := New(&out, in)
+	answer, err := u.AskQuestion(context.Background(), "Pick a color", []string{"red", "blue"}, "")
+	require.NoError(t, err)
+	assert.Equal(t, "red", answer)
+	assert.Contains(t, out.String(), "Options: [red blue]")
+}
+
+func TestAskQuestion_WithDefault_Used(t *testing.T) {
+	in := strings.NewReader("\n")
+	var out bytes.Buffer
+	u := New(&out, in)
+	answer, err := u.AskQuestion(context.Background(), "Continue?", nil, "default-answer")
+	require.NoError(t, err)
+	assert.Equal(t, "default-answer", answer)
+	assert.Contains(t, out.String(), "Default: default-answer")
+}
+
+func TestAskQuestion_WithDefault_Overridden(t *testing.T) {
+	in := strings.NewReader("custom\n")
+	var out bytes.Buffer
+	u := New(&out, in)
+	answer, err := u.AskQuestion(context.Background(), "Continue?", nil, "default")
+	require.NoError(t, err)
+	assert.Equal(t, "custom", answer)
+}
+
+func TestAskQuestion_EmptyAnswerNoDefault(t *testing.T) {
+	in := strings.NewReader("\n")
+	var out bytes.Buffer
+	u := New(&out, in)
+	answer, err := u.AskQuestion(context.Background(), "Your name?", nil, "")
+	require.NoError(t, err)
+	assert.Equal(t, "", answer)
+}
+
+func TestAskQuestion_ContextCancel(t *testing.T) {
+	in := iotest.TimeoutReader(strings.NewReader("data"))
+	var out bytes.Buffer
+	u := New(&out, in)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := u.AskQuestion(ctx, "Question?", nil, "")
+	assert.Error(t, err)
+}
