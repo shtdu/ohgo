@@ -1,10 +1,12 @@
-.PHONY: all build build-og build-ogmo test test-v test-pkg vet lint check ci fmt clean install run
+.PHONY: all build build-og build-ogmo test test-v test-pkg coverage vet lint check ci fmt clean install run
 
 BINDIR    := bin
 GO        := go
 GOPATH    := $(shell go env GOPATH)
 GOLANGCI_LINT ?= golangci-lint
 LINT_FLAGS    ?=
+COVERAGE_FILE ?= coverage.out
+COVERAGE_HTML ?= coverage.html
 
 all: build
 
@@ -31,6 +33,12 @@ test-v:
 # Run a single package's tests (usage: make test-pkg PKG=./internal/engine)
 test-pkg:
 	$(GO) test -v $(PKG)
+
+# Run all tests and generate coverage reports
+coverage:
+	$(GO) test -coverprofile=$(COVERAGE_FILE) -covermode=atomic ./...
+	$(GO) tool cover -func=$(COVERAGE_FILE) | tail -1
+	$(GO) tool cover -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
 
 # Vet
 vet:
@@ -61,4 +69,4 @@ run: build-og
 
 # Clean build artifacts
 clean:
-	rm -rf $(BINDIR)
+	rm -rf $(BINDIR) $(COVERAGE_FILE) $(COVERAGE_HTML)

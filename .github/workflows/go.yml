@@ -10,6 +10,7 @@ on:
       - "go.mod"
       - "go.sum"
       - "Makefile"
+      - "codecov.yml"
       - ".github/workflows/go.yml"
   pull_request:
     paths:
@@ -17,6 +18,7 @@ on:
       - "go.mod"
       - "go.sum"
       - "Makefile"
+      - "codecov.yml"
       - ".github/workflows/go.yml"
 
 permissions:
@@ -51,3 +53,15 @@ jobs:
       - name: Build, lint, and test merged changes
         if: github.event_name == 'push'
         run: make ci LINT_FLAGS="--new-from-rev=${{ github.event.before }}"
+
+      - name: Generate coverage report
+        run: make coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.out
+          flags: go
+          name: go-coverage
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
