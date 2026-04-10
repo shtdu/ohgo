@@ -3,7 +3,6 @@ package sandbox
 import (
 	"encoding/json"
 	"os"
-	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,14 +11,24 @@ import (
 
 func TestCheckAvailability(t *testing.T) {
 	avail := CheckAvailability()
-	// Result depends on whether srt is installed
-	if _, err := exec.LookPath("srt"); err == nil {
-		assert.True(t, avail.Available)
-		assert.NotEmpty(t, avail.Command)
-	} else {
-		assert.False(t, avail.Available)
-		assert.Contains(t, avail.Reason, "srt")
-	}
+	// srt is installed (per README prerequisites)
+	assert.True(t, avail.Available, "srt should be available")
+	assert.True(t, avail.Enabled, "srt should be enabled")
+	assert.NotEmpty(t, avail.Command, "should have srt path")
+	assert.True(t, avail.Active(), "sandbox should be active")
+}
+
+func TestCheckAvailability_NoSrt(t *testing.T) {
+	// Temporarily remove srt from PATH
+	originalPath := os.Getenv("PATH")
+	t.Cleanup(func() { os.Setenv("PATH", originalPath) })
+
+	// Set PATH to empty so srt cannot be found
+	t.Setenv("PATH", "/nonexistent")
+	avail := CheckAvailability()
+	assert.False(t, avail.Available)
+	assert.False(t, avail.Enabled)
+	assert.Contains(t, avail.Reason, "srt")
 }
 
 func TestAvailability_Active(t *testing.T) {
@@ -28,22 +37,86 @@ func TestAvailability_Active(t *testing.T) {
 	assert.False(t, Availability{Enabled: false, Available: true}.Active())
 }
 
-func TestWrapCommand_NotActive(t *testing.T) {
-	// If srt is not installed, command should pass through unchanged
+func TestWrapCommand_Active(t *testing.T) {
+	// srt is installed, so WrapCommand should wrap the command
 	argv := []string{"echo", "hello"}
 	wrapped, tmpFile, err := WrapCommand(argv)
 	require.NoError(t, err)
+	defer os.Remove(tmpFile)
 
-	if _, lookErr := exec.LookPath("srt"); lookErr != nil {
-		// srt not installed: passthrough
-		assert.Equal(t, argv, wrapped)
-		assert.Empty(t, tmpFile)
-	} else {
-		// srt installed: wrapped
-		assert.Contains(t, wrapped[0], "srt")
-		assert.NotEmpty(t, tmpFile)
-		_ = os.Remove(tmpFile)
-	}
+	assert.Contains(t, wrapped[0], "srt", "first element should be srt binary")
+	assert.NotEmpty(t, tmpFile, "should return a temp config file path")
+
+	// Verify the wrapped command structure: srt --settings <config> -- <original args>
+	require.GreaterOrEqual(t, len(wrapped), 4, "should have srt prefix args")
+	assert.Equal(t, "--settings", wrapped[1])
+	assert.Equal(t, tmpFile, wrapped[2])
+	assert.Equal(t, "--", wrapped[3])
+	assert.Equal(t, argv, wrapped[4:], "original args should be at the end")
+}
+
+func TestWrapCommand_Active_TempFileIsValid(t *testing.T) {
+	argv := []string{"ls"}
+	wrapped, tmpFile, err := WrapCommand(argv)
+	require.NoError(t, err)
+	defer os.Remove(tmpFile)
+
+	// The temp file should contain valid JSON config
+	data, err := os.ReadFile(tmpFile)
+	require.NoError(t, err)
+
+	var parsed map[string]any
+	require.NoError(t, json.Unmarshal(data, &parsed))
+	assert.Contains(t, parsed, "allow")
+	assert.Contains(t, parsed, "deny")
+
+	// Verify wrapped command references the same temp file
+	assert.Equal(t, tmpFile, wrapped[2])
+}
+
+func TestWrapCommand_NotActive(t *testing.T) {
+	// Force inactive by removing srt from PATH
+	originalPath := os.Getenv("PATH")
+	t.Cleanup(func() { os.Setenv("PATH", originalPath) })
+	t.Setenv("PATH", "/nonexistent")
+
+	argv := []string{"echo", "hello"}
+	wrapped, tmpFile, err := WrapCommand(argv)
+	require.NoError(t, err)
+	assert.Equal(t, argv, wrapped, "should pass through unchanged")
+	assert.Empty(t, tmpFile, "should not create temp file")
+}
+
+func TestWrapCommand_EmptyArgv(t *testing.T) {
+	wrapped, tmpFile, err := WrapCommand([]string{})
+	require.NoError(t, err)
+	defer os.Remove(tmpFile)
+
+	assert.Contains(t, wrapped[0], "srt")
+	assert.Equal(t, "--settings", wrapped[1])
+	assert.Equal(t, "--", wrapped[3])
+	// No original args appended
+	assert.Equal(t, 4, len(wrapped), "should have only srt prefix args")
+}
+
+func TestWrapCommand_NilArgv(t *testing.T) {
+	wrapped, tmpFile, err := WrapCommand(nil)
+	require.NoError(t, err)
+	defer os.Remove(tmpFile)
+
+	assert.Contains(t, wrapped[0], "srt")
+	assert.Equal(t, 4, len(wrapped), "should have only srt prefix args, nil appends nothing")
+}
+
+func TestWrapCommand_ComplexArgv(t *testing.T) {
+	argv := []string{"bash", "-c", "echo 'hello world' && ls -la"}
+	wrapped, tmpFile, err := WrapCommand(argv)
+	require.NoError(t, err)
+	defer os.Remove(tmpFile)
+
+	// Verify original args appear at the end of the wrapped command
+	tail := wrapped[len(wrapped)-len(argv):]
+	assert.Equal(t, argv, tail)
 }
 
 func TestBuildConfig(t *testing.T) {
@@ -67,17 +140,14 @@ func TestBuildConfig_ValidJSON(t *testing.T) {
 	config, err := buildConfig()
 	require.NoError(t, err)
 
-	// Verify it is valid JSON that can be re-unmarshaled
 	var parsed map[string]any
 	err = json.Unmarshal(config, &parsed)
 	require.NoError(t, err)
 
-	// Verify exactly the expected top-level keys exist
 	assert.Len(t, parsed, 2)
 	assert.Contains(t, parsed, "allow")
 	assert.Contains(t, parsed, "deny")
 
-	// Verify both allow and deny are arrays (not nil or other types)
 	allow, ok := parsed["allow"].([]any)
 	assert.True(t, ok, "allow should be a JSON array")
 	assert.NotNil(t, allow)
@@ -85,61 +155,6 @@ func TestBuildConfig_ValidJSON(t *testing.T) {
 	deny, ok := parsed["deny"].([]any)
 	assert.True(t, ok, "deny should be a JSON array")
 	assert.NotNil(t, deny)
-}
-
-func TestWrapCommand_EmptyArgv(t *testing.T) {
-	// Empty argv should pass through without crashing
-	wrapped, tmpFile, err := WrapCommand([]string{})
-	require.NoError(t, err)
-
-	if _, lookErr := exec.LookPath("srt"); lookErr != nil {
-		// srt not installed: passthrough
-		assert.Equal(t, []string{}, wrapped)
-		assert.Empty(t, tmpFile)
-	} else {
-		// srt installed: wrapped with prefix args
-		assert.True(t, len(wrapped) >= 4, "wrapped command should have srt prefix args")
-		assert.NotEmpty(t, tmpFile)
-		_ = os.Remove(tmpFile)
-	}
-}
-
-func TestWrapCommand_NilArgv(t *testing.T) {
-	// Nil argv should pass through without crashing
-	wrapped, tmpFile, err := WrapCommand(nil)
-	require.NoError(t, err)
-
-	if _, lookErr := exec.LookPath("srt"); lookErr != nil {
-		// srt not installed: passthrough returns nil
-		assert.Nil(t, wrapped)
-		assert.Empty(t, tmpFile)
-	} else {
-		// srt installed: wrapped with prefix args, nil gets appended as nothing
-		assert.True(t, len(wrapped) >= 4, "wrapped command should have srt prefix args")
-		assert.NotEmpty(t, tmpFile)
-		_ = os.Remove(tmpFile)
-	}
-}
-
-func TestWrapCommand_ComplexArgv(t *testing.T) {
-	argv := []string{"bash", "-c", "echo 'hello world' && ls -la"}
-	wrapped, tmpFile, err := WrapCommand(argv)
-	require.NoError(t, err)
-
-	if _, lookErr := exec.LookPath("srt"); lookErr != nil {
-		// srt not installed: passthrough unchanged
-		assert.Equal(t, argv, wrapped)
-		assert.Empty(t, tmpFile)
-	} else {
-		// srt installed: result has at least the original args plus srt prefix
-		assert.GreaterOrEqual(t, len(wrapped), len(argv))
-		assert.Contains(t, wrapped[0], "srt")
-		assert.NotEmpty(t, tmpFile)
-		// Verify original args appear at the end of the wrapped command
-		tail := wrapped[len(wrapped)-len(argv):]
-		assert.Equal(t, argv, tail)
-		_ = os.Remove(tmpFile)
-	}
 }
 
 func TestAvailability_Fields(t *testing.T) {
@@ -156,16 +171,13 @@ func TestAvailability_Fields(t *testing.T) {
 	assert.Equal(t, "/usr/bin/srt", avail.Command)
 	assert.True(t, avail.Active())
 
-	// Verify toggling Enabled flips Active
 	avail.Enabled = false
 	assert.False(t, avail.Active())
 
-	// Verify toggling Available flips Active
 	avail.Enabled = true
 	avail.Available = false
 	assert.False(t, avail.Active())
 
-	// Verify zero-value struct
 	zero := Availability{}
 	assert.False(t, zero.Active())
 	assert.Empty(t, zero.Reason)
