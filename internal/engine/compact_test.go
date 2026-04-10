@@ -167,16 +167,22 @@ func TestFullCompact_FewerThanPreserve(t *testing.T) {
 }
 
 func TestFullCompact_WithMockAPI(t *testing.T) {
-	// Mock SSE server that returns a summary
+	// Mock SSE server that returns a summary using proper Anthropic SSE format
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/event-stream")
-		fmt.Fprintf(w, "event: message_start\ndata: {\"message\":{\"usage\":{\"input_tokens\":10,\"output_tokens\":0}}}\n\n") //nolint:errcheck
-		fmt.Fprintf(w, "event: content_block_start\ndata: {\"type\":\"text\",\"text\":\"\"}\n\n") //nolint:errcheck
-		fmt.Fprintf(w, "event: content_block_delta\ndata: {\"delta\":{\"type\":\"text_delta\",\"text\":\"Summary of conversation\"}}\n\n") //nolint:errcheck
-		fmt.Fprintf(w, "event: content_block_stop\ndata: {}\n\n") //nolint:errcheck
-		fmt.Fprintf(w, "event: message_delta\ndata: {\"usage\":{\"output_tokens\":10}}\n\n") //nolint:errcheck
-		fmt.Fprintf(w, "event: message_stop\ndata: {}\n\n") //nolint:errcheck
-		w.(http.Flusher).Flush()
+		flusher := w.(http.Flusher)
+		fmt.Fprintf(w, "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_1\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[],\"model\":\"test-model\",\"stop_reason\":null,\"stop_sequence\":null,\"usage\":{\"input_tokens\":10,\"output_tokens\":0,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0}}}\n\n") //nolint:errcheck
+		flusher.Flush()
+		fmt.Fprintf(w, "event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n") //nolint:errcheck
+		flusher.Flush()
+		fmt.Fprintf(w, "event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Summary of conversation\"}}\n\n") //nolint:errcheck
+		flusher.Flush()
+		fmt.Fprintf(w, "event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\n") //nolint:errcheck
+		flusher.Flush()
+		fmt.Fprintf(w, "event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\",\"stop_sequence\":null},\"usage\":{\"output_tokens\":10}}\n\n") //nolint:errcheck
+		flusher.Flush()
+		fmt.Fprintf(w, "event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n") //nolint:errcheck
+		flusher.Flush()
 	}))
 	defer server.Close()
 
