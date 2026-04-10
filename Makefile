@@ -38,7 +38,7 @@ test-pkg:
 coverage:
 	$(GO) test -coverprofile=$(COVERAGE_FILE) -covermode=atomic ./...
 	$(GO) tool cover -func=$(COVERAGE_FILE) | tail -1
-	$(GO) tool cover -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
+# 	$(GO) tool cover -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
 
 # Vet
 vet:

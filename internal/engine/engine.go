@@ -350,12 +350,28 @@ func (e *Engine) LoadMessages(msgs []api.Message) {
 var _ = json.RawMessage{}
 
 // summarizeArgs returns a short summary of tool arguments for display.
+// For tools with a "command" field (e.g. bash), it extracts and shows
+// just the command string instead of the raw JSON.
 func summarizeArgs(args json.RawMessage) string {
+	// For bash-like tools, extract the command field for cleaner display.
+	var parsed map[string]json.RawMessage
+	if err := json.Unmarshal(args, &parsed); err == nil {
+		if raw, ok := parsed["command"]; ok {
+			var cmd string
+			if err := json.Unmarshal(raw, &cmd); err == nil {
+				const maxLen = 200
+				if len(cmd) <= maxLen {
+					return cmd
+				}
+				return cmd[:maxLen] + "..."
+			}
+		}
+	}
+	// Fallback: show raw JSON, truncated.
 	const maxLen = 200
 	if len(args) <= maxLen {
 		return string(args)
 	}
-	// Find a safe UTF-8 boundary to avoid splitting multi-byte characters.
 	end := maxLen
 	for end > 0 && !utf8.RuneStart(args[end]) {
 		end--
