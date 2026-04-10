@@ -112,7 +112,10 @@ func (c *AnthropicClient) processStream(stream *ssestream.Stream[anthropic.Messa
 
 	for stream.Next() {
 		event := stream.Current()
-		msg.Accumulate(event)
+		if err := msg.Accumulate(event); err != nil {
+			ch <- StreamEvent{Type: "error", Data: err.Error()}
+			return
+		}
 
 		switch ev := event.AsAny().(type) {
 		case anthropic.ContentBlockDeltaEvent:

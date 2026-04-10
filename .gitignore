@@ -1,3 +1,4 @@
 bin/
-ai.setting
+*.setting
 .claude/worktrees/
+coverage.*

@@ -33,6 +33,7 @@ og -p "List all functions in main.go"
 
 - Go 1.25+
 - An LLM API key (Anthropic, OpenAI-compatible, or others)
+- **Optional sandboxing:** [`@anthropic-ai/sandbox-runtime`](https://www.npmjs.com/package/@anthropic-ai/sandbox-runtime) (`npm install -g @anthropic-ai/sandbox-runtime`) enables OS-level sandboxing for commands run by the agent. Without `srt`, commands still run, but with the normal permissions of your user account. On macOS, `srt` uses the system sandbox support (`sandbox-exec`); on Linux/WSL, it also requires `bwrap` (bubblewrap).
 
 ## Build Commands
 

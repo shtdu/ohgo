@@ -21,7 +21,7 @@ func TestCheckAvailability(t *testing.T) {
 func TestCheckAvailability_NoSrt(t *testing.T) {
 	// Temporarily remove srt from PATH
 	originalPath := os.Getenv("PATH")
-	t.Cleanup(func() { os.Setenv("PATH", originalPath) })
+	t.Cleanup(func() { _ = os.Setenv("PATH", originalPath) })
 
 	// Set PATH to empty so srt cannot be found
 	t.Setenv("PATH", "/nonexistent")
@@ -42,7 +42,7 @@ func TestWrapCommand_Active(t *testing.T) {
 	argv := []string{"echo", "hello"}
 	wrapped, tmpFile, err := WrapCommand(argv)
 	require.NoError(t, err)
-	defer os.Remove(tmpFile)
+	defer func() { _ = os.Remove(tmpFile) }()
 
 	assert.Contains(t, wrapped[0], "srt", "first element should be srt binary")
 	assert.NotEmpty(t, tmpFile, "should return a temp config file path")
@@ -59,7 +59,7 @@ func TestWrapCommand_Active_TempFileIsValid(t *testing.T) {
 	argv := []string{"ls"}
 	wrapped, tmpFile, err := WrapCommand(argv)
 	require.NoError(t, err)
-	defer os.Remove(tmpFile)
+	defer func() { _ = os.Remove(tmpFile) }()
 
 	// The temp file should contain valid JSON config
 	data, err := os.ReadFile(tmpFile)
@@ -77,7 +77,7 @@ func TestWrapCommand_Active_TempFileIsValid(t *testing.T) {
 func TestWrapCommand_NotActive(t *testing.T) {
 	// Force inactive by removing srt from PATH
 	originalPath := os.Getenv("PATH")
-	t.Cleanup(func() { os.Setenv("PATH", originalPath) })
+	t.Cleanup(func() { _ = os.Setenv("PATH", originalPath) })
 	t.Setenv("PATH", "/nonexistent")
 
 	argv := []string{"echo", "hello"}
@@ -90,7 +90,7 @@ func TestWrapCommand_NotActive(t *testing.T) {
 func TestWrapCommand_EmptyArgv(t *testing.T) {
 	wrapped, tmpFile, err := WrapCommand([]string{})
 	require.NoError(t, err)
-	defer os.Remove(tmpFile)
+	defer func() { _ = os.Remove(tmpFile) }()
 
 	assert.Contains(t, wrapped[0], "srt")
 	assert.Equal(t, "--settings", wrapped[1])
@@ -102,7 +102,7 @@ func TestWrapCommand_EmptyArgv(t *testing.T) {
 func TestWrapCommand_NilArgv(t *testing.T) {
 	wrapped, tmpFile, err := WrapCommand(nil)
 	require.NoError(t, err)
-	defer os.Remove(tmpFile)
+	defer func() { _ = os.Remove(tmpFile) }()
 
 	assert.Contains(t, wrapped[0], "srt")
 	assert.Equal(t, 4, len(wrapped), "should have only srt prefix args, nil appends nothing")
@@ -112,7 +112,7 @@ func TestWrapCommand_ComplexArgv(t *testing.T) {
 	argv := []string{"bash", "-c", "echo 'hello world' && ls -la"}
 	wrapped, tmpFile, err := WrapCommand(argv)
 	require.NoError(t, err)
-	defer os.Remove(tmpFile)
+	defer func() { _ = os.Remove(tmpFile) }()
 
 	// Verify original args appear at the end of the wrapped command
 	tail := wrapped[len(wrapped)-len(argv):]

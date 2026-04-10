@@ -314,8 +314,9 @@ func TestManager_List_ReturnsCopy(t *testing.T) {
 	first := m.List()
 	require.Len(t, first, 1)
 
-	// Mutate the returned slice.
-	first = append(first, nil)
+	// Mutate the returned slice — result is intentionally discarded to verify
+	// that List returns a defensive copy.
+	_ = append(first, nil)
 
 	// List again and verify the internal state is unchanged.
 	second := m.List()

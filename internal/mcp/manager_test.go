@@ -198,7 +198,7 @@ func TestHeaderTransport_RoundTrip(t *testing.T) {
 	client := &http.Client{Transport: transport}
 	resp, err := client.Get(srv.URL)
 	require.NoError(t, err)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	assert.Equal(t, "test-value", receivedHeaders.Get("X-Custom"))
 }
