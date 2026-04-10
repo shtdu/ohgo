@@ -1,293 +1,224 @@
+// Package api defines the Client interface for communicating with LLM providers.
+//
+// This file implements the Anthropic provider using the official anthropic-sdk-go.
 package api
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
-	"io"
+	"errors"
 	"log/slog"
-	"net/http"
 	"strings"
-	"time"
+
+	"github.com/anthropics/anthropic-sdk-go"
+	"github.com/anthropics/anthropic-sdk-go/option"
+	"github.com/anthropics/anthropic-sdk-go/packages/param"
+	"github.com/anthropics/anthropic-sdk-go/packages/ssestream"
 )
 
-const (
-	defaultBaseURL   = "https://api.anthropic.com/v1/messages"
-	apiVersionHeader = "2023-06-01"
-)
-
-// AnthropicClient implements the Client interface for the Anthropic API.
+// AnthropicClient implements the Client interface using the official Anthropic Go SDK.
 type AnthropicClient struct {
-	apiKey     string
-	baseURL    string
-	httpClient *http.Client
-	maxRetries int
+	client anthropic.Client
 }
 
 // AnthropicOption configures an AnthropicClient.
-type AnthropicOption func(*AnthropicClient)
+type AnthropicOption func(*sdkConfig)
+
+type sdkConfig struct {
+	apiKey     string
+	baseURL    string
+	maxRetries int
+}
 
 // WithAPIKey sets the API key.
 func WithAPIKey(key string) AnthropicOption {
-	return func(c *AnthropicClient) { c.apiKey = key }
+	return func(c *sdkConfig) { c.apiKey = key }
 }
 
 // WithBaseURL sets a custom API base URL.
 func WithBaseURL(url string) AnthropicOption {
-	return func(c *AnthropicClient) { c.baseURL = url }
-}
-
-// WithHTTPClient sets a custom HTTP client.
-func WithHTTPClient(hc *http.Client) AnthropicOption {
-	return func(c *AnthropicClient) { c.httpClient = hc }
+	return func(c *sdkConfig) { c.baseURL = url }
 }
 
 // WithMaxRetries sets the maximum number of retries.
 func WithMaxRetries(n int) AnthropicOption {
-	return func(c *AnthropicClient) { c.maxRetries = n }
+	return func(c *sdkConfig) { c.maxRetries = n }
 }
 
-// NewAnthropicClient creates a new Anthropic API client.
+// NewAnthropicClient creates a new Anthropic API client backed by the official SDK.
 func NewAnthropicClient(opts ...AnthropicOption) *AnthropicClient {
-	c := &AnthropicClient{
-		baseURL:    defaultBaseURL,
-		httpClient: &http.Client{Timeout: 5 * time.Minute},
+	cfg := &sdkConfig{
 		maxRetries: maxRetries,
 	}
 	for _, opt := range opts {
-		opt(c)
+		opt(cfg)
 	}
-	return c
+
+	sdkOpts := []option.RequestOption{
+		option.WithAPIKey(cfg.apiKey),
+	}
+	if cfg.baseURL != "" {
+		// Strip /v1/messages suffix for backward compat with the old baseURL format.
+		sdkOpts = append(sdkOpts, option.WithBaseURL(normalizeBaseURL(cfg.baseURL)))
+	}
+	if cfg.maxRetries > 0 {
+		sdkOpts = append(sdkOpts, option.WithMaxRetries(cfg.maxRetries))
+	}
+
+	client := anthropic.NewClient(sdkOpts...)
+	return &AnthropicClient{
+		client: client,
+	}
+}
+
+func normalizeBaseURL(url string) string {
+	return strings.TrimSuffix(url, "/v1/messages")
 }
 
 // Stream sends a request to the Anthropic API and returns a channel of events.
 func (c *AnthropicClient) Stream(ctx context.Context, opts StreamOptions) (<-chan StreamEvent, error) {
-	ch := make(chan StreamEvent, 64)
+	params := c.buildParams(opts)
+	stream := c.client.Messages.NewStreaming(ctx, params)
 
+	ch := make(chan StreamEvent, 64)
 	go func() {
 		defer close(ch)
-		c.streamWithRetry(ctx, opts, ch)
+		c.processStream(stream, ch)
 	}()
 
 	return ch, nil
 }
 
-func (c *AnthropicClient) streamWithRetry(ctx context.Context, opts StreamOptions, ch chan<- StreamEvent) {
-	for attempt := 0; attempt <= c.maxRetries; attempt++ {
-		if err := c.streamOnce(ctx, opts, ch); err != nil {
-			if !IsRetryable(err) || attempt >= c.maxRetries {
-				ch <- StreamEvent{Type: "error", Data: err.Error()}
-				return
-			}
-			delay := retryDelay(attempt)
-			slog.Warn("api retry", "attempt", attempt+1, "max", c.maxRetries, "delay", delay, "error", err)
-			select {
-			case <-ctx.Done():
-				ch <- StreamEvent{Type: "error", Data: ctx.Err().Error()}
-				return
-			case <-time.After(delay):
-			}
-			continue
-		}
-		return
-	}
-}
-
-func (c *AnthropicClient) streamOnce(ctx context.Context, opts StreamOptions, ch chan<- StreamEvent) error {
-	body, err := c.buildRequestBody(opts)
-	if err != nil {
-		return fmt.Errorf("build request body: %w", err)
+func (c *AnthropicClient) buildParams(opts StreamOptions) anthropic.MessageNewParams {
+	params := anthropic.MessageNewParams{
+		Model:     anthropic.Model(opts.Model),
+		MaxTokens: int64(opts.MaxTokens),
+		Messages:  convertMessages(opts.Messages),
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL, bytes.NewReader(body))
-	if err != nil {
-		return fmt.Errorf("create request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-api-key", c.apiKey)
-	req.Header.Set("anthropic-version", apiVersionHeader)
-	req.Header.Set("Accept", "text/event-stream")
-
-	slog.Debug("anthropic request", "url", c.baseURL, "model", opts.Model)
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return &APIError{StatusCode: 0, Message: err.Error(), Retryable: true}
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	slog.Debug("anthropic response", "status", resp.StatusCode)
-
-	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(resp.Body)
-		slog.Debug("anthropic error body", "body", string(respBody))
-		apiErr := TranslateAPIError(resp.StatusCode, string(respBody))
-		return apiErr
-	}
-
-	c.parseSSEStream(resp.Body, ch)
-	return nil
-}
-
-func (c *AnthropicClient) buildRequestBody(opts StreamOptions) ([]byte, error) {
-	req := map[string]any{
-		"model":      opts.Model,
-		"max_tokens": opts.MaxTokens,
-		"stream":     true,
-	}
-
-	// Messages
-	msgs := make([]any, 0, len(opts.Messages))
-	for _, msg := range opts.Messages {
-		msgs = append(msgs, msg)
-	}
-	req["messages"] = msgs
-
-	// System prompt
 	if opts.System != "" {
-		req["system"] = opts.System
+		params.System = []anthropic.TextBlockParam{{Text: opts.System}}
 	}
 
-	// Tools
 	if len(opts.Tools) > 0 {
-		tools := make([]map[string]any, 0, len(opts.Tools))
-		for _, t := range opts.Tools {
-			tools = append(tools, map[string]any{
-				"name":         t.Name,
-				"description":  t.Description,
-				"input_schema": t.InputSchema,
+		params.Tools = convertTools(opts.Tools)
+	}
+
+	return params
+}
+
+func (c *AnthropicClient) processStream(stream *ssestream.Stream[anthropic.MessageStreamEventUnion], ch chan<- StreamEvent) {
+	var msg anthropic.Message
+
+	for stream.Next() {
+		event := stream.Current()
+		msg.Accumulate(event)
+
+		switch ev := event.AsAny().(type) {
+		case anthropic.ContentBlockDeltaEvent:
+			switch delta := ev.Delta.AsAny().(type) {
+			case anthropic.TextDelta:
+				ch <- StreamEvent{Type: "text_delta", Data: delta.Text}
+			}
+		case anthropic.MessageStopEvent:
+			apiMsg := sdkToMessage(msg)
+			ch <- StreamEvent{Type: "message_complete", Data: apiMsg}
+			ch <- StreamEvent{Type: "usage", Data: sdkToUsage(msg.Usage)}
+			slog.Debug("anthropic usage",
+				"input", msg.Usage.InputTokens,
+				"output", msg.Usage.OutputTokens,
+				"cache_read", msg.Usage.CacheReadInputTokens,
+				"cache_created", msg.Usage.CacheCreationInputTokens)
+		}
+	}
+
+	if err := stream.Err(); err != nil {
+		ch <- StreamEvent{Type: "error", Data: sdkError(err).Error()}
+	}
+}
+
+// convertMessages converts internal Messages to SDK MessageParams.
+func convertMessages(msgs []Message) []anthropic.MessageParam {
+	result := make([]anthropic.MessageParam, 0, len(msgs))
+	for _, msg := range msgs {
+		blocks := make([]anthropic.ContentBlockParamUnion, 0, len(msg.Content))
+		for _, block := range msg.Content {
+			switch block.Type {
+			case "text":
+				blocks = append(blocks, anthropic.NewTextBlock(block.Text))
+			case "tool_use":
+				blocks = append(blocks, anthropic.NewToolUseBlock(block.ID, json.RawMessage(block.Input), block.Name))
+			case "tool_result":
+				blocks = append(blocks, anthropic.NewToolResultBlock(block.ToolUseID, block.Content, block.IsError))
+			}
+		}
+		switch msg.Role {
+		case "user":
+			result = append(result, anthropic.NewUserMessage(blocks...))
+		case "assistant":
+			result = append(result, anthropic.NewAssistantMessage(blocks...))
+		}
+	}
+	return result
+}
+
+// convertTools converts internal ToolDefs to SDK ToolUnionParams.
+func convertTools(tools []ToolDef) []anthropic.ToolUnionParam {
+	result := make([]anthropic.ToolUnionParam, 0, len(tools))
+	for _, t := range tools {
+		result = append(result, anthropic.ToolUnionParam{
+			OfTool: &anthropic.ToolParam{
+				Name:        t.Name,
+				Description: param.NewOpt(t.Description),
+				InputSchema: anthropic.ToolInputSchemaParam{
+					Properties: t.InputSchema,
+				},
+			},
+		})
+	}
+	return result
+}
+
+// sdkToMessage converts an accumulated SDK Message to an internal Message.
+func sdkToMessage(msg anthropic.Message) Message {
+	blocks := make([]ContentBlock, 0, len(msg.Content))
+	for _, block := range msg.Content {
+		switch block.Type {
+		case "text":
+			blocks = append(blocks, ContentBlock{Type: "text", Text: block.Text})
+		case "tool_use":
+			blocks = append(blocks, ContentBlock{
+				Type:  "tool_use",
+				ID:    block.ID,
+				Name:  block.Name,
+				Input: block.Input,
 			})
 		}
-		req["tools"] = tools
 	}
-
-	return json.Marshal(req)
+	return NewAssistantMessage(blocks)
 }
 
-func (c *AnthropicClient) parseSSEStream(reader io.Reader, ch chan<- StreamEvent) {
-	scanner := bufio.NewScanner(reader)
-	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
-
-	var eventType string
-	var contentBlocks []ContentBlock
-	var toolInputParts []string // accumulates input_json_delta fragments
-	var textParts []string     // accumulates text_delta fragments
-	var usage UsageSnapshot
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if prefix, ok := strings.CutPrefix(line, "event: "); ok {
-			eventType = prefix
-			continue
-		}
-
-		if !strings.HasPrefix(line, "data: ") {
-			if line == "" {
-				eventType = ""
-			}
-			continue
-		}
-
-		data, _ := strings.CutPrefix(line, "data: ")
-
-		switch eventType {
-		case "message_start":
-			contentBlocks = nil
-			usage = UsageSnapshot{}
-			var msg struct {
-				Message struct {
-					Usage struct {
-						InputTokens              int `json:"input_tokens"`
-						OutputTokens             int `json:"output_tokens"`
-						CacheReadInputTokens     int `json:"cache_read_input_tokens"`
-						CacheCreationInputTokens int `json:"cache_creation_input_tokens"`
-					} `json:"usage"`
-				} `json:"message"`
-			}
-			if json.Unmarshal([]byte(data), &msg) == nil {
-				usage.InputTokens = msg.Message.Usage.InputTokens
-				usage.OutputTokens = msg.Message.Usage.OutputTokens
-				usage.CacheReadInputTokens = msg.Message.Usage.CacheReadInputTokens
-				usage.CacheCreationInputTokens = msg.Message.Usage.CacheCreationInputTokens
-			}
-
-		case "content_block_start":
-			toolInputParts = nil
-			textParts = nil
-			var block struct {
-				ContentBlock ContentBlock `json:"content_block"`
-			}
-			if json.Unmarshal([]byte(data), &block) == nil {
-				contentBlocks = append(contentBlocks, block.ContentBlock)
-			}
-
-		case "content_block_delta":
-			var delta struct {
-				Delta struct {
-					Type        string `json:"type"`
-					Text        string `json:"text"`
-					PartialJSON string `json:"partial_json"`
-				} `json:"delta"`
-				Index int `json:"index"`
-			}
-			if json.Unmarshal([]byte(data), &delta) == nil {
-				if delta.Delta.Type == "text_delta" && delta.Delta.Text != "" {
-					textParts = append(textParts, delta.Delta.Text)
-					ch <- StreamEvent{Type: "text_delta", Data: delta.Delta.Text}
-				}
-				if delta.Delta.Type == "input_json_delta" && delta.Delta.PartialJSON != "" {
-					toolInputParts = append(toolInputParts, delta.Delta.PartialJSON)
-				}
-			}
-
-		case "content_block_stop":
-			if len(contentBlocks) > 0 {
-				idx := len(contentBlocks) - 1
-				if len(textParts) > 0 {
-					contentBlocks[idx].Text = strings.Join(textParts, "")
-					textParts = nil
-				}
-				if len(toolInputParts) > 0 {
-					combined := strings.Join(toolInputParts, "")
-					contentBlocks[idx].Input = json.RawMessage(combined)
-					toolInputParts = nil
-				}
-			}
-
-		case "message_delta":
-			var msgDelta struct {
-				Delta struct {
-					StopReason string `json:"stop_reason"`
-				} `json:"delta"`
-				Usage struct {
-					InputTokens              int `json:"input_tokens"`
-					OutputTokens             int `json:"output_tokens"`
-					CacheReadInputTokens     int `json:"cache_read_input_tokens"`
-					CacheCreationInputTokens int `json:"cache_creation_input_tokens"`
-				} `json:"usage"`
-			}
-			if json.Unmarshal([]byte(data), &msgDelta) == nil {
-				usage.InputTokens += msgDelta.Usage.InputTokens
-				usage.OutputTokens += msgDelta.Usage.OutputTokens
-				usage.CacheReadInputTokens += msgDelta.Usage.CacheReadInputTokens
-				usage.CacheCreationInputTokens += msgDelta.Usage.CacheCreationInputTokens
-			}
-
-		case "message_stop":
-			// Emit the complete message
-			msg := NewAssistantMessage(contentBlocks)
-			ch <- StreamEvent{Type: "message_complete", Data: msg}
-			ch <- StreamEvent{Type: "usage", Data: usage}
-			slog.Debug("anthropic usage", "input", usage.InputTokens, "output", usage.OutputTokens,
-				"cache_read", usage.CacheReadInputTokens, "cache_created", usage.CacheCreationInputTokens)
-		}
-
-		if line == "" {
-			eventType = ""
-		}
+// sdkToUsage converts SDK Usage to internal UsageSnapshot.
+func sdkToUsage(u anthropic.Usage) UsageSnapshot {
+	return UsageSnapshot{
+		InputTokens:              int(u.InputTokens),
+		OutputTokens:             int(u.OutputTokens),
+		CacheReadInputTokens:     int(u.CacheReadInputTokens),
+		CacheCreationInputTokens: int(u.CacheCreationInputTokens),
 	}
 }
 
+// sdkError maps an SDK error to an internal API error.
+func sdkError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	// The SDK's apierror.Error is aliased as anthropic.Error and carries StatusCode.
+	var sdkErr *anthropic.Error
+	if errors.As(err, &sdkErr) {
+		return TranslateAPIError(sdkErr.StatusCode, sdkErr.Error())
+	}
+
+	return &APIError{StatusCode: 0, Message: err.Error(), Retryable: false}
+}

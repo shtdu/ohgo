@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -13,21 +12,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// mockSSEServer creates a test server that serves SSE events.
-func mockSSEServer(events []string) *httptest.Server {
+// anthropicSSEServer creates a test server that serves Anthropic-format SSE events.
+func anthropicSSEServer(events []string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify auth header
 		if r.Header.Get("x-api-key") == "" {
 			w.WriteHeader(401)
-			_, _ = fmt.Fprint(w, "missing api key")
+			_, _ = fmt.Fprint(w, `{"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}`)
 			return
 		}
 
 		w.Header().Set("Content-Type", "text/event-stream")
 		flusher, ok := w.(http.Flusher)
 		if !ok {
-			t := testing.Testing()
-			_ = t
 			return
 		}
 
@@ -38,23 +35,26 @@ func mockSSEServer(events []string) *httptest.Server {
 	}))
 }
 
-func TestAnthropicClient_TextStreaming(t *testing.T) {
-	sseEvents := []string{
-		"event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":10}}}\n\n",
-		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
-		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"Hello\"}}\n\n",
-		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\" world\"}}\n\n",
-		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n",
-		"event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens\":5}}\n\n",
+// Full SSE response for a simple text message: "Hello world"
+func textSSEEvents() []string {
+	return []string{
+		"event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_1\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[],\"model\":\"claude-sonnet-4-6\",\"stop_reason\":null,\"stop_sequence\":null,\"usage\":{\"input_tokens\":10,\"output_tokens\":0,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0}}}\n\n",
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Hello\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\" world\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\n",
+		"event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\",\"stop_sequence\":null},\"usage\":{\"output_tokens\":5}}\n\n",
 		"event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n",
 	}
+}
 
-	server := mockSSEServer(sseEvents)
+func TestAnthropicClient_TextStreaming(t *testing.T) {
+	server := anthropicSSEServer(textSSEEvents())
 	defer server.Close()
 
 	client := NewAnthropicClient(
 		WithAPIKey("test-key"),
-		WithBaseURL(server.URL+"/v1/messages"),
+		WithBaseURL(server.URL),
 	)
 
 	ch, err := client.Stream(context.Background(), StreamOptions{
@@ -90,25 +90,23 @@ func TestAnthropicClient_TextStreaming(t *testing.T) {
 }
 
 func TestAnthropicClient_TextAccumulatedInContentBlock(t *testing.T) {
-	// Verify that text_delta fragments are accumulated into contentBlock.Text
-	// on content_block_stop (the behavior added by the textParts accumulator).
-	sseEvents := []string{
-		"event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":5}}}\n\n",
-		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
-		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"Go\"}}\n\n",
-		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\" \"}}\n\n",
-		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"rewritten\"}}\n\n",
-		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n",
-		"event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens\":3}}\n\n",
+	events := []string{
+		"event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_2\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[],\"model\":\"test\",\"stop_reason\":null,\"stop_sequence\":null,\"usage\":{\"input_tokens\":5,\"output_tokens\":0,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0}}}\n\n",
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Go\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\" \"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"rewritten\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\n",
+		"event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\",\"stop_sequence\":null},\"usage\":{\"output_tokens\":3}}\n\n",
 		"event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n",
 	}
 
-	server := mockSSEServer(sseEvents)
+	server := anthropicSSEServer(events)
 	defer server.Close()
 
 	client := NewAnthropicClient(
 		WithAPIKey("test-key"),
-		WithBaseURL(server.URL + "/v1/messages"),
+		WithBaseURL(server.URL),
 	)
 
 	ch, err := client.Stream(context.Background(), StreamOptions{
@@ -129,36 +127,35 @@ func TestAnthropicClient_TextAccumulatedInContentBlock(t *testing.T) {
 	}
 }
 
-func TestAnthropicClient_MultipleContentBlocks_ResetTextParts(t *testing.T) {
-	// Verify textParts resets between content blocks (text + tool_use + text).
-	sseEvents := []string{
-		"event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":10}}}\n\n",
+func TestAnthropicClient_MultipleContentBlocks(t *testing.T) {
+	events := []string{
+		"event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"id\":\"msg_3\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[],\"model\":\"test\",\"stop_reason\":null,\"stop_sequence\":null,\"usage\":{\"input_tokens\":10,\"output_tokens\":0,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0}}}\n\n",
 
 		// Block 0: text
-		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
-		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"Let me check\"}}\n\n",
-		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n",
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":0,\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"Let me check\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":0}\n\n",
 
 		// Block 1: tool_use with input_json_delta
-		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"tool_use\",\"id\":\"tool_1\",\"name\":\"bash\"}}\n\n",
-		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"input_json_delta\",\"partial_json\":\"{\\\"command\\\":\\\"ls\\\"}\"}}\n\n",
-		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n",
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":1,\"content_block\":{\"type\":\"tool_use\",\"id\":\"tool_1\",\"name\":\"bash\",\"input\":{}}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":1,\"delta\":{\"type\":\"input_json_delta\",\"partial_json\":\"{\\\"command\\\":\\\"ls\\\"}\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":1}\n\n",
 
 		// Block 2: text (continues after tool result)
-		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
-		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"delta\":{\"type\":\"text_delta\",\"text\":\"Done.\"}}\n\n",
-		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n",
+		"event: content_block_start\ndata: {\"type\":\"content_block_start\",\"index\":2,\"content_block\":{\"type\":\"text\",\"text\":\"\"}}\n\n",
+		"event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":2,\"delta\":{\"type\":\"text_delta\",\"text\":\"Done.\"}}\n\n",
+		"event: content_block_stop\ndata: {\"type\":\"content_block_stop\",\"index\":2}\n\n",
 
-		"event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens\":10}}\n\n",
+		"event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\",\"stop_sequence\":null},\"usage\":{\"output_tokens\":10}}\n\n",
 		"event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n",
 	}
 
-	server := mockSSEServer(sseEvents)
+	server := anthropicSSEServer(events)
 	defer server.Close()
 
 	client := NewAnthropicClient(
 		WithAPIKey("test-key"),
-		WithBaseURL(server.URL + "/v1/messages"),
+		WithBaseURL(server.URL),
 	)
 
 	ch, err := client.Stream(context.Background(), StreamOptions{
@@ -194,13 +191,14 @@ func TestAnthropicClient_MultipleContentBlocks_ResetTextParts(t *testing.T) {
 func TestAnthropicClient_AuthError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(401)
-		_, _ = fmt.Fprint(w, "invalid api key")
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}`)
 	}))
 	defer server.Close()
 
 	client := NewAnthropicClient(
 		WithAPIKey("bad-key"),
-		WithBaseURL(server.URL+"/v1/messages"),
+		WithBaseURL(server.URL),
 		WithMaxRetries(0),
 	)
 
@@ -226,28 +224,23 @@ func TestAnthropicClient_RetryOn429(t *testing.T) {
 		calls++
 		if calls <= 1 {
 			w.WriteHeader(429)
-			_, _ = fmt.Fprint(w, "rate limited")
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"type":"error","error":{"type":"rate_limit_error","message":"rate limited"}}`)
 			return
 		}
 		// Success on second call
 		w.Header().Set("Content-Type", "text/event-stream")
 		flusher := w.(http.Flusher)
-		_, _ = fmt.Fprint(w, "event: message_start\ndata: {\"type\":\"message_start\",\"message\":{\"usage\":{\"input_tokens\":5}}}\n\n")
-		flusher.Flush()
-		_, _ = fmt.Fprint(w, "event: content_block_start\ndata: {\"type\":\"content_block_start\",\"content_block\":{\"type\":\"text\",\"text\":\"ok\"}}\n\n")
-		flusher.Flush()
-		_, _ = fmt.Fprint(w, "event: content_block_stop\ndata: {\"type\":\"content_block_stop\"}\n\n")
-		flusher.Flush()
-		_, _ = fmt.Fprint(w, "event: message_delta\ndata: {\"type\":\"message_delta\",\"delta\":{\"stop_reason\":\"end_turn\"},\"usage\":{\"output_tokens\":2}}\n\n")
-		flusher.Flush()
-		_, _ = fmt.Fprint(w, "event: message_stop\ndata: {\"type\":\"message_stop\"}\n\n")
-		flusher.Flush()
+		for _, ev := range textSSEEvents() {
+			_, _ = fmt.Fprint(w, ev)
+			flusher.Flush()
+		}
 	}))
 	defer server.Close()
 
 	client := NewAnthropicClient(
 		WithAPIKey("test-key"),
-		WithBaseURL(server.URL+"/v1/messages"),
+		WithBaseURL(server.URL),
 		WithMaxRetries(2),
 	)
 
@@ -270,7 +263,6 @@ func TestAnthropicClient_RetryOn429(t *testing.T) {
 
 func TestAnthropicClient_ContextCancel(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Slow response
 		time.Sleep(10 * time.Second)
 	}))
 	defer server.Close()
@@ -280,7 +272,7 @@ func TestAnthropicClient_ContextCancel(t *testing.T) {
 
 	client := NewAnthropicClient(
 		WithAPIKey("test-key"),
-		WithBaseURL(server.URL+"/v1/messages"),
+		WithBaseURL(server.URL),
 		WithMaxRetries(0),
 	)
 
@@ -295,34 +287,4 @@ func TestAnthropicClient_ContextCancel(t *testing.T) {
 		// drain
 	}
 	// Should complete without hanging
-}
-
-func TestAnthropicClient_BuildRequestBody(t *testing.T) {
-	client := NewAnthropicClient(WithAPIKey("test"))
-	body, err := client.buildRequestBody(StreamOptions{
-		Model:     "claude-sonnet-4-6",
-		MaxTokens: 100,
-		System:    "you are helpful",
-		Messages:  []Message{NewUserTextMessage("hello")},
-		Tools: []ToolDef{
-			{Name: "bash", Description: "run command", InputSchema: map[string]any{"type": "object"}},
-		},
-	})
-	require.NoError(t, err)
-
-	var decoded map[string]any
-	require.NoError(t, json.Unmarshal(body, &decoded))
-
-	assert.Equal(t, "claude-sonnet-4-6", decoded["model"])
-	assert.Equal(t, float64(100), decoded["max_tokens"])
-	assert.Equal(t, true, decoded["stream"])
-	assert.Equal(t, "you are helpful", decoded["system"])
-
-	msgs, ok := decoded["messages"].([]any)
-	require.True(t, ok)
-	require.Len(t, msgs, 1)
-
-	tools, ok := decoded["tools"].([]any)
-	require.True(t, ok)
-	require.Len(t, tools, 1)
 }
