@@ -1,0 +1,53 @@
+name: Go
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - "Makefile"
+      - ".github/workflows/go.yml"
+  pull_request:
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - "Makefile"
+      - ".github/workflows/go.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    name: Build, lint, and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.11.3
+          install-only: true
+
+      - name: Build, lint, and test pull request changes
+        if: github.event_name == 'pull_request'
+        run: make ci LINT_FLAGS="--new-from-merge-base=origin/${{ github.base_ref }}"
+
+      - name: Build, lint, and test merged changes
+        if: github.event_name == 'push'
+        run: make ci LINT_FLAGS="--new-from-rev=${{ github.event.before }}"

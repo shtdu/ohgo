@@ -1,8 +1,10 @@
-.PHONY: all build build-og build-ogmo test test-v vet lint fmt clean install run
+.PHONY: all build build-og build-ogmo test test-v test-pkg vet lint check ci fmt clean install run
 
 BINDIR    := bin
 GO        := go
 GOPATH    := $(shell go env GOPATH)
+GOLANGCI_LINT ?= golangci-lint
+LINT_FLAGS    ?=
 
 all: build
 
@@ -36,7 +38,13 @@ vet:
 
 # Lint (requires golangci-lint)
 lint:
-	golangci-lint run
+	$(GOLANGCI_LINT) run $(LINT_FLAGS)
+
+# Run all local verification checks
+check: build lint test
+
+# CI entrypoint
+ci: check
 
 # Format
 fmt:
