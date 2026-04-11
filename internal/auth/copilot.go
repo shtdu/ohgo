@@ -114,6 +114,8 @@ func (f *CopilotDeviceFlow) pollForToken(ctx context.Context, codeResp *deviceCo
 		interval = 1 * time.Second
 	}
 	deadline := time.After(time.Duration(codeResp.ExpiresIn) * time.Second)
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
 
 	for {
 		select {
@@ -121,7 +123,7 @@ func (f *CopilotDeviceFlow) pollForToken(ctx context.Context, codeResp *deviceCo
 			return "", ctx.Err()
 		case <-deadline:
 			return "", fmt.Errorf("device code expired")
-		case <-time.After(interval):
+		case <-ticker.C:
 			token, err := f.checkToken(ctx, codeResp.DeviceCode)
 			if err != nil {
 				if strings.Contains(err.Error(), "authorization_pending") {
@@ -129,6 +131,7 @@ func (f *CopilotDeviceFlow) pollForToken(ctx context.Context, codeResp *deviceCo
 				}
 				if strings.Contains(err.Error(), "slow_down") {
 					interval += 5 * time.Second
+					ticker.Reset(interval)
 					continue
 				}
 				return "", err

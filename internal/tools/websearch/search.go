@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/shtdu/ohgo/internal/tools"
+	"github.com/shtdu/ohgo/internal/tools/htmlutil"
 )
 
 const (
@@ -256,12 +257,5 @@ func stripTags(s string) string {
 }
 
 func decodeHTMLEntities(s string) string {
-	s = strings.ReplaceAll(s, "&amp;", "&")
-	s = strings.ReplaceAll(s, "&lt;", "<")
-	s = strings.ReplaceAll(s, "&gt;", ">")
-	s = strings.ReplaceAll(s, "&quot;", "\"")
-	s = strings.ReplaceAll(s, "&#39;", "'")
-	s = strings.ReplaceAll(s, "&apos;", "'")
-	s = strings.ReplaceAll(s, "&nbsp;", " ")
-	return s
+	return htmlutil.DecodeEntities(s)
 }

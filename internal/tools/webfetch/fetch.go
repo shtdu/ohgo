@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/shtdu/ohgo/internal/tools"
+	"github.com/shtdu/ohgo/internal/tools/htmlutil"
 )
 
 const (
@@ -174,13 +175,7 @@ func htmlToText(html string) string {
 	}
 
 	// Decode common HTML entities
-	text := result.String()
-	text = strings.ReplaceAll(text, "&amp;", "&")
-	text = strings.ReplaceAll(text, "&lt;", "<")
-	text = strings.ReplaceAll(text, "&gt;", ">")
-	text = strings.ReplaceAll(text, "&quot;", "\"")
-	text = strings.ReplaceAll(text, "&#39;", "'")
-	text = strings.ReplaceAll(text, "&nbsp;", " ")
+	text := htmlutil.DecodeEntities(result.String())
 
 	// Collapse whitespace
 	lines := strings.Split(text, "\n")

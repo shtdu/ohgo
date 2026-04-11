@@ -4,6 +4,8 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"sort"
+	"sync"
 )
 
 // Result represents the output of a tool execution.
@@ -30,6 +32,7 @@ type Tool interface {
 
 // Registry manages available tools.
 type Registry struct {
+	mu    sync.RWMutex
 	tools map[string]Tool
 }
 
@@ -40,19 +43,28 @@ func NewRegistry() *Registry {
 
 // Register adds a tool to the registry.
 func (r *Registry) Register(t Tool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.tools[t.Name()] = t
 }
 
 // Get retrieves a tool by name. Returns nil if not found.
 func (r *Registry) Get(name string) Tool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	return r.tools[name]
 }
 
-// List returns all registered tools.
+// List returns all registered tools sorted by name.
 func (r *Registry) List() []Tool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	out := make([]Tool, 0, len(r.tools))
 	for _, t := range r.tools {
 		out = append(out, t)
 	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Name() < out[j].Name()
+	})
 	return out
 }

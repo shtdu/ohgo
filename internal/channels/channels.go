@@ -3,6 +3,7 @@ package channels
 
 import (
 	"context"
+	"sync"
 )
 
 // Channel represents an IM channel integration.
@@ -19,6 +20,7 @@ type Channel interface {
 
 // Registry manages active channel integrations.
 type Registry struct {
+	mu       sync.RWMutex
 	channels map[string]Channel
 }
 
@@ -29,5 +31,25 @@ func NewRegistry() *Registry {
 
 // Register adds a channel integration.
 func (r *Registry) Register(c Channel) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	r.channels[c.Name()] = c
+}
+
+// Get retrieves a channel by name.
+func (r *Registry) Get(name string) Channel {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.channels[name]
+}
+
+// List returns all registered channels.
+func (r *Registry) List() []Channel {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := make([]Channel, 0, len(r.channels))
+	for _, c := range r.channels {
+		out = append(out, c)
+	}
+	return out
 }

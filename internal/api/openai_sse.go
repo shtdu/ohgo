@@ -3,6 +3,7 @@ package api
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 )
@@ -83,4 +84,12 @@ func parseOpenAISSEStream(reader io.Reader, ch chan<- StreamEvent) {
 			usage.OutputTokens = chunk.Usage.CompletionTokens
 		}
 	}
+
+	// Scanner stopped without seeing [DONE] — treat as a stream error.
+	if err := scanner.Err(); err != nil {
+		ch <- StreamEvent{Type: "error", Data: fmt.Errorf("sse stream read: %w", err)}
+		return
+	}
+	// Scanner ended cleanly but [DONE] was never received.
+	ch <- StreamEvent{Type: "error", Data: fmt.Errorf("sse stream ended without [DONE] sentinel")}
 }

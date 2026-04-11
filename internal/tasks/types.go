@@ -1,3 +1,4 @@
+// Package tasks manages background task lifecycle.
 package tasks
 
 import "time"

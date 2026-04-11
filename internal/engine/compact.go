@@ -140,7 +140,11 @@ func FullCompact(ctx context.Context, messages []api.Message, client api.Client,
 			case "text":
 				convText.WriteString(block.Text)
 			case "tool_use":
-				fmt.Fprintf(&convText, "[tool:%s %s]", block.Name, string(block.Input))
+				input := string(block.Input)
+				if len(input) > 200 {
+					input = input[:200] + "..."
+				}
+				fmt.Fprintf(&convText, "[tool:%s %s]", block.Name, input)
 			case "tool_result":
 				convText.WriteString(block.Content)
 			}

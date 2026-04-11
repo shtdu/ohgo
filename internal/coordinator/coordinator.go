@@ -114,6 +114,9 @@ func (c *Coordinator) Spawn(ctx context.Context, spec AgentSpec) (string, error)
 		c.mu.Lock()
 		defer c.mu.Unlock()
 		if ra.Status != AgentStatusRunning {
+			// Already stopped via Stop/Shutdown; clean up map entries.
+			delete(c.procs, agentID)
+			delete(c.cancels, agentID)
 			return
 		}
 		if err != nil {
@@ -121,6 +124,9 @@ func (c *Coordinator) Spawn(ctx context.Context, spec AgentSpec) (string, error)
 		} else {
 			ra.Status = AgentStatusDone
 		}
+		// Clean up completed agent entries.
+		delete(c.procs, agentID)
+		delete(c.cancels, agentID)
 	}()
 
 	return agentID, nil
@@ -190,6 +196,10 @@ func (c *Coordinator) Shutdown() {
 			ra.Status = AgentStatusDone
 		}
 	}
+
+	// Clear all maps to release references.
+	c.procs = make(map[string]*os.Process)
+	c.cancels = make(map[string]context.CancelFunc)
 }
 
 // CreateTeam creates a named team of agent definitions.

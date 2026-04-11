@@ -103,9 +103,10 @@ func (r *Registry) List() []Command {
 }
 
 // formatKV formats key-value pairs into aligned lines.
+// Returns empty string if given an odd number of arguments.
 func formatKV(pairs ...string) string {
 	if len(pairs)%2 != 0 {
-		panic("formatKV requires even number of arguments")
+		return ""
 	}
 	maxKey := 0
 	for i := 0; i < len(pairs); i += 2 {

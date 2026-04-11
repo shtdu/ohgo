@@ -41,17 +41,17 @@ import (
 // ToolDeps carries shared services needed by stateful tools.
 // Fields may be nil; tools that require a nil dependency are not registered.
 type ToolDeps struct {
-	Checker   *permissions.DefaultChecker
-	Settings  *config.Settings
-	Registry  *tools.Registry
-	CronMgr   *toolcron.Manager
-	SkillReg  *skills.Registry
-	TaskMgr   *tasks.Manager
-	PluginMgr *plugins.Manager
-	MCPMgr    *mcp.Manager
-	Coord     *coordinator.Coordinator
-	AskPrompter ask.Prompter
-	MsgEmitter  func(msg message.Message) error
+	Checker      *permissions.DefaultChecker
+	Settings     *config.Settings
+	Registry     *tools.Registry
+	CronMgr      *toolcron.Manager
+	SkillReg     *skills.Registry
+	TaskMgr      *tasks.Manager
+	PluginMgr    *plugins.Manager
+	MCPMgr       *mcp.Manager
+	Coord        *coordinator.Coordinator
+	AskPrompter  ask.Prompter
+	MsgEmitter   func(msg message.Message) error
 }
 
 // RegisterAll registers all built-in tools into the registry.

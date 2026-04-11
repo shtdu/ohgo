@@ -36,13 +36,19 @@ func (m *Manager) Load(ctx context.Context) (*Settings, error) {
 }
 
 // loadConfig is the shared implementation used by Manager.Load.
-func loadConfig(_ context.Context, _ string) (*Settings, error) {
+func loadConfig(_ context.Context, configDir string) (*Settings, error) {
 	s := DefaultSettings()
 
 	// User config
-	userPath, err := ConfigFilePath()
-	if err != nil {
-		return nil, err
+	var userPath string
+	if configDir != "" {
+		userPath = configDir + "/settings.json"
+	} else {
+		var err error
+		userPath, err = ConfigFilePath()
+		if err != nil {
+			return nil, err
+		}
 	}
 	if fileSettings, err := loadFromFile(userPath); err == nil {
 		s = mergeSettings(s, fileSettings)

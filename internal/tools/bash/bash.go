@@ -93,6 +93,7 @@ func (BashTool) Execute(ctx context.Context, args json.RawMessage) (tools.Result
 	cmd.Stderr = &combinedBuf
 
 	if err := cmd.Start(); err != nil {
+		cancel()
 		return tools.Result{
 			Content: fmt.Sprintf("failed to start command: %v", err),
 			IsError: true,
@@ -100,18 +101,29 @@ func (BashTool) Execute(ctx context.Context, args json.RawMessage) (tools.Result
 	}
 
 	// Kill the process group when the context is done.
+	// Use a done channel so the killer goroutine exits promptly after
+	// cmd.Wait returns, preventing PID reuse on SIGKILL.
+	waitDone := make(chan struct{})
 	go func() {
-		<-timeoutCtx.Done()
-		// Send SIGTERM first for graceful shutdown.
-		if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM); err == nil {
-			// Give the process a brief grace period before force-killing.
-			time.Sleep(2 * time.Second)
+		select {
+		case <-timeoutCtx.Done():
+			// Send SIGTERM first for graceful shutdown.
+			if err := syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM); err == nil {
+				select {
+				case <-time.After(2 * time.Second):
+				case <-waitDone:
+					return
+				}
+			}
+			// The process may have already exited; ignore the error.
+			_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		case <-waitDone:
+			// Process exited normally; no need to kill.
 		}
-		// The process may have already exited; ignore the error.
-		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	}()
 
 	waitErr := cmd.Wait()
+	close(waitDone)
 
 	output := combinedBuf.String()
 

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 )
 
 // UI manages terminal output and user interaction.
@@ -70,6 +71,11 @@ func (u *UI) AskQuestion(ctx context.Context, question string, options []string,
 }
 
 // Prompt displays a prompt and reads a line of user input.
+//
+// When ctx is cancelled, this returns ctx.Err() promptly. If the underlying
+// reader is an *os.File (e.g., stdin), its read deadline is set to force the
+// blocked goroutine to unblock. Otherwise the goroutine may linger until
+// the next read completes.
 func (u *UI) Prompt(ctx context.Context, prompt string) (string, error) {
 	_, _ = fmt.Fprint(u.out, prompt)
 	lineCh := make(chan string, 1)
@@ -83,11 +89,15 @@ func (u *UI) Prompt(ctx context.Context, prompt string) (string, error) {
 		lineCh <- scanner.Text()
 	}()
 	select {
-	case <-ctx.Done():
-		return "", ctx.Err()
 	case line := <-lineCh:
 		return line, nil
 	case err := <-errCh:
 		return "", err
+	case <-ctx.Done():
+		// Try to unblock the goroutine by setting a deadline on the file.
+		if f, ok := u.in.(interface{ SetReadDeadline(time.Time) error }); ok {
+			_ = f.SetReadDeadline(time.Now())
+		}
+		return "", ctx.Err()
 	}
 }

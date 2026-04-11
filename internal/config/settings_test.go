@@ -382,3 +382,30 @@ func TestSave_InvalidPath(t *testing.T) {
 	err := Save(s, "/nonexistent/deeply/nested/dir/settings.json")
 	assert.Error(t, err)
 }
+
+func TestLoadConfig_WithConfigDir(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("ANTHROPIC_MODEL", "")
+
+	// Write settings to the custom config dir
+	configData := `{"model": "custom-model", "max_tokens": 9999}`
+	err := os.WriteFile(filepath.Join(tmp, "settings.json"), []byte(configData), 0o644)
+	require.NoError(t, err)
+
+	s, err := loadConfig(context.Background(), tmp)
+	require.NoError(t, err)
+	assert.Equal(t, "custom-model", s.Model)
+	assert.Equal(t, 9999, s.MaxTokens)
+}
+
+func TestLoadConfig_EmptyConfigDir(t *testing.T) {
+	t.Setenv("ANTHROPIC_API_KEY", "")
+	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("ANTHROPIC_MODEL", "")
+	// Empty configDir should use default path via ConfigFilePath
+	s, err := loadConfig(context.Background(), "")
+	require.NoError(t, err)
+	assert.Equal(t, "claude-sonnet-4-6", s.Model)
+}
