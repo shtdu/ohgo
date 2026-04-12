@@ -5,7 +5,7 @@
 
 ## Requirement
 
-Where a language intelligence service is available for the file type, the system shall provide code navigation operations including go-to-definition, find-references, hover information, and document symbols.
+Where a language intelligence service is available for the file type, the system shall provide code intelligence and navigation operations.
 
 ## Acceptance Criteria
 

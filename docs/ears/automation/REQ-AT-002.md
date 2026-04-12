@@ -5,15 +5,14 @@
 
 ## Requirement
 
-While a background task exists, the system shall manage its lifecycle through creation, execution, output streaming, progress tracking, and termination.
+While a background task exists, the system shall manage its complete lifecycle from creation through termination. Progress tracking is covered separately by REQ-AT-005.
 
 ## Acceptance Criteria
 
 - [ ] Tasks are created with unique IDs
 - [ ] Task state transitions follow: pending, running, completed, or failed
-- [ ] Task output is retrievable while the task exists
 - [ ] Tasks can be stopped by user request
-- [ ] Task progress percentage and status are queryable
+- [ ] When a task creation fails (duplicate ID, invalid state), the system returns a descriptive error identifying the cause
 
 ## Source Evidence
 

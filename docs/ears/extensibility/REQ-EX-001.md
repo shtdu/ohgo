@@ -9,10 +9,10 @@ Where plugin directories are configured, the system shall discover and load plug
 
 ## Acceptance Criteria
 
-- [ ] Discovers plugins from user directory (`~/.ohmo/plugins/`)
-- [ ] Discovers plugins from project directory (`.openharness/plugins/`)
+- [ ] Discovers plugins from all configured directories (user and project scope)
 - [ ] Each plugin provides a manifest declaring its contributions
 - [ ] Skips plugins with invalid manifests and reports the error
+- [ ] When the plugin directory is missing or inaccessible, the system logs a warning and continues with built-in capabilities
 
 ## Source Evidence
 

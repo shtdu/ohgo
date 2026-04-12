@@ -9,9 +9,10 @@ When the user requests to share a session (`/share`), the system shall create a 
 
 ## Acceptance Criteria
 
-- [ ] Produces a self-contained document including the full conversation with formatted tool results
+- [ ] Produces a Markdown file containing the full conversation with a metadata header and formatted tool results
 - [ ] Includes the full conversation with formatted tool results
 - [ ] The system provides a confirmation before creating the shareable artifact
+- [ ] When the share target file path is not writable, the system reports the specific error with the file path
 
 ## Source Evidence
 

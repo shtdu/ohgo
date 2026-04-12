@@ -16,6 +16,7 @@ The system shall accept model selection, permission mode, effort level, and outp
 - [ ] `--print` / `-p` prints response and exits (non-interactive)
 - [ ] `--max-turns` limits agentic turns
 - [ ] CLI flags override values from the settings file for the duration of the session
+- [ ] When an invalid flag value is provided (unknown model, unsupported permission mode), the system reports the error and exits with a non-zero status code
 
 ## Source Evidence
 

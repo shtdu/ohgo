@@ -9,9 +9,10 @@ When the user requests to continue a session (`-c` flag), the system shall load 
 
 ## Acceptance Criteria
 
-- [ ] Finds the most recent session for the current directory
+- [ ] Finds the session with the latest `updated_at` timestamp for the current directory
 - [ ] Restores full message history
 - [ ] The agent can reference and build upon information from the restored conversation history in subsequent responses
+- [ ] When no previous session exists, the system starts a new session without error
 
 ## Source Evidence
 

@@ -11,7 +11,7 @@ When a plugin becomes active (first loaded per REQ-EX-001 or re-enabled per REQ-
 
 - [ ] Plugin commands become available for invocation
 - [ ] Plugin skills can be loaded on demand
-- [ ] Plugin hooks execute at the appropriate execution points
+- [ ] Plugin hooks execute before and after the associated tool invocation
 - [ ] Plugin external tool servers are connected and their tools become available
 - [ ] Contributions are registered when a plugin is first loaded (per REQ-EX-001) and when re-enabled (per REQ-EX-008)
 

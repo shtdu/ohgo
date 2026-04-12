@@ -19,13 +19,13 @@ OpenHarness
 │   ├── Channel gateways      # REQ-UI-005
 │   └── Interactive prompts   # REQ-UI-006
 ├── Tool Execution            # How tools are registered, found, executed
-│   ├── Tool registry         # REQ-TL-001
+│   ├── Tool registry         # REQ-TL-001 (Complex)
 │   ├── File operations       # REQ-TL-002
 │   ├── Shell execution       # REQ-TL-003
 │   ├── Search tools          # REQ-TL-004, REQ-TL-005
 │   ├── Web tools             # REQ-TL-006, REQ-TL-007
 │   ├── Dev tools             # REQ-TL-008, REQ-TL-009
-│   ├── MCP bridge            # REQ-TL-010
+│   ├── MCP bridge            # REQ-TL-010 (Complex)
 │   └── Tool discovery        # REQ-TL-011
 ├── Agent Coordination        # How multiple agents collaborate
 │   ├── Subagent spawning     # REQ-AC-001, REQ-AC-004
@@ -50,7 +50,7 @@ OpenHarness
 │   └── Fail-safe             # REQ-PS-008
 ├── Configuration             # How the system is customized
 │   ├── Settings file         # REQ-CF-001, REQ-CF-007
-│   ├── CLI overrides         # REQ-CF-005
+│   ├── CLI overrides         # REQ-CF-002, REQ-CF-005
 │   ├── Provider profiles     # REQ-CF-003, REQ-CF-004
 │   └── Runtime updates       # REQ-CF-006
 ├── Extensibility             # How the system is extended
@@ -72,13 +72,13 @@ OpenHarness
 
 | Pattern | Count | Percentage |
 |---------|-------|------------|
-| Ubiquitous | 10 | 14% |
-| Event-Driven | 37 | 54% |
-| State-Driven | 5 | 7% |
-| Optional Feature | 15 | 22% |
-| Complex | 1 | 1% |
+| Ubiquitous | 7 | 10% |
+| Event-Driven | 39 | 56% |
+| State-Driven | 6 | 9% |
+| Optional Feature | 14 | 20% |
+| Complex | 3 | 4% |
 | Unwanted Behaviour | 1 | 1% |
-| **Total** | **69** | **100%** |
+| **Total** | **70** | **100%** |
 
 ## Traceability
 
@@ -93,12 +93,12 @@ OpenHarness
 | `OpenHarness/src/openharness/skills/` | REQ-EX-004 |
 | `OpenHarness/src/openharness/hooks/` | REQ-EX-005, REQ-EX-006 |
 | `OpenHarness/src/openharness/mcp/` | REQ-TL-010, REQ-EX-007 |
-| `OpenHarness/src/openharness/settings.py` | REQ-CF-001, REQ-CF-005, REQ-CF-007, REQ-PS-005, REQ-PS-006, REQ-MC-006, REQ-AU-001 |
+| `OpenHarness/src/openharness/config/settings.py` | REQ-CF-001, REQ-CF-005, REQ-CF-007, REQ-PS-005, REQ-PS-006, REQ-MC-006, REQ-AU-001 |
 | `OpenHarness/src/openharness/auth/` | REQ-AU-002 |
 | `OpenHarness/src/openharness/bridge/` | REQ-AU-003 |
 | `OpenHarness/src/openharness/channels/` | REQ-UI-005 |
 | `OpenHarness/src/openharness/swarm/` | REQ-AC-001, REQ-AC-003, REQ-AC-004 |
-| `OpenHarness/src/openharness/tui/` | REQ-UI-003 |
+| `OpenHarness/src/openharness/ui/` | REQ-UI-003 |
 | `OpenHarness/src/openharness/prompts/` | REQ-MC-003 |
 
 ## CE Check — Entry Point Coverage

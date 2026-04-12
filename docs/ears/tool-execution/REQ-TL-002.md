@@ -13,6 +13,7 @@ The system shall provide tools for reading, writing, and editing files within th
 - [ ] Write tool creates or overwrites files with specified content
 - [ ] Edit tool replaces specific text strings in existing files
 - [ ] File operations are subject to path permission rules (per Permissions domain)
+- [ ] When a file operation fails (not found, permission denied), the tool returns a structured error containing the path and the failure reason
 
 ## Source Evidence
 

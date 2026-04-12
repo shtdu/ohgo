@@ -13,6 +13,8 @@ When the agent invokes a skill, the system shall load the skill's markdown conte
 - [ ] Each skill provides a name and description in its metadata
 - [ ] The skill content becomes part of the agent's instructions for execution
 - [ ] Skills are loaded on demand, not all at startup
+- [ ] When a skill's markdown content is missing or unreadable, the system logs a warning and skips the skill
+- [ ] When skill metadata (YAML frontmatter) is invalid or missing required fields, the system logs a warning with the skill name and skips the skill
 
 ## Source Evidence
 

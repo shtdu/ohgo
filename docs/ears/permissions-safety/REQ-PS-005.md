@@ -10,11 +10,11 @@ If a tool appears on the denied list, then the system shall block its execution 
 ## Acceptance Criteria
 
 - [ ] Denied list takes precedence over all other settings
-- [ ] Allowed list grants auto-approval in default mode
+- [ ] When operating in default mode, the allowed list grants auto-approval; in other modes, the allowed list has no auto-approval effect
 - [ ] Lists are configurable via CLI flags and settings
 - [ ] Both built-in and MCP tools are subject to list filtering
 
 ## Source Evidence
 
 - `OpenHarness/src/openharness/cli.py` — `--allowed-tools`, `--disallowed-tools`
-- `OpenHarness/src/openharness/settings.py` — `permission.allowed_tools`, `permission.denied_tools`
+- `OpenHarness/src/openharness/config/settings.py` — `permission.allowed_tools`, `permission.denied_tools`

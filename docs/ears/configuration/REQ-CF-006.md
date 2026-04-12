@@ -12,6 +12,7 @@ When the user updates settings via slash commands (e.g., `/config`, `/model`, `/
 - [ ] Settings changes take effect for subsequent operations
 - [ ] Changes are persisted to the settings file
 - [ ] The user is informed of the change
+- [ ] When an invalid value is provided via slash command (e.g., non-existent model, invalid key-value pair), the system reports the specific error and does not apply the change
 
 ## Source Evidence
 

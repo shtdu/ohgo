@@ -13,6 +13,7 @@ When the agent performs a web search, the system shall query a search engine and
 - [ ] Returns results with title, URL, and summary for each match
 - [ ] Supports a configurable maximum number of results
 - [ ] Returns results or an error within a configurable timeout period
+- [ ] When the search engine query times out, the tool returns a timeout error identifying the search provider
 
 ## Source Evidence
 

@@ -12,6 +12,7 @@ When the permission mode is default and the agent requests a sensitive tool exec
 - [ ] Tools classified as write-capable (file write, file edit, command execution) require user approval
 - [ ] Read-only tools bypass confirmation when that option is enabled in settings; otherwise all tools require confirmation
 - [ ] The user can approve a single action, deny it, or approve all remaining actions for the session
+- [ ] When the user denies a tool execution, the engine receives a rejection result and continues the session without error
 
 ## Source Evidence
 

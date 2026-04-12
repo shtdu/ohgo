@@ -5,13 +5,13 @@
 
 ## Requirement
 
-If the permission system encounters an error during evaluation, the system shall not execute the requested tool and shall report the error to the user.
+If the permission system encounters an error during evaluation, the system shall refuse tool execution and report the error to the user.
 
 ## Acceptance Criteria
 
 - [ ] Tool execution is blocked when permission checking fails
-- [ ] The user receives a descriptive error message
-- [ ] The error is logged for diagnostics
+- [ ] The user receives an error message containing the tool name, the permission rule that failed, and the failure reason
+- [ ] The error is logged with the tool name, permission context, and timestamp
 
 ## Source Evidence
 

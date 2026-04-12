@@ -5,7 +5,7 @@
 
 ## Requirement
 
-When a plugin is installed or uninstalled via the CLI, the system shall update the plugin registry and reload affected subsystems.
+When a plugin is installed, uninstalled, or listed via the CLI, the system shall update the plugin registry and reload affected subsystems.
 
 ## Acceptance Criteria
 
@@ -13,6 +13,7 @@ When a plugin is installed or uninstalled via the CLI, the system shall update t
 - [ ] `plugin uninstall` removes a plugin
 - [ ] `plugin list` shows installed plugins and status
 - [ ] After install, the plugin's contributions become available
+- [ ] When plugin installation fails (invalid archive, dependency failure), the system reports the specific error and does not register the plugin
 
 ## Source Evidence
 

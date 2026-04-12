@@ -13,7 +13,8 @@ Where path permission rules are configured, the system shall restrict file opera
 - [ ] File operations targeting paths outside the allowed set are rejected
 - [ ] Path rules apply across all permission modes
 - [ ] An access-denied message is returned identifying the blocked path
+- [ ] When a path rule contains invalid syntax, the system rejects the rule at load time and reports the specific rule and error
 
 ## Source Evidence
 
-- `OpenHarness/src/openharness/settings.py` — `permission.path_rules`
+- `OpenHarness/src/openharness/config/settings.py` — `permission.path_rules`

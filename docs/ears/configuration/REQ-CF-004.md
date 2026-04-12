@@ -5,12 +5,12 @@
 
 ## Requirement
 
-When the user switches provider profiles, the system shall update the active API configuration without restarting the session. Profile switching is a specialized case of the runtime configuration update mechanism defined in REQ-CF-006, retained as a separate requirement for its distinct acceptance criteria around API connection continuity.
+When the user switches provider profiles, the system shall validate the new provider connection and update the active API configuration without restarting the session.
 
 ## Acceptance Criteria
 
 - [ ] After a profile switch completes, the next API call uses the new provider configuration
-- [ ] The active profile is persisted for future sessions
+- [ ] The active profile selection is persisted to the settings file so that future sessions use the same profile
 - [ ] The system confirms the profile switch to the user, showing the new provider name
 
 ## Source Evidence

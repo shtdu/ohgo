@@ -11,8 +11,10 @@ Where cron jobs are configured, the system shall execute specified commands or a
 
 - [ ] Cron expressions define the schedule
 - [ ] Jobs can be enabled and disabled individually
-- [ ] Jobs can be triggered immediately on demand
-- [ ] Job execution history is maintained
+- [ ] Jobs can be invoked outside their schedule via an immediate trigger
+- [ ] Each scheduled execution records its outcome (success or failure)
+- [ ] When a cron expression is invalid, the system rejects it with a parse error message identifying the malformed portion
+- [ ] When cron job execution fails, the system logs the error and does not remove or disable the job
 
 ## Source Evidence
 

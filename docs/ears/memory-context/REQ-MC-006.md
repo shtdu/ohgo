@@ -15,4 +15,4 @@ When a memory entry is added, the system shall enforce configurable limits on th
 
 ## Source Evidence
 
-- `OpenHarness/src/openharness/settings.py` — `memory.max_files`, `memory.max_entrypoint_lines`
+- `OpenHarness/src/openharness/config/settings.py` — `memory.max_files`, `memory.max_entrypoint_lines`

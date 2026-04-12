@@ -11,7 +11,8 @@ When a task updates its progress, the system shall persist the progress metadata
 
 - [ ] Progress is a percentage value (0-100)
 - [ ] A status note describes current activity
-- [ ] Progress is queryable via task list and task get
+- [ ] Progress metadata is persisted and available to task retrieval operations (REQ-AT-002, REQ-AT-004)
+- [ ] When an invalid progress value is provided (negative, over 100, or non-numeric), the system rejects the update and returns a validation error
 
 ## Source Evidence
 

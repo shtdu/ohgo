@@ -5,7 +5,7 @@
 
 ## Requirement
 
-When the conversation reaches the compaction threshold (default: 90% of the model's context window capacity), the system shall compact older messages while preserving key information to continue the session.
+When the conversation reaches the compaction threshold (default: 90% of the model's context window capacity), the system shall compact older messages into a summary to free context window capacity.
 
 ## Acceptance Criteria
 
@@ -13,8 +13,9 @@ When the conversation reaches the compaction threshold (default: 90% of the mode
 - [ ] Preserves recent messages in full
 - [ ] Compacted messages are replaced with a summary that is included in the conversation context
 - [ ] The agent continues responding to new prompts using the compacted context
+- [ ] When compaction fails to produce a usable summary, the system retains the original context and logs the failure
 
 ## Source Evidence
 
 - `OpenHarness/src/openharness/commands/` — `/compact` command
-- Engine auto-compaction logic
+- `OpenHarness/src/openharness/engine/` — auto-compaction logic

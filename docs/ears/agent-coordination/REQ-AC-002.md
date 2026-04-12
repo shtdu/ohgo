@@ -10,7 +10,7 @@ When a team is created, the system shall establish a named group of agents with 
 ## Acceptance Criteria
 
 - [ ] Teams are created with a name and description
-- [ ] Teams can be deleted when no longer needed
+- [ ] A created team persists until explicitly disbanded
 - [ ] Team members share a communication channel
 - [ ] Creating a team with a name that already exists produces an error
 

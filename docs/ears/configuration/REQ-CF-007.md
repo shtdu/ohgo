@@ -5,7 +5,7 @@
 
 ## Requirement
 
-The system shall discover and merge configuration from multiple layers: user global settings, project local settings, and CLI overrides.
+The system shall discover and merge configuration from multiple layers per session: user global settings, project local settings, and CLI overrides.
 
 ## Acceptance Criteria
 
@@ -13,9 +13,8 @@ The system shall discover and merge configuration from multiple layers: user glo
 - [ ] The system reads project-level settings from the project's configuration directory when present
 - [ ] CLI flags override both layers
 - [ ] When the same setting is defined in multiple layers, the value from the highest-precedence layer (CLI flags > project settings > global settings) is used
-- [ ] CLI flag overrides apply only to the current session; the settings file is not modified
-- [ ] On next launch, settings revert to values from the settings file
+- [ ] When a configuration file is missing, unreadable, or contains invalid syntax, the system uses defaults for that layer and logs a warning
 
 ## Source Evidence
 
-- `OpenHarness/src/openharness/settings.py` — multi-layer config loading
+- `OpenHarness/src/openharness/config/settings.py` — multi-layer config loading

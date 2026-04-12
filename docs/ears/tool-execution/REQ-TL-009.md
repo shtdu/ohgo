@@ -13,6 +13,7 @@ Where a Jupyter notebook file is targeted, the system shall provide cell-level e
 - [ ] Supports edit modes: replace, insert, delete
 - [ ] Operates on individual cells by index
 - [ ] Preserves notebook structure and metadata
+- [ ] When the cell index is out of bounds or the notebook format is invalid, the tool returns an error identifying the issue
 
 ## Source Evidence
 

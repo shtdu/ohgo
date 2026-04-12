@@ -16,4 +16,4 @@ When the user enables or disables a plugin, the system shall update the active p
 
 ## Source Evidence
 
-- `OpenHarness/src/openharness/settings.py` — `enabled_plugins` dictionary
+- `OpenHarness/src/openharness/config/settings.py` — `enabled_plugins` dictionary

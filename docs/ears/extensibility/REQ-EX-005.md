@@ -5,7 +5,7 @@
 
 ## Requirement
 
-When a configured hook event fires (PreToolUse, PostToolUse), the system shall execute all registered hooks for that event in order.
+When a configured hook event fires (PreToolUse, PostToolUse), the system shall execute all registered hooks for that event in order, stopping early if any hook requests cancellation.
 
 ## Acceptance Criteria
 

@@ -5,13 +5,14 @@
 
 ## Requirement
 
-Where the memory feature is enabled, the system shall maintain persistent memory entries that survive across sessions, allowing the agent to recall user preferences, project context, and past decisions. When the memory feature is not enabled, the system shall not persist any memory across sessions and shall not load memory files into context.
+Where the memory feature is enabled, the system shall maintain persistent memory entries that survive across sessions, enabling recall of user preferences, project context, past decisions. When disabled, no memory persists across sessions; no memory files load into context.
 
 ## Acceptance Criteria
 
 - [ ] Memory content persists across session boundaries and is retrievable by future sessions in the same project
 - [ ] Memory entries survive process termination
 - [ ] Memory entries are individually addressable and removable
+- [ ] When the memory store is corrupted or unreadable, the system logs the error and continues without memory
 
 ## Source Evidence
 

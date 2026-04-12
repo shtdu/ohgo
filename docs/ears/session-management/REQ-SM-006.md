@@ -12,6 +12,7 @@ When the user tags a session (`/tag`), the system shall create a named snapshot 
 - [ ] Accepts a tag name
 - [ ] Creates a named checkpoint that can be referenced later
 - [ ] Tagged sessions are listed in session history
+- [ ] When the specified tag already exists, the system returns an error message without overwriting the existing tag
 
 ## Source Evidence
 

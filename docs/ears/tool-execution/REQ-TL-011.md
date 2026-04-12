@@ -12,6 +12,8 @@ When the agent queries available tools, the system shall search tool names and d
 - [ ] Accepts a search query string
 - [ ] Searches across tool names and descriptions
 - [ ] Returns matching tools with their descriptions and parameter schemas
+- [ ] When a tool search returns no results, the system returns an empty list without error
+- [ ] When the search query is empty or exceeds a maximum length, the tool returns a validation error
 
 ## Source Evidence
 

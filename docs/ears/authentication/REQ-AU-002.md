@@ -5,14 +5,15 @@
 
 ## Requirement
 
-When the user initiates authentication with an OAuth provider (e.g., GitHub Copilot), the system shall perform the device authorization flow including user code display and token exchange.
+When the user invokes an authentication command (login, status, logout, switch), the system shall perform the corresponding OAuth device flow or credential management operation.
 
 ## Acceptance Criteria
 
-- [ ] Displays a verification URL and user code
-- [ ] Polls for token exchange completion
-- [ ] The resulting token is stored in the user's configuration directory with file permissions restricted to the owner
-- [ ] Supports login, status check, logout, and account switching
+- [ ] Login displays a verification URL, user code, polls for token exchange, stores the resulting token with owner-only file permissions
+- [ ] Status queries display the current authentication state
+- [ ] Logout revokes the stored token
+- [ ] Switch selects a different stored credential profile as the active profile
+- [ ] When the OAuth device flow expires or is denied, the system returns an error and does not store credentials
 
 ## Source Evidence
 

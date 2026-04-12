@@ -13,6 +13,7 @@ When the agent requests web content, the system shall fetch the specified URL an
 - [ ] Returns extracted text content, not raw HTML
 - [ ] Supports a configurable maximum character limit
 - [ ] When the requested URL cannot be retrieved, the system returns a descriptive error message indicating the failure reason
+- [ ] When content extraction fails despite a successful HTTP response (e.g., empty body, unsupported encoding), the tool returns the raw response with a warning
 
 ## Source Evidence
 

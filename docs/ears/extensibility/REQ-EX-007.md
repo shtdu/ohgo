@@ -13,6 +13,7 @@ When the user adds or removes an MCP server configuration, the system shall pers
 - [ ] MCP servers are removed via CLI (`mcp remove`)
 - [ ] The configuration of external tool servers is persisted and reflected on next session start or MCP reconnection
 - [ ] Server connection errors are reported without affecting other tools
+- [ ] When adding an MCP server fails due to invalid configuration or connectivity issues, the system reports the error and does not add the server to the configuration
 
 ## Source Evidence
 

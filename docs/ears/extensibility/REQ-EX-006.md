@@ -5,7 +5,7 @@
 
 ## Requirement
 
-Where a hook of a supported type is configured, the system shall execute it according to its type's semantics: command execution, prompt evaluation, URL retrieval, or webhook notification.
+Where a hook of a supported type is configured, the system shall execute it according to the deserialization and validation rules defined for its declared parameter type.
 
 ## Acceptance Criteria
 
@@ -13,6 +13,7 @@ Where a hook of a supported type is configured, the system shall execute it acco
 - [ ] Prompt-type hooks produce an AI-generated response
 - [ ] URL-type hooks retrieve content from a web address
 - [ ] Webhook-type hooks send a notification to an external service
+- [ ] When a hook execution fails (command not found, network timeout), the system logs the error and continues the session without the hook result
 
 ## Source Evidence
 

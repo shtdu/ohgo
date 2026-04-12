@@ -11,10 +11,11 @@ The system shall render a terminal user interface that displays streaming AI res
 
 - [ ] Responses stream token-by-token to the terminal
 - [ ] Tool invocations are displayed with parameters and results
-- [ ] Progress indicators show during long-running operations
+- [ ] Progress indicators show during tool execution and API streaming
 - [ ] The interface handles terminal resize events
+- [ ] When the terminal is too small to render the interface, the system displays a minimum-size warning message
 
 ## Source Evidence
 
-- `OpenHarness/src/openharness/tui/` — React-based terminal UI
+- `OpenHarness/src/openharness/ui/` — terminal UI components
 - `OpenHarness/frontend/` — frontend rendering components

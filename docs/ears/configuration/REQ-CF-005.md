@@ -13,7 +13,8 @@ Where environment variables are set (e.g., `ANTHROPIC_API_KEY`, `OPENHARNESS_MOD
 - [ ] `OPENHARNESS_MODEL` overrides the default model
 - [ ] `OPENHARNESS_SETTINGS` overrides the settings file path
 - [ ] Environment variables take precedence over settings file but not CLI flags
+- [ ] When an environment variable override contains an invalid value, the system reports which variable and the expected format
 
 ## Source Evidence
 
-- `OpenHarness/src/openharness/settings.py` — environment variable handling
+- `OpenHarness/src/openharness/config/settings.py` — environment variable handling

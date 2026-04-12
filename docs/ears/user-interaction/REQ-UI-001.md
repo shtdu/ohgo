@@ -13,6 +13,7 @@ The system shall provide a command-line interface that accepts natural language 
 - [ ] The system accepts free-text prompts as positional arguments
 - [ ] The system supports interactive mode when launched without a prompt
 - [ ] The system returns a non-zero exit code on failure
+- [ ] When the model service is unreachable at startup, the system reports a connection error before entering interactive mode
 
 ## Source Evidence
 

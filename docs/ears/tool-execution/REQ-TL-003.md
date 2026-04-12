@@ -14,6 +14,8 @@ When the agent invokes the command execution tool, the system shall execute the 
 - [ ] Partial output captured before timeout is included in the result
 - [ ] A default timeout applies when no explicit timeout is specified; exceeding it terminates the command and returns a timeout error message
 - [ ] The working directory persists between sequential command invocations
+- [ ] When a shell command returns a non-zero exit code, the tool returns both stdout and stderr to the agent
+- [ ] When the command executable is not found or execution is denied by permissions, the tool returns an error with the command name and failure reason
 
 ## Source Evidence
 
