@@ -6,6 +6,11 @@ import (
 )
 
 // Manager handles multi-layer config loading.
+//
+// Config is loaded in order: defaults → user config → project config → env vars.
+// Later layers override earlier ones at the field level (zero-value fields are
+// "not set" and don't override). Secrets (API keys) are never logged or included
+// in error messages.
 type Manager struct {
 	configDir string
 }

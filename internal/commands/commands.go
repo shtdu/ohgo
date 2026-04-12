@@ -25,6 +25,7 @@ type Result struct {
 }
 
 // Deps holds shared dependencies that commands can access.
+// Passed to every command's Run method — commands never access global state.
 type Deps struct {
 	Engine    *engine.Engine
 	Config    *config.Settings

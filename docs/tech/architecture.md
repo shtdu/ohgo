@@ -4,158 +4,146 @@ System architecture for ohgo — the Go reimplementation of OpenHarness.
 
 ## Overview
 
-ohgo is a single static binary that wraps an LLM into a functional agent. It provides tool-use, skills, memory, permissions, multi-agent coordination, and MCP support. Two binaries are produced:
+ohgo wraps an LLM into a functional agent with tool-use, skills, memory, permissions, multi-agent coordination, and MCP support. It produces two binaries:
 
 - **og** — the agent CLI (interactive REPL + one-shot mode)
 - **ogmo** — the personal agent (IM channel gateway + headless mode)
 
-## Package Dependency Graph
+Both share the same core engine. The difference is the interface layer: og talks to a terminal, ogmo talks to IM channels.
+
+## Architecture Layers
 
 ```
-cmd/og ─────────────────────────────────────────────────────┐
-cmd/ogmo ───────────────────────────────────────────────────┤
-                                                            │
-  ┌─────────┐                                               │
-  │ engine   │ ← core agent loop                            │
-  └────┬────┘                                               │
-       │ depends on                                          │
-       ├──── api/        (LLM provider clients)              │
-       ├──── tools/      (Tool interface + registry)         │
-       ├──── permissions/ (pre-execution permission check)   │
-       ├──── hooks/      (pre/post tool lifecycle)           │
-       └──── config/     (merged config)                     │
-                                                            │
-  ┌─────────┐                                               │
-  │ prompts  │ ← system prompt assembly                     │
-  └────┬────┘                                               │
-       ├──── skills/     (markdown skill loading)            │
-       └──── config/     (CLAUDE.md discovery)               │
-                                                            │
-  ┌─────────┐                                               │
-  │ commands │ ← slash commands (/help, /commit, etc.)      │
-  └────┬────┘                                               │
-       └──── engine/      (can invoke the agent loop)        │
-                                                            │
-  Standalone packages (no cross-dependencies):               │
-  ┌──────────────┐  ┌──────────┐  ┌──────────┐             │
-  │ coordinator  │  │ memory   │  │ tasks    │              │
-  └──────────────┘  └──────────┘  └──────────┘             │
-  ┌──────────────┐  ┌──────────┐  ┌──────────┐             │
-  │ mcp          │  │ auth     │  │ bridge   │              │
-  └──────────────┘  └──────────┘  └──────────┘             │
-  ┌──────────────┐  ┌──────────┐                            │
-  │ plugins      │  │ channels │                            │
-  └──────────────┘  └──────────┘                            │
-  ┌──────────────┐                                          │
-  │ ui           │                                          │
-  └──────────────┘                                          │
-                                                            │
-  └──────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                    Interface Layer                        │
+│   CLI (og)              TUI (og)         Channels (ogmo) │
+└──────────────────────────┬───────────────────────────────┘
+                           │
+┌──────────────────────────▼───────────────────────────────┐
+│                   Command Layer                           │
+│   Slash commands ─── /help, /commit, /plan, /mcp, ...    │
+└──────────────────────────┬───────────────────────────────┘
+                           │
+┌──────────────────────────▼───────────────────────────────┐
+│                    Engine (Core Loop)                     │
+│   Query → Stream → Parse → Execute Tools → Loop          │
+│                                                          │
+│   ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
+│   │ API Clients  │  │ Permissions  │  │ Hooks         │  │
+│   │ (streaming)  │  │ (gate)       │  │ (lifecycle)   │  │
+│   └─────────────┘  └──────────────┘  └───────────────┘  │
+└──────────────────────────┬───────────────────────────────┘
+                           │
+┌──────────────────────────▼───────────────────────────────┐
+│                  Capability Layer                         │
+│                                                          │
+│   ┌──────┐ ┌────────┐ ┌──────┐ ┌─────┐ ┌───────────┐   │
+│   │Tools │ │ Skills  │ │ MCP  │ │ Mem │ │ Coordinator│   │
+│   └──────┘ └────────┘ └──────┘ └─────┘ └───────────┘   │
+│   ┌──────┐ ┌────────┐ ┌──────┐ ┌─────────┐             │
+│   │Tasks │ │ Bridge │ │ Auth │ │ Sandbox │              │
+│   └──────┘ └────────┘ └──────┘ └─────────┘             │
+└──────────────────────────┬───────────────────────────────┘
+                           │
+┌──────────────────────────▼───────────────────────────────┐
+│                  Foundation Layer                         │
+│   Config (multi-layer)  ·  Prompts (assembly)            │
+│   Plugins (discovery)   ·  UI (terminal output)          │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ## Dependency Rules
 
-1. **engine/** depends on api, tools, permissions, hooks, config — nothing else
-2. **tools/** has zero internal dependencies — each tool is self-contained
-3. **api/** has zero internal dependencies — provider clients are independent
-4. **No circular imports** — enforced by Go's package system
-5. **ui/** never imports engine — UI receives events, doesn't drive the loop
+1. **Dependencies point downward** — higher layers depend on lower layers, never the reverse
+2. **Engine is the single orchestrator** — it calls capabilities, nothing calls back into it
+3. **API clients are provider-independent** — each client normalizes to the same streaming interface
+4. **Tools are self-contained execution units** — they never import engine or permissions
+5. **No circular imports** — enforced by Go's package system
+6. **UI receives events, never drives the loop** — output channel pattern, not callbacks
 
-## Data Flow
+## Core Agent Loop
+
+The engine drives a sequential loop:
 
 ```
 User Prompt
     │
     ▼
- CLI (cobra) ─── parse flags, load config
+ append to conversation history
     │
     ▼
- Engine.Query(prompt)
+ compact if token budget exceeded
     │
-    ├─ 1. Prompts.Assembler.Build() → system prompt
+    ▼
+ stream from LLM provider (SSE)
     │
-    ├─ 2. api.Client.Stream(messages, tools, system)
-    │       │
-    │       ▼  (SSE stream)
-    │   StreamEvent channel
-    │       │
-    │       ├─ text_delta → UI output
-    │       │
-    │       └─ message_complete with tool_use
-    │            │
-    │            ▼
-    │       3. For each tool call:
-    │            │
-    │            ├─ hooks.Executor.RunPre()
-    │            │     └─ block? → stop, report reason
-    │            │
-    │            ├─ permissions.Checker.Check()
-    │            │     └─ deny?  → stop
-    │            │     └─ ask?   → UI prompt user
-    │            │
-    │            ├─ tools.Registry.Get(name).Execute(args)
-    │            │
-    │            └─ hooks.Executor.RunPost()
+    ├─ text response → emit to UI
     │
-    ├─ 4. Append tool results to messages
-    │
-    └─ 5. Loop back to step 2 (until no more tool_use or max turns)
+    └─ tool_use requests → for each:
+         │
+         ├─ pre-hooks (may block)
+         ├─ permission check (allow/deny/ask user)
+         ├─ tool execution
+         └─ post-hooks
+         │
+         ▼
+    append tool results to history
+         │
+         ▼
+    loop back to compact + stream
 ```
 
-## Core Agent Loop Invariants
+### Loop Invariants
 
-1. **At most one API stream is active at a time** — the loop is sequential
-2. **Tool execution is sequential by default** — parallel only when explicitly configured
-3. **Every tool call goes through permissions + hooks** — no bypass
-4. **Context cancellation stops the loop at the next safe point** — between API calls or between tool executions, never mid-stream
-5. **Conversation history grows monotonically** until compaction triggers (token budget exceeded)
-6. **Max turn limit prevents infinite loops** — configurable, default 200
+1. **One stream at a time** — the loop is strictly sequential
+2. **Every tool call passes through hooks then permissions** — no shortcuts
+3. **Cancellation stops at the next safe point** — between turns, never mid-stream
+4. **History grows monotonically** until compaction reclaims space
+5. **Hard turn limit** prevents runaway loops
 
-## Binary Structure
+## Agent Loop Variations
 
-```
-cmd/og/main.go     → og binary
-  ├── cobra root command (interactive mode)
-  ├── --prompt flag (one-shot mode)
-  ├── --model flag (override config)
-  ├── --permission flag (default|plan|auto)
-  └── subcommands: mcp, plugin, auth, provider
+### Compaction
 
-cmd/ogmo/main.go   → ogmo binary
-  ├── cobra root command (headless agent)
-  ├── --channel flag (telegram|slack|discord|feishu)
-  └── workspace at ~/.ohmo/
-```
+When the token budget is exceeded, the engine compacts older messages:
 
-## Configuration Layers (highest precedence first)
+- **Microcompact** — clears old tool result content, keeping recent turns. No LLM call needed.
+- **Full compact** — asks the LLM to summarize older turns into a single message. Costs one extra API call.
 
-| Priority | Source | Location |
-|---|---|---|
-| 1 | CLI flags | `--model`, `--permission`, etc. |
-| 2 | Environment variables | `OPENHARNESS_MODEL`, `ANTHROPIC_API_KEY` |
-| 3 | Project config | `./.openharness/settings.json` |
-| 4 | User config | `~/.openharness/settings.json` |
-| 5 | Defaults | hardcoded in config package |
+### Multi-Agent
 
-## Storage Paths
+The coordinator spawns subagents as child processes. Each subagent runs its own engine loop with a scoped tool set. Teams group agents for coordinated workflows.
 
-| Path | Purpose |
-|---|---|
-| `~/.openharness/` | User config directory (shared with Python version) |
-| `~/.openharness/settings.json` | Permission rules, profiles, hooks |
-| `~/.openharness/data/memory/` | Cross-session memory store |
-| `./.openharness/` | Project-level config |
-| `./CLAUDE.md` | Project-level system prompt injection |
-| `~/.openharness/CLAUDE.md` | User-level system prompt injection |
+### MCP Integration
+
+MCP servers are external processes (stdio, SSE, or HTTP) that expose additional tools and resources. The MCP manager handles connection lifecycle and translates MCP calls into the internal tool execution path.
+
+## Configuration
+
+Config is loaded in layers — later layers override earlier ones. Provider profiles abstract connection details so users select a name, not individual fields.
+
+See [config.md](config.md) for the full configuration design.
+
+## Binary Boundaries
+
+### og (agent CLI)
+
+The primary interface. Two modes:
+- **Interactive** — REPL with slash commands, streaming output, permission prompts
+- **One-shot** — `--prompt` flag, runs a single query, exits
+
+### ogmo (personal agent)
+
+A headless agent that connects to IM channels. Shares the same engine and capabilities, but replaces the terminal interface with channel adapters. Runs persistently, handling messages from multiple users.
 
 ## Compatibility Requirements
 
-These must remain compatible with the Python OpenHarness:
+ohgo must remain compatible with the Python OpenHarness ecosystem:
 
-| Component | Format | Compatibility |
-|---|---|---|
-| Skills | YAML frontmatter + markdown body | `anthropics/skills` format |
-| Plugins | `plugin.json` + directory layout | `claude-code/plugins` format |
-| Settings | `settings.json` | Same schema as Python version |
-| Memory | `MEMORY.md` index + separate files | Same directory structure |
-| Permission modes | `default`, `plan`, `auto` | Same behavior as Python version |
+| Component | Compatibility |
+|---|---|
+| Skills | YAML frontmatter + markdown body (`anthropics/skills` format) |
+| Plugins | `plugin.json` + directory layout (`claude-code/plugins` format) |
+| Settings | `settings.json` with the same schema |
+| Memory | `MEMORY.md` index + separate files, same directory structure |
+| Permissions | `default`, `plan`, `auto` modes with same behavior |

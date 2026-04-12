@@ -12,6 +12,10 @@ import (
 )
 
 // Store manages memory files for a project.
+// Memory is stored per-project under .openharness/memory/.
+// Each entry is a markdown file; MEMORY.md serves as the index.
+// Format is compatible with the Python OpenHarness version.
+// All operations are safe for concurrent use.
 type Store struct {
 	dir string // project memory directory
 	mu  sync.Mutex

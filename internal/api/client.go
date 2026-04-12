@@ -7,6 +7,20 @@ import (
 )
 
 // Message represents a single message in a conversation.
+//
+// Conversation history alternates between roles in a fixed pattern:
+//
+//	user:      "fix the bug"
+//	assistant: [text, tool_use]          ← model responds, may request tools
+//	user:      [tool_result]            ← engine provides tool output
+//	assistant: "I've fixed it"          ← model continues
+//	user:      "run the tests"
+//	...
+//
+// ContentBlock types carry different fields depending on role and direction:
+//   - text:        assistant → user display (Text field)
+//   - tool_use:    assistant → engine (ID, Name, Input fields)
+//   - tool_result: engine → API (ToolUseID, Content, IsError fields)
 type Message struct {
 	Role    string         `json:"role"`
 	Content []ContentBlock `json:"content"`
@@ -99,6 +113,24 @@ type ToolDef struct {
 }
 
 // Client is the interface for LLM API communication.
+//
+// Contract:
+//   - Stream() returns immediately — events arrive on the returned channel asynchronously.
+//   - The returned channel is always closed by the provider (EOF) or on error.
+//   - Callers must drain the channel or cancel the context to avoid goroutine leaks.
+//   - Implementations handle retry with exponential backoff internally. Callers see a
+//     single logical stream — no retry logic is needed at the call site.
+//   - API keys come from config/auth. Never pass credentials through StreamOptions.
+//
+// # Streaming Protocol
+//
+// Each provider uses a different SSE wire format, but all are normalized to the
+// same StreamEvent channel. The engine doesn't know which provider it's using.
+//
+// Anthropic sends typed events (message_start, content_block_delta, message_stop).
+// OpenAI and Copilot send newline-delimited JSON chunks terminated by [DONE].
+// Both produce the same normalized events: text_delta, tool_use, message_complete,
+// error, and usage.
 type Client interface {
 	// Stream sends a request and returns a channel of events.
 	Stream(ctx context.Context, opts StreamOptions) (<-chan StreamEvent, error)

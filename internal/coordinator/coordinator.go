@@ -45,6 +45,11 @@ type Team struct {
 
 // Coordinator manages multi-agent orchestration, including spawning,
 // tracking, and stopping subagent processes as well as team management.
+//
+// Subagents are spawned as child processes (exec.CommandContext) running the
+// same binary with --prompt. Each subagent runs its own independent engine loop.
+// The coordinator tracks process state via background goroutines and provides
+// thread-safe access to agent status. All operations are safe for concurrent use.
 type Coordinator struct {
 	mu      sync.RWMutex
 	agents  map[string]*RunningAgent

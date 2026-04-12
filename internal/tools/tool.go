@@ -9,6 +9,10 @@ import (
 )
 
 // Result represents the output of a tool execution.
+//
+// Content is always populated, even on error — the model needs to see the error
+// message to decide how to recover. IsError signals that the tool failed, which
+// the model uses to decide whether to retry or change approach.
 type Result struct {
 	Content string
 	IsError bool
@@ -16,6 +20,14 @@ type Result struct {
 
 // Tool is the interface all agent tools must implement.
 // It mirrors the Python BaseTool pattern with JSON Schema support.
+//
+// Contract:
+//   - Name() must be unique across the registry. Duplicate names are rejected.
+//   - InputSchema() must return a valid JSON Schema object (draft-07).
+//   - Execute() must be safe for concurrent calls from multiple goroutines.
+//   - Execute() must respect context cancellation — return promptly when ctx is done.
+//   - Result.Content must always be populated, even on error.
+//   - Tools must not import engine, permissions, or hooks — they are pure execution units.
 type Tool interface {
 	// Name returns the unique tool identifier (e.g. "bash", "read_file").
 	Name() string
@@ -30,7 +42,7 @@ type Tool interface {
 	Execute(ctx context.Context, args json.RawMessage) (Result, error)
 }
 
-// Registry manages available tools.
+// Registry manages available tools. All operations are safe for concurrent use.
 type Registry struct {
 	mu    sync.RWMutex
 	tools map[string]Tool

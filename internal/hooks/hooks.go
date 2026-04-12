@@ -5,6 +5,11 @@ import "context"
 
 // HookRunner is the interface for running lifecycle hooks.
 // Both the legacy Executor and DefinitionExecutor implement this.
+//
+// Contract:
+//   - Pre-hooks run in registration order. The first hook to block wins; remaining hooks are skipped.
+//   - Post-hooks all run regardless of individual errors. Errors are logged, not fatal.
+//   - Hooks must complete within 30 seconds or context cancellation kills them.
 type HookRunner interface {
 	// RunPre executes pre-tool hooks. Returns true if execution should be blocked.
 	RunPre(ctx context.Context, toolName string, args map[string]any) (blocked bool, reason string, err error)

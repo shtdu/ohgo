@@ -46,37 +46,37 @@ Technical decision record for ohgo. Each decision includes context, options cons
 
 **Rationale:** Go's philosophy is struct tags for metadata. `encoding/json` handles serialization. `validator/v10` adds field-level validation rules via tags (`validate:"required,min=1"`). Together they cover pydantic's core use case without reflection-heavy ORM patterns. For JSON Schema generation (tool InputSchema), custom code generates schemas from tagged structs.
 
-## ADR-006: LLM SDKs — both official
+## ADR-006: LLM SDKs — official Anthropic SDK + raw HTTP for OpenAI
 
-**Decision:** Use both `anthropic-sdk-go` and `openai-go`.
+**Decision:** Use `anthropic-sdk-go` for Anthropic, raw `net/http` with custom SSE parsing for OpenAI-compatible and Copilot.
 
 **Context:** Python uses both `anthropic` and `openai` SDKs for different providers.
 
-**Rationale:** Each SDK is purpose-built for its provider's API quirks (streaming format, tool use protocol, error handling). Trying to abstract both behind one SDK would leak complexity. The `api.Client` interface normalizes them — the engine doesn't know which provider it's talking to.
+**Rationale:** The official Anthropic SDK handles Claude-specific streaming, tool use protocol, and error handling well. For OpenAI-compatible providers (including third-party APIs and Copilot), raw HTTP gives more control over SSE parsing and avoids pulling in the large OpenAI Go SDK dependency. The `api.Client` interface normalizes both — the engine doesn't know which provider it's talking to.
 
-## ADR-007: HTTP client — resty
+## ADR-007: HTTP client — stdlib net/http
 
-**Decision:** Use `github.com/go-resty/resty/v2` over stdlib `net/http`.
+**Decision:** Use `net/http` for all non-SDK HTTP needs.
 
 **Context:** Need HTTP client for web fetch, web search, channel integrations, bridge connections.
 
-**Rationale:** resty provides retry, middleware, request/response binding, and a simpler API surface than raw `net/http`. The LLM SDKs handle their own HTTP — resty is for non-LLM HTTP needs.
+**Rationale:** stdlib `net/http` is sufficient for the non-LLM HTTP needs. The LLM SDKs handle their own HTTP. No need for a third-party HTTP client library — reduces dependency count.
 
-## ADR-008: WebSocket — gorilla/websocket
+## ADR-008: WebSocket — deferred
 
-**Decision:** Use `github.com/gorilla/websocket`.
+**Decision:** No WebSocket library imported yet. Will evaluate when IM channels are implemented.
 
 **Context:** Needed for Discord gateway and other real-time IM channel connections.
 
-**Rationale:** De facto standard Go WebSocket library. Stable, well-tested, broad adoption. Only used in the channels package.
+**Rationale:** The channels subsystem is not yet implemented (ogmo is a skeleton). When channel implementations are needed, `github.com/coder/websocket` (formerly `nhooyr.io/websocket`) or `github.com/gorilla/websocket` can be evaluated against the specific requirements.
 
-## ADR-009: MCP — mark3labs/mcp-go
+## ADR-009: MCP — modelcontextprotocol/go-sdk
 
-**Decision:** Use `github.com/mark3labs/mcp-go`.
+**Decision:** Use `github.com/modelcontextprotocol/go-sdk`.
 
-**Context:** Need MCP client to connect to external tool servers via stdio JSON-RPC.
+**Context:** Need MCP client to connect to external tool servers via stdio, SSE, and streamable HTTP transports.
 
-**Rationale:** Most mature Go MCP implementation. Supports client and server modes. Handles stdio transport, JSON-RPC framing, and MCP protocol versioning. Direct replacement for the Python `mcp` package.
+**Rationale:** Official MCP SDK for Go. Supports client and server modes, multiple transport types (stdio, SSE, streamable HTTP), and handles JSON-RPC framing. Direct replacement for the Python `mcp` package.
 
 ## ADR-010: Testing — testify
 
@@ -90,9 +90,9 @@ Technical decision record for ohgo. Each decision includes context, options cons
 
 **Decision:** Use `gopkg.in/yaml.v3`.
 
-**Context:** Need YAML for skill frontmatter, plugin manifests, and some config files.
+**Context:** Need YAML for skill frontmatter, plugin manifests, agent definitions, and some config files.
 
-**Rationale:** Standard Go YAML library. Full YAML 1.2 support. Stable API. Used for parsing skill YAML frontmatter and plugin hook definitions.
+**Rationale:** Standard Go YAML library. Full YAML 1.2 support. Stable API. Used for parsing skill YAML frontmatter, plugin hook definitions, and coordinator agent definitions.
 
 ## ADR-012: Config directory — shared with Python
 
@@ -108,7 +108,7 @@ Technical decision record for ohgo. Each decision includes context, options cons
 
 **Context:** Python uses a deep module hierarchy. Go prefers flat packages.
 
-**Rationale:** Go best practice is small, focused packages. Each `internal/` subdirectory is one package with one job. Tools are an exception — each tool gets its own subdirectory under `internal/tools/` because there are 43+ of them. This avoids single 3000-line files while keeping the tool interface centralized.
+**Rationale:** Go best practice is small, focused packages. Each `internal/` subdirectory is one package with one job. Tools are an exception — each tool gets its own subdirectory under `internal/tools/` because there are 28 of them across 23 packages. This avoids single 3000-line files while keeping the tool interface centralized.
 
 ## ADR-014: Streaming — normalized event channel
 
@@ -116,7 +116,7 @@ Technical decision record for ohgo. Each decision includes context, options cons
 
 **Context:** Anthropic SSE and OpenAI SSE have different formats and event names.
 
-**Rationale:** The engine shouldn't care about provider differences. Each API client implementation handles its own SSE parsing and emits normalized events. This allows adding new providers without touching the engine.
+**Rationale:** The engine shouldn't care about provider differences. Each API client implementation handles its own SSE parsing and emits normalized events. This allows adding new providers (like Copilot) without touching the engine.
 
 ## ADR-015: Error model — wrapped errors + typed errors
 
@@ -124,4 +124,44 @@ Technical decision record for ohgo. Each decision includes context, options cons
 
 **Context:** Python uses exception hierarchies. Go uses error values.
 
-**Rationale:** Wrapped errors preserve the chain for `errors.Is()`/`errors.As()`. Custom error types (e.g., `PermissionDeniedError`) allow callers to switch on error kind without string matching. No error code system — Go idiom is type-based matching.
+**Rationale:** Wrapped errors preserve the chain for `errors.Is()`/`errors.As()`. Custom error types (e.g., `PermissionDeniedError`, `RateLimitError`) allow callers to switch on error kind without string matching. No error code system — Go idiom is type-based matching.
+
+## ADR-016: API client registry — factory pattern
+
+**Decision:** Use a factory-based registry mapping `api_format` strings to `ClientFactory` functions.
+
+**Context:** Multiple provider types (Anthropic, OpenAI, Copilot) each need different client construction.
+
+**Rationale:** A factory registry allows the engine to be provider-agnostic. Config specifies `api_format` (e.g., "anthropic", "openai", "copilot"), and the registry produces the correct client. New providers can be added by registering a factory — no engine changes needed.
+
+## ADR-017: Copilot — two-step OAuth
+
+**Decision:** Implement Copilot auth as a two-step flow: GitHub OAuth device code → Copilot API token.
+
+**Context:** GitHub Copilot requires OAuth authentication, not a simple API key.
+
+**Rationale:** The device code flow is user-friendly for CLI apps (no browser redirect needed). The Copilot token is cached with expiry to avoid repeated OAuth flows. Uses `golang.org/x/oauth2` for the device flow implementation.
+
+## ADR-018: Cron scheduling — robfig/cron
+
+**Decision:** Use `github.com/robfig/cron/v3` for scheduled job management.
+
+**Context:** Need cron-like scheduling for recurring agent tasks.
+
+**Rationale:** Most widely used Go cron library. Standard cron expression syntax, timezone support, thread-safe. Provides the `cron_create`, `cron_delete`, `cron_list`, `cron_toggle` tools.
+
+## ADR-019: JSON manipulation — tidwall/gjson + sjson
+
+**Decision:** Use `github.com/tidwall/gjson` and `github.com/tidwall/sjson` for JSON path operations.
+
+**Context:** Need to extract and modify JSON values without full unmarshaling (e.g., tool arguments, API responses).
+
+**Rationale:** gjson/sjson provide fast JSON path queries and mutations without allocating full Go structs. Useful for tool argument extraction and API response handling where full type definitions would be over-engineering.
+
+## ADR-020: Go version — 1.25
+
+**Decision:** Target Go 1.25 (go.mod specifies 1.25.6).
+
+**Context:** Need to choose a minimum Go version for the project.
+
+**Rationale:** Go 1.25 provides the latest language features, standard library improvements, and toolchain updates. As a new project, there's no backwards compatibility constraint — start with the latest stable version.

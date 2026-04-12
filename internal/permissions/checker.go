@@ -45,6 +45,12 @@ type Check struct {
 }
 
 // Checker is the interface for permission decisions on tool execution.
+//
+// Contract:
+//   - Check() must be fast — no network calls, no user interaction.
+//   - Return Allow to proceed without prompting.
+//   - Return Deny to block with a reason.
+//   - Return Ask to trigger an interactive UI prompt (handled by engine.PermissionPrompter).
 type Checker interface {
 	// Check evaluates whether a tool invocation is permitted.
 	Check(ctx context.Context, check Check) (Decision, error)

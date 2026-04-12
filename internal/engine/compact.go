@@ -15,10 +15,10 @@ var CompactableTools = map[string]bool{
 }
 
 const (
-	clearedMessage       = "[Old tool result content cleared]"
-	defaultKeepRecent    = 5
-	autocompactBuffer    = 10000
-	maxConsecutiveFails  = 3
+	clearedMessage      = "[Old tool result content cleared]"
+	defaultKeepRecent   = 5
+	autocompactBuffer   = 10000
+	maxConsecutiveFails = 3
 )
 
 // MicrocompactResult holds the result of a microcompact pass.
@@ -48,6 +48,17 @@ func EstimateTokens(messages []api.Message) int {
 }
 
 // Microcompact clears old compactable tool results, keeping the most recent N.
+//
+// When the token budget is exceeded, the engine applies two levels of compaction:
+//
+// 1. Microcompact (this function): clears old tool_result content from compactable
+// tools, replacing it with a placeholder. Keeps the most recent N results intact.
+// Applied first because it's free — no API call needed.
+//
+// 2. FullCompact: if microcompact doesn't free enough space, sends older messages
+// to the LLM for summarization. The summary replaces older messages as a single
+// user message, preserving alternating user/assistant ordering. Costs one API call.
+// Falls back gracefully on failure (retries up to 3 consecutive times).
 func Microcompact(messages []api.Message, keepRecent int) MicrocompactResult {
 	if keepRecent <= 0 {
 		keepRecent = defaultKeepRecent

@@ -16,11 +16,19 @@ import (
 )
 
 // PermissionPrompter asks the user to approve or deny a tool execution.
+// Called when the permission checker returns Ask.
 type PermissionPrompter interface {
 	PromptApproval(ctx context.Context, toolName string, details string) (allow bool, remember bool, err error)
 }
 
 // Options configures the engine.
+//
+// The engine is the single orchestrator of the agent loop. It owns conversation
+// history — callers access it via Messages() / LoadMessages(), never by direct
+// mutation. At most one API stream is active at a time; the loop is strictly
+// sequential. Every tool call passes through hooks then permissions with no
+// shortcuts. Cancellation stops the loop at the next safe point (between turns,
+// never mid-stream). A hard turn limit (default 200) prevents runaway loops.
 type Options struct {
 	Model         string
 	MaxTokens     int

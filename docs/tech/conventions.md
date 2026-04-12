@@ -140,7 +140,7 @@ func TestRegistryDuplicatePanics(t *testing.T) {
 
 ### Rules
 
-- Test files: `foo_test.go` in the same package (white-box) or `package_test` (black-box)
+- Test files: `foo_test.go` in the same package (white-box testing is the norm in this project)
 - Use `require` for setup that must succeed (test can't continue without it)
 - Use `assert` for assertions that should be true (test continues on failure)
 - Table-driven tests for multi-case scenarios
