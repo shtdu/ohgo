@@ -47,16 +47,22 @@ func (s *Store) PersonalDir() string { return s.personalDir }
 
 // List returns sorted .md file basenames in the project memory directory.
 func (s *Store) List() ([]string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return listDir(s.projectDir)
 }
 
 // Add creates a project memory file and appends it to the project MEMORY.md index.
 func (s *Store) Add(title, content string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return addToDir(s.projectDir, title, content)
 }
 
 // Remove deletes a project memory file and removes its entry from the index.
 func (s *Store) Remove(name string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return removeFromDir(s.projectDir, name)
 }
 
@@ -64,16 +70,22 @@ func (s *Store) Remove(name string) (bool, error) {
 
 // ListPersonal returns sorted .md file basenames in the personal memory directory.
 func (s *Store) ListPersonal() ([]string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return listDir(s.personalDir)
 }
 
 // AddPersonal creates a personal memory file and appends it to the personal MEMORY.md index.
 func (s *Store) AddPersonal(title, content string) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return addToDir(s.personalDir, title, content)
 }
 
 // RemovePersonal deletes a personal memory file and removes its entry from the index.
 func (s *Store) RemovePersonal(name string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	return removeFromDir(s.personalDir, name)
 }
 
@@ -85,8 +97,14 @@ func (s *Store) LoadPrompt(maxLines int) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	personalContent, _ := readIndex(s.personalDir)
-	projectContent, _ := readIndex(s.projectDir)
+	personalContent, err := readIndex(s.personalDir)
+	if err != nil {
+		return "", fmt.Errorf("read personal memory: %w", err)
+	}
+	projectContent, err := readIndex(s.projectDir)
+	if err != nil {
+		return "", fmt.Errorf("read project memory: %w", err)
+	}
 
 	if personalContent == "" && projectContent == "" {
 		return "", nil

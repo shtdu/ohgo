@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"fmt"
 	"regexp"
 	"sort"
 	"strings"
@@ -20,24 +21,28 @@ func Find(query, cwd string, maxResults int) ([]*Header, error) {
 		return nil, nil
 	}
 
-	// Scan both layers.
-	projectHeaders, err := Scan(cwd, 100)
-	if err != nil {
-		return nil, err
-	}
-	for _, h := range projectHeaders {
-		h.Layer = "project"
+	// Scan both layers. A failure in one layer does not prevent searching the other.
+	var allHeaders []*Header
+
+	projectHeaders, pErr := Scan(cwd, 100)
+	if pErr == nil {
+		for _, h := range projectHeaders {
+			h.Layer = "project"
+		}
+		allHeaders = append(allHeaders, projectHeaders...)
 	}
 
-	personalHeaders, err := ScanPersonal(100)
-	if err != nil {
-		return nil, err
-	}
-	for _, h := range personalHeaders {
-		h.Layer = "personal"
+	personalHeaders, prErr := ScanPersonal(100)
+	if prErr == nil {
+		for _, h := range personalHeaders {
+			h.Layer = "personal"
+		}
+		allHeaders = append(allHeaders, personalHeaders...)
 	}
 
-	allHeaders := append(projectHeaders, personalHeaders...)
+	if pErr != nil && prErr != nil {
+		return nil, fmt.Errorf("scan both layers failed: project: %v, personal: %v", pErr, prErr)
+	}
 
 	type scored struct {
 		score  float64
