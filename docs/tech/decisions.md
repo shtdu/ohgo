@@ -94,13 +94,13 @@ Technical decision record for ohgo. Each decision includes context, options cons
 
 **Rationale:** Standard Go YAML library. Full YAML 1.2 support. Stable API. Used for parsing skill YAML frontmatter, plugin hook definitions, and coordinator agent definitions.
 
-## ADR-012: Config directory — shared with Python
+## ADR-012: Config directory — independent from Python
 
-**Decision:** Use `~/.openharness/` for config, same as the Python version.
+**Decision:** Use `~/.ohgo/` for config, separate from the Python version's `~/.openharness/`.
 
-**Context:** Users may switch between Python and Go versions.
+**Context:** ohgo is a standalone Go binary with its own identity. While originally ported from OpenHarness Python, the config directories should be independent.
 
-**Rationale:** Shared config directory means users don't need to reconfigure when switching implementations. `settings.json` format remains compatible. Only the binary changes.
+**Rationale:** Independent config directory avoids conflicts between Python and Go versions. Users can run both side-by-side. The `settings.json` schema remains compatible, so migration is a simple directory copy if needed.
 
 ## ADR-013: Package structure — flat internal packages
 

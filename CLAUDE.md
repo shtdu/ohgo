@@ -124,7 +124,7 @@ User Prompt → CLI/TUI → Engine → API Client
 - **Skills**: Must remain compatible with `anthropics/skills` markdown format (YAML frontmatter + body)
 - **Plugins**: Must remain compatible with `claude-code/plugins` directory layout (`plugin.json` manifest)
 - **Provider profiles**: Support Anthropic-compatible, OpenAI-compatible, Claude/Codex subscription bridges, and GitHub Copilot
-- **Config**: Read from `~/.openharness/` (same config directory as Python version)
+- **Config**: Read from `~/.ohgo/` (Go-specific config directory)
 - **Permissions**: `settings.json` format compatible with Python version
 
 ## Code Style

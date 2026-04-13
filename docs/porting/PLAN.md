@@ -115,13 +115,13 @@ echo "Always respond in French" > CLAUDE.md
 rm CLAUDE.md
 
 # 5. Hook blocking
-mkdir -p .openharness/plugins/test
-cat > .openharness/plugins/test/hooks.json << 'EOF'
+mkdir -p .ohgo/plugins/test
+cat > .ohgo/plugins/test/hooks.json << 'EOF'
 {"hooks":[{"event":"PreToolUse","pattern":"bash","command":"echo BLOCKED >&2 && exit 1"}]}
 EOF
 ./og --prompt "Run ls"
 # Expect: bash tool blocked by hook
-rm -rf .openharness
+rm -rf .ohgo
 ```
 
 ---
@@ -302,7 +302,7 @@ Commands are tested via a command registry test harness — mock the engine/UI, 
 | 5.24 | `tag` | `internal/commands/tag.go` | Named session snapshot | session storage | create tag, list tags | DONE |
 | 5.25 | `rewind` | `internal/commands/rewind.go` | Remove last turn(s) | 1.11 | rewind 1 turn, rewind N turns, rewind past start | DONE |
 | 5.26 | `files` | `internal/commands/files.go` | List workspace files | — | list files in test dir | DONE |
-| 5.27 | `init` | `internal/commands/init.go` | Initialize project files | — | creates .openharness dir, verify files | DONE |
+| 5.27 | `init` | `internal/commands/init.go` | Initialize project files | — | creates .ohgo dir, verify files | DONE |
 | 5.28 | `bridge` | `internal/commands/bridge.go` | Inspect bridge helpers | bridge pkg | show bridge status | DONE |
 | 5.29 | `login` / `logout` | `internal/commands/auth.go` | Auth status, store/clear API key | auth pkg | mock key store, verify save/clear | DONE |
 | 5.30 | `feedback` | `internal/commands/feedback.go` | Save feedback | — | writes to file | DONE |
@@ -398,8 +398,8 @@ Self-contained subsystems that the engine and tools depend on.
 
 ```bash
 # 1. Skills
-mkdir -p ~/.openharness/skills
-cat > ~/.openharness/skills/test.md << 'EOF'
+mkdir -p ~/.ohgo/skills
+cat > ~/.ohgo/skills/test.md << 'EOF'
 ---
 name: test-skill
 description: A test skill
@@ -421,8 +421,8 @@ EOF
 # Expect: shows tools from MCP server
 
 # 4. Plugins
-mkdir -p .openharness/plugins/test-plugin
-cat > .openharness/plugins/test-plugin/plugin.json << 'EOF'
+mkdir -p .ohgo/plugins/test-plugin
+cat > .ohgo/plugins/test-plugin/plugin.json << 'EOF'
 {"name":"test","version":"1.0","description":"Test plugin"}
 EOF
 ./og

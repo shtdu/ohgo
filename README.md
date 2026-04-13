@@ -114,7 +114,7 @@ Every tool implements the `Tool` interface with JSON Schema for model self-disco
 
 ### Skills
 
-On-demand knowledge loaded from markdown files. Compatible with the `anthropics/skills` format (YAML frontmatter + body). Drop `.md` files into `~/.openharness/skills/`.
+On-demand knowledge loaded from markdown files. Compatible with the `anthropics/skills` format (YAML frontmatter + body). Drop `.md` files into `~/.ohgo/skills/`.
 
 ### Plugins
 

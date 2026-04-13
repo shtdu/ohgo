@@ -7,7 +7,7 @@ How ohgo discovers, loads, merges, and resolves configuration.
 1. **Zero-config defaults** — `og` works out of the box with a single `ANTHROPIC_API_KEY`
 2. **Layered override** — every setting can be overridden at a more specific level
 3. **Profile-driven** — users select a provider profile, not individual connection fields
-4. **Python-compatible** — shared config directory and settings format with OpenHarness
+4. **Environment-first** — env vars override file-based config
 
 ## Config Layers
 
@@ -18,8 +18,8 @@ defaults  →  user settings  →  project settings  →  environment variables
    │              │                  │                      │
    │              │                  │                      │
    ▼              ▼                  ▼                      ▼
- hardcoded    ~/.openharness/    ./.openharness/         ANTHROPIC_*,
- values       settings.json     settings.json            OPENHARNESS_*
+ hardcoded    ~/.ohgo/          ./.ohgo/                 ANTHROPIC_*,
+ values       settings.json     settings.json            OHGO_*
 ```
 
 CLI flags are applied after all layers, overriding everything.
@@ -38,13 +38,13 @@ Key rules:
 
 The config directory resolves in order:
 
-1. `OPENHARNESS_CONFIG_DIR` environment variable
-2. `~/.openharness/` (default)
+1. `OHGO_CONFIG_DIR` environment variable
+2. `~/.ohgo/` (default)
 
 All paths derive from the config directory:
 
 ```
-~/.openharness/
+~/.ohgo/
   settings.json        # user settings
   credentials.json     # auth credentials (file-based keyring)
   data/
@@ -54,7 +54,7 @@ All paths derive from the config directory:
     cron_jobs.json     # scheduled job registry
   logs/                # application logs
 
-./.openharness/
+./.ohgo/
   settings.json        # project settings
   memory/              # project-local memory store
   plugins/             # project-local plugins
@@ -115,17 +115,17 @@ The auth manager tries sources in order: credentials store → environment varia
 | `ANTHROPIC_API_KEY` | API key |
 | `ANTHROPIC_MODEL` | Default model |
 | `ANTHROPIC_BASE_URL` | API base URL |
-| `OPENHARNESS_MODEL` | Default model (fallback if ANTHROPIC_MODEL unset) |
-| `OPENHARNESS_BASE_URL` | API base URL (fallback) |
-| `OPENHARNESS_API_FORMAT` | API format (anthropic/openai/copilot) |
-| `OPENHARNESS_PROVIDER` | Provider name |
-| `OPENHARNESS_MAX_TOKENS` | Max response tokens |
-| `OPENHARNESS_MAX_TURNS` | Max agent loop turns |
-| `OPENHARNESS_CONFIG_DIR` | Config directory location |
-| `OPENHARNESS_DATA_DIR` | Data directory location |
-| `OPENHARNESS_LOGS_DIR` | Logs directory location |
+| `OHGO_MODEL` | Default model (fallback if ANTHROPIC_MODEL unset) |
+| `OHGO_BASE_URL` | API base URL (fallback) |
+| `OHGO_API_FORMAT` | API format (anthropic/openai/copilot) |
+| `OHGO_PROVIDER` | Provider name |
+| `OHGO_MAX_TOKENS` | Max response tokens |
+| `OHGO_MAX_TURNS` | Max agent loop turns |
+| `OHGO_CONFIG_DIR` | Config directory location |
+| `OHGO_DATA_DIR` | Data directory location |
+| `OHGO_LOGS_DIR` | Logs directory location |
 
-`ANTHROPIC_*` variables take precedence over `OPENHARNESS_*` equivalents, supporting users who already have Anthropic SDK env vars set.
+`ANTHROPIC_*` variables take precedence over `OHGO_*` equivalents, supporting users who already have Anthropic SDK env vars set.
 
 ## Settings Schema
 

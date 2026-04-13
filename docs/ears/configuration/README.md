@@ -22,7 +22,7 @@ Multi-layer configuration, profile management, environment variable resolution, 
 
 ### Requirement
 
-The system shall read configuration from a JSON settings file at a standard location (`~/.openharness/settings.json`).
+The system shall read configuration from a JSON settings file at a standard location (`~/.ohgo/settings.json`).
 
 ### Acceptance Criteria
 
@@ -93,13 +93,13 @@ When the user switches provider profiles, the system shall validate the new prov
 
 ### Requirement
 
-Where environment variables are set (e.g., `ANTHROPIC_API_KEY`, `OPENHARNESS_MODEL`), the system shall use them as overrides for corresponding settings values.
+Where environment variables are set (e.g., `ANTHROPIC_API_KEY`, `OHGO_MODEL`), the system shall use them as overrides for corresponding settings values.
 
 ### Acceptance Criteria
 
 - [ ] `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` override API key settings
-- [ ] `OPENHARNESS_MODEL` overrides the default model
-- [ ] `OPENHARNESS_SETTINGS` overrides the settings file path
+- [ ] `OHGO_MODEL` overrides the default model
+- [ ] `OHGO_CONFIG_DIR` overrides the settings file path
 - [ ] Environment variables take precedence over settings file but not CLI flags
 - [ ] When an environment variable override contains an invalid value, the system reports which variable and the expected format
 
