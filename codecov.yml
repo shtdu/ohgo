@@ -42,6 +42,7 @@ ignore:
   - "**/testutil/**"
   - "**/scripts/**"
   - "OpenHarness/**"
+  - "cmd/**"
 
 github_checks:
   annotations: true

@@ -38,9 +38,9 @@ test-integration:
 test-pkg:
 	$(GO) test -v $(PKG)
 
-# Run all tests and generate coverage reports
+# Run all tests and generate coverage reports (unit + integration)
 coverage:
-	$(GO) test -coverprofile=$(COVERAGE_FILE) -covermode=atomic ./internal/...
+	$(GO) test -tags=integration -coverprofile=$(COVERAGE_FILE) -covermode=atomic ./internal/...
 	$(GO) tool cover -func=$(COVERAGE_FILE) | tail -1
 # 	$(GO) tool cover -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
 
