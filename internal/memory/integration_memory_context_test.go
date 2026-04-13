@@ -3,6 +3,7 @@
 package memory_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,122 +12,158 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/shtdu/ohgo/internal/memory"
+	"github.com/shtdu/ohgo/internal/prompts"
 )
 
 // EARS: REQ-MC-001
-func TestIntegration_Memory_PersistenceAcrossInstances(t *testing.T) {
+// Memory added in one Store instance is visible to a new Store for the same project,
+// and also appears when LoadPrompt reads the MEMORY.md index.
+func TestIntegration_Memory_PersistenceAndPromptGeneration(t *testing.T) {
 	dir := t.TempDir()
 
-	// Create first store and add memory
+	// Add memory through first store
 	store1, err := memory.NewStore(dir)
 	require.NoError(t, err)
-
-	path, err := store1.Add("Test Memory", "This is test content")
+	_, err = store1.Add("Test Note", "This is important context")
 	require.NoError(t, err)
-	assert.NotEmpty(t, path)
 
-	// Create second store for the same project — should see the memory
+	// Second store instance for same project — cross-instance persistence
 	store2, err := memory.NewStore(dir)
 	require.NoError(t, err)
-
 	files, err := store2.List()
 	require.NoError(t, err)
-	assert.Contains(t, files, "test_memory.md", "memory should persist across store instances")
+	assert.Contains(t, files, "test_note.md")
+
+	// Cross-component: memory.LoadPrompt produces content for prompt injection
+	prompt, err := store2.LoadPrompt(100)
+	require.NoError(t, err)
+	assert.Contains(t, prompt, "test_note", "LoadPrompt should include memory index entries")
 }
 
 // EARS: REQ-MC-005
-func TestIntegration_Memory_AddRemoveUpdatesIndex(t *testing.T) {
+// Add and remove entries, verifying the MEMORY.md index stays in sync,
+// and that LoadPrompt reflects the changes.
+func TestIntegration_Memory_AddRemove_IndexAndPromptSync(t *testing.T) {
 	dir := t.TempDir()
 	store, err := memory.NewStore(dir)
 	require.NoError(t, err)
 
-	// Add entry
-	_, err = store.Add("My Entry", "Some content here")
+	// Add two entries
+	_, err = store.Add("Keep This", "persistent content")
+	require.NoError(t, err)
+	_, err = store.Add("Remove This", "temporary content")
 	require.NoError(t, err)
 
-	// Verify MEMORY.md index contains the entry
-	indexData, err := os.ReadFile(filepath.Join(store.ProjectDir(), "MEMORY.md"))
+	// Prompt should contain both
+	prompt, err := store.LoadPrompt(100)
 	require.NoError(t, err)
-	assert.Contains(t, string(indexData), "my_entry.md")
-	assert.Contains(t, string(indexData), "My Entry")
+	assert.Contains(t, prompt, "keep_this")
+	assert.Contains(t, prompt, "remove_this")
 
-	// Remove entry
-	removed, err := store.Remove("my_entry")
+	// Remove one entry
+	removed, err := store.Remove("remove_this")
 	require.NoError(t, err)
 	assert.True(t, removed)
 
-	// Verify removed from list
-	files, err := store.List()
+	// Prompt should no longer contain removed entry
+	prompt, err = store.LoadPrompt(100)
 	require.NoError(t, err)
-	assert.NotContains(t, files, "my_entry.md")
-
-	// Verify MEMORY.md index updated
-	indexData, err = os.ReadFile(filepath.Join(store.ProjectDir(), "MEMORY.md"))
-	require.NoError(t, err)
-	assert.NotContains(t, string(indexData), "my_entry.md")
+	assert.Contains(t, prompt, "keep_this")
+	assert.NotContains(t, prompt, "remove_this", "removed entry should disappear from prompt")
 }
 
 // EARS: REQ-MC-002
-func TestIntegration_Memory_LoadPrompt(t *testing.T) {
+// Memory content integrates with the prompts.Assembler via CLAUDE.md discovery.
+// A CLAUDE.md file in the project dir is picked up by the prompt assembler.
+func TestIntegration_Memory_CLAUDEmdDiscoveryInPrompt(t *testing.T) {
+	dir := t.TempDir()
+
+	// Write a CLAUDE.md file in the project directory
+	claudeMdContent := "# Project Rules\n\nAlways use tabs for indentation."
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte(claudeMdContent), 0o644))
+
+	// Prompts assembler discovers the CLAUDE.md
+	files, err := prompts.DiscoverCLAUDEmd(context.Background(), dir)
+	require.NoError(t, err)
+	require.NotEmpty(t, files, "CLAUDE.md should be discovered")
+	assert.Contains(t, files[0].Content, "Always use tabs")
+
+	// Merge produces a combined prompt section
+	merged := prompts.MergeCLAUDEmd(files, 12000)
+	require.NotNil(t, merged)
+	assert.Contains(t, *merged, "Always use tabs")
+
+	// Full assembler build includes CLAUDE.md content
+	assembler := prompts.NewAssembler(dir)
+	systemPrompt, err := assembler.Build(context.Background())
+	require.NoError(t, err)
+	assert.Contains(t, systemPrompt, "Always use tabs", "assembled prompt should include CLAUDE.md")
+}
+
+// EARS: REQ-MC-001, REQ-MC-002
+// Dual-layer memory (personal + project) both appear in LoadPrompt.
+func TestIntegration_Memory_DualLayerPrompt(t *testing.T) {
 	dir := t.TempDir()
 	store, err := memory.NewStore(dir)
 	require.NoError(t, err)
 
-	// Add entries
-	_, err = store.Add("First Note", "First content")
+	// Add to both scopes
+	_, err = store.AddPersonal("Personal Note", "my personal context")
 	require.NoError(t, err)
-	_, err = store.Add("Second Note", "Second content")
-	require.NoError(t, err)
-
-	// Load prompt should return content from MEMORY.md
-	prompt, err := store.LoadPrompt(100)
-	require.NoError(t, err)
-	assert.Contains(t, prompt, "first_note")
-	assert.Contains(t, prompt, "second_note")
-}
-
-// EARS: REQ-MC-002
-func TestIntegration_Memory_LoadPromptEmpty(t *testing.T) {
-	dir := t.TempDir()
-	store, err := memory.NewStore(dir)
+	_, err = store.Add("Project Note", "shared project context")
 	require.NoError(t, err)
 
-	// No memories added — prompt should have no memory content
-	prompt, err := store.LoadPrompt(100)
+	prompt, err := store.LoadPrompt(200)
 	require.NoError(t, err)
-	// Even with no memories, LoadPrompt may produce section headers
-	assert.True(t, len(prompt) < 200, "empty store should produce minimal prompt, got: %q", prompt)
+	assert.Contains(t, prompt, "Personal Memory", "personal section should appear")
+	assert.Contains(t, prompt, "personal_note")
+	assert.Contains(t, prompt, "Project Memory", "project section should appear")
+	assert.Contains(t, prompt, "project_note")
 }
 
 // EARS: REQ-MC-005
-func TestIntegration_Memory_RemoveNonExistent(t *testing.T) {
+// Removing nonexistent entries is a safe no-op; prompt still reflects valid entries.
+func TestIntegration_Memory_RemoveNoOp_PromptUnchanged(t *testing.T) {
 	dir := t.TempDir()
 	store, err := memory.NewStore(dir)
 	require.NoError(t, err)
 
+	// Add one real entry
+	_, err = store.Add("Real Entry", "actual content")
+	require.NoError(t, err)
+
+	// Get baseline prompt
+	promptBefore, err := store.LoadPrompt(100)
+	require.NoError(t, err)
+
+	// Remove nonexistent — should be safe no-op
 	removed, err := store.Remove("nonexistent")
 	require.NoError(t, err)
-	assert.False(t, removed, "removing nonexistent entry should return false")
+	assert.False(t, removed)
+
+	// Prompt unchanged
+	promptAfter, err := store.LoadPrompt(100)
+	require.NoError(t, err)
+	assert.Equal(t, promptBefore, promptAfter)
 }
 
-// EARS: REQ-MC-001
-func TestIntegration_Memory_PersonalScope(t *testing.T) {
+// EARS: REQ-MC-002
+// .claude/rules/*.md files are discovered alongside CLAUDE.md.
+func TestIntegration_Memory_RulesDiscovery(t *testing.T) {
 	dir := t.TempDir()
-	store, err := memory.NewStore(dir)
-	require.NoError(t, err)
 
-	// Add personal memory
-	path, err := store.AddPersonal("Personal Note", "personal content")
-	require.NoError(t, err)
-	assert.NotEmpty(t, path)
+	// Create CLAUDE.md and a rules file
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte("# Main"), 0o644))
+	rulesDir := filepath.Join(dir, ".claude", "rules")
+	require.NoError(t, os.MkdirAll(rulesDir, 0o755))
+	require.NoError(t, os.WriteFile(filepath.Join(rulesDir, "testing.md"), []byte("# Testing Rules\nWrite tests first."), 0o644))
 
-	// List personal should contain it
-	files, err := store.ListPersonal()
+	files, err := prompts.DiscoverCLAUDEmd(context.Background(), dir)
 	require.NoError(t, err)
-	assert.Contains(t, files, "personal_note.md")
+	assert.GreaterOrEqual(t, len(files), 2, "should discover CLAUDE.md and rules file")
 
-	// Remove personal
-	removed, err := store.RemovePersonal("personal_note")
-	require.NoError(t, err)
-	assert.True(t, removed)
+	// Merge all
+	merged := prompts.MergeCLAUDEmd(files, 12000)
+	require.NotNil(t, merged)
+	assert.Contains(t, *merged, "Write tests first")
 }

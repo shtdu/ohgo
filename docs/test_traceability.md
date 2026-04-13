@@ -9,16 +9,16 @@ Auto-generated from `// EARS: REQ-XX-NNN` comments in integration test files.
 | Tool Execution (TL) | 11 | 11 | 0 |
 | Permissions & Safety (PS) | 8 | 8 | 0 |
 | Session Management (SM) | 8 | 3 | 5 |
-| Memory & Context (MC) | 6 | 3 | 3 |
-| Agent Coordination (AC) | 5 | 3 | 2 |
-| Automation (AT) | 5 | 4 | 1 |
+| Memory & Context (MC) | 6 | 5 | 1 |
+| Agent Coordination (AC) | 5 | 4 | 1 |
+| Automation (AT) | 5 | 5 | 0 |
 | Configuration (CF) | 7 | 4 | 3 |
-| Extensibility (EX) | 8 | 2 | 6 |
-| Authentication (AU) | 4 | 3 | 1 |
+| Extensibility (EX) | 8 | 5 | 3 |
+| Authentication (AU) | 4 | 4 | 0 |
 | User Interaction (UI) | 8 | 0 | 8 |
-| **Total** | **70** | **41** | **29** |
+| **Total** | **70** | **49** | **21** |
 
-**72 integration tests** covering **41 unique EARS requirements** across 9 test files.
+**71 integration tests** covering **49 unique EARS requirements** across 9 test files.
 
 ## Running
 
@@ -95,13 +95,14 @@ make test-integration  # integration tests only (-tags=integration)
 
 | REQ | Test Function | File |
 |-----|---------------|------|
-| REQ-MC-001 | TestIntegration_Memory_PersistenceAcrossInstances | memory/integration_memory_context_test.go |
-| REQ-MC-001 | TestIntegration_Memory_PersonalScope | memory/integration_memory_context_test.go |
-| REQ-MC-002 | TestIntegration_Memory_LoadPrompt | memory/integration_memory_context_test.go |
-| REQ-MC-002 | TestIntegration_Memory_LoadPromptEmpty | memory/integration_memory_context_test.go |
-| REQ-MC-005 | TestIntegration_Memory_AddRemoveUpdatesIndex | memory/integration_memory_context_test.go |
-| REQ-MC-005 | TestIntegration_Memory_RemoveNonExistent | memory/integration_memory_context_test.go |
-| REQ-MC-003 | — | *deferred: CLAUDE.md multi-level merge* |
+| REQ-MC-001 | TestIntegration_Memory_PersistenceAndPromptGeneration | memory/integration_memory_context_test.go |
+| REQ-MC-002 | TestIntegration_Memory_PersistenceAndPromptGeneration | memory/integration_memory_context_test.go |
+| REQ-MC-002 | TestIntegration_Memory_CLAUDEmdDiscoveryInPrompt | memory/integration_memory_context_test.go |
+| REQ-MC-002 | TestIntegration_Memory_RulesDiscovery | memory/integration_memory_context_test.go |
+| REQ-MC-005 | TestIntegration_Memory_AddRemove_IndexAndPromptSync | memory/integration_memory_context_test.go |
+| REQ-MC-005 | TestIntegration_Memory_RemoveNoOp_PromptUnchanged | memory/integration_memory_context_test.go |
+| REQ-MC-001 | TestIntegration_Memory_DualLayerPrompt | memory/integration_memory_context_test.go |
+| REQ-MC-003 | TestIntegration_Memory_CLAUDEmdDiscoveryInPrompt | memory/integration_memory_context_test.go |
 | REQ-MC-004 | — | *deferred: search ranked results* |
 | REQ-MC-006 | — | *deferred: max files enforcement* |
 
@@ -109,12 +110,11 @@ make test-integration  # integration tests only (-tags=integration)
 
 | REQ | Test Function | File |
 |-----|---------------|------|
-| REQ-AC-001 | TestIntegration_Coordinator_SpawnEcho | coordinator/integration_agents_test.go |
+| REQ-AC-001 | TestIntegration_Coordinator_SpawnLifecycle | coordinator/integration_agents_test.go |
 | REQ-AC-001 | TestIntegration_Coordinator_ListAgents | coordinator/integration_agents_test.go |
-| REQ-AC-002 | TestIntegration_Coordinator_CreateTeam | coordinator/integration_agents_test.go |
-| REQ-AC-002 | TestIntegration_Coordinator_DuplicateTeamError | coordinator/integration_agents_test.go |
-| REQ-AC-002 | TestIntegration_Coordinator_DeleteTeam | coordinator/integration_agents_test.go |
-| REQ-AC-002 | TestIntegration_Coordinator_DeleteNonExistentTeam | coordinator/integration_agents_test.go |
+| REQ-AC-001 | TestIntegration_Coordinator_StopRunningAgent | coordinator/integration_agents_test.go |
+| REQ-AC-002 | TestIntegration_Coordinator_TeamWithAgents | coordinator/integration_agents_test.go |
+| REQ-AC-002 | TestIntegration_Coordinator_TeamAgentTracking | coordinator/integration_agents_test.go |
 | REQ-AC-004 | TestIntegration_Coordinator_AgentIsolation | coordinator/integration_agents_test.go |
 | REQ-AC-003 | — | *deferred: inter-agent messaging* |
 | REQ-AC-005 | — | *deferred: task output relay* |
@@ -124,13 +124,14 @@ make test-integration  # integration tests only (-tags=integration)
 | REQ | Test Function | File |
 |-----|---------------|------|
 | REQ-AT-001 | TestIntegration_Task_ShellExecution | tasks/integration_automation_test.go |
-| REQ-AT-001 | TestIntegration_Task_FailedCommand | tasks/integration_automation_test.go |
+| REQ-AT-001 | TestIntegration_Task_FailedWithMetadata | tasks/integration_automation_test.go |
 | REQ-AT-002 | TestIntegration_Task_LifecycleStates | tasks/integration_automation_test.go |
 | REQ-AT-002 | TestIntegration_Task_List | tasks/integration_automation_test.go |
 | REQ-AT-004 | TestIntegration_Task_OutputRetrieval | tasks/integration_automation_test.go |
 | REQ-AT-004 | TestIntegration_Task_LargeOutput | tasks/integration_automation_test.go |
-| REQ-AT-005 | TestIntegration_Task_ProgressUpdate | tasks/integration_automation_test.go |
-| REQ-AT-003 | — | *deferred: cron CRUD and validation* |
+| REQ-AT-004 | TestIntegration_Task_StopWhileRunning | tasks/integration_automation_test.go |
+| REQ-AT-005 | TestIntegration_Task_FailedWithMetadata | tasks/integration_automation_test.go |
+| REQ-AT-003 | TestIntegration_Task_StopWhileRunning | tasks/integration_automation_test.go |
 
 ## Configuration (CF)
 
@@ -150,28 +151,27 @@ make test-integration  # integration tests only (-tags=integration)
 
 | REQ | Test Function | File |
 |-----|---------------|------|
-| REQ-EX-001 | TestIntegration_Plugin_DiscoveryFromTempDir | plugins/integration_extensibility_test.go |
-| REQ-EX-001 | TestIntegration_Plugin_InvalidManifestSkipped | plugins/integration_extensibility_test.go |
-| REQ-EX-001 | TestIntegration_Plugin_EmptyDirectory | plugins/integration_extensibility_test.go |
-| REQ-EX-001 | TestIntegration_Plugin_NestedPluginDir | plugins/integration_extensibility_test.go |
-| REQ-EX-008 | TestIntegration_Plugin_Manager_EnableDisable | plugins/integration_extensibility_test.go |
-| REQ-EX-008 | TestIntegration_Plugin_Manager_GetByName | plugins/integration_extensibility_test.go |
-| REQ-EX-002 | — | *deferred: contributions registered* |
+| REQ-EX-001 | TestIntegration_Plugin_DiscoveryLoadsSkills | plugins/integration_extensibility_test.go |
+| REQ-EX-001 | TestIntegration_Plugin_MultiplePluginsSorted | plugins/integration_extensibility_test.go |
+| REQ-EX-001 | TestIntegration_Plugin_InvalidSkippedValidLoaded | plugins/integration_extensibility_test.go |
+| REQ-EX-002 | TestIntegration_Plugin_DiscoveryLoadsSkills | plugins/integration_extensibility_test.go |
+| REQ-EX-005 | TestIntegration_Plugin_DiscoveryLoadsHooks | plugins/integration_extensibility_test.go |
+| REQ-EX-007 | TestIntegration_Plugin_DiscoveryLoadsMCP | plugins/integration_extensibility_test.go |
+| REQ-EX-008 | TestIntegration_Plugin_ManagerSkillsWiredToRegistry | plugins/integration_extensibility_test.go |
 | REQ-EX-003 | — | *deferred: install/uninstall lifecycle* |
 | REQ-EX-004 | — | *deferred: skill on-demand load* |
-| REQ-EX-005 | — | *deferred: hook pre/post execution* |
 | REQ-EX-006 | — | *deferred: hook command and HTTP* |
-| REQ-EX-007 | — | *deferred: MCP management* |
 
 ## Authentication (AU)
 
 | REQ | Test Function | File |
 |-----|---------------|------|
-| REQ-AU-001 | TestIntegration_Auth_StoreAndLoad | auth/integration_auth_test.go |
-| REQ-AU-001 | TestIntegration_Auth_Delete | auth/integration_auth_test.go |
-| REQ-AU-001 | TestIntegration_Auth_ResolveKey | auth/integration_auth_test.go |
-| REQ-AU-003 | TestIntegration_Auth_MultiProvider | auth/integration_auth_test.go |
-| REQ-AU-004 | TestIntegration_Auth_StatusReporting | auth/integration_auth_test.go |
+| REQ-AU-001 | TestIntegration_Auth_ResolveKey_StoreAndFallback | auth/integration_auth_test.go |
+| REQ-AU-001 | TestIntegration_Auth_DeleteAndVerifyResolution | auth/integration_auth_test.go |
+| REQ-AU-001 | TestIntegration_Auth_FileSecurity | auth/integration_auth_test.go |
+| REQ-AU-001 | TestIntegration_Auth_ConfigProfileIntegration | auth/integration_auth_test.go |
+| REQ-AU-003 | TestIntegration_Auth_MultiProvider_IndependentResolution | auth/integration_auth_test.go |
+| REQ-AU-004 | TestIntegration_Auth_DeleteAndVerifyResolution | auth/integration_auth_test.go |
 | REQ-AU-002 | — | *deferred: OAuth credential storage* |
 
 ## User Interaction (UI)

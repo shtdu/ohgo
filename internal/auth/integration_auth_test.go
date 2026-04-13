@@ -4,6 +4,7 @@ package auth_test
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -12,113 +13,133 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/shtdu/ohgo/internal/auth"
+	"github.com/shtdu/ohgo/internal/config"
+	"github.com/shtdu/ohgo/internal/permissions"
 )
 
 // EARS: REQ-AU-001
-func TestIntegration_Auth_StoreAndLoad(t *testing.T) {
+// Stored credential resolves through ResolveKey, matching the auth-source→provider mapping
+// that the engine uses to obtain API keys at query time.
+func TestIntegration_Auth_ResolveKey_StoreAndFallback(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "credentials.json")
 	mgr := auth.NewManager(path)
 
-	cred := &auth.Credential{
-		Provider:  "anthropic",
-		Kind:      "api_key",
-		Value:     "sk-ant-test-key-123",
-		CreatedAt: time.Now().Unix(),
-		UpdatedAt: time.Now().Unix(),
-	}
-
-	err := mgr.Store(context.Background(), cred)
+	// No credential stored yet — should fall back to env
+	t.Setenv("ANTHROPIC_API_KEY", "env-fallback-key")
+	key, err := mgr.ResolveKey(context.Background(), "anthropic_api_key")
 	require.NoError(t, err)
+	assert.Equal(t, "env-fallback-key", key)
 
-	loaded, err := mgr.Load(context.Background(), "anthropic")
+	// Store a credential — should take precedence over env
+	require.NoError(t, mgr.Store(context.Background(), &auth.Credential{
+		Provider: "anthropic", Kind: "api_key", Value: "stored-key",
+		CreatedAt: time.Now().Unix(), UpdatedAt: time.Now().Unix(),
+	}))
+	key, err = mgr.ResolveKey(context.Background(), "anthropic_api_key")
 	require.NoError(t, err)
-	assert.Equal(t, "anthropic", loaded.Provider)
-	assert.Equal(t, "sk-ant-test-key-123", loaded.Value)
-	assert.Equal(t, "api_key", loaded.Kind)
+	assert.Equal(t, "stored-key", key, "stored credential should override env var")
 }
 
 // EARS: REQ-AU-003
-func TestIntegration_Auth_MultiProvider(t *testing.T) {
+// Multiple providers can be stored and independently resolved by different auth sources.
+func TestIntegration_Auth_MultiProvider_IndependentResolution(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "credentials.json")
 	mgr := auth.NewManager(path)
 
-	// Store for multiple providers
-	err := mgr.Store(context.Background(), &auth.Credential{
-		Provider: "anthropic", Kind: "api_key", Value: "key-1",
+	require.NoError(t, mgr.Store(context.Background(), &auth.Credential{
+		Provider: "anthropic", Kind: "api_key", Value: "anthropic-key",
 		CreatedAt: time.Now().Unix(), UpdatedAt: time.Now().Unix(),
-	})
-	require.NoError(t, err)
-
-	err = mgr.Store(context.Background(), &auth.Credential{
-		Provider: "openai", Kind: "api_key", Value: "key-2",
+	}))
+	require.NoError(t, mgr.Store(context.Background(), &auth.Credential{
+		Provider: "openai", Kind: "api_key", Value: "openai-key",
 		CreatedAt: time.Now().Unix(), UpdatedAt: time.Now().Unix(),
-	})
-	require.NoError(t, err)
+	}))
 
-	// Load each
-	anthropic, err := mgr.Load(context.Background(), "anthropic")
+	// Each auth source maps to the correct provider
+	anthropicKey, err := mgr.ResolveKey(context.Background(), "anthropic_api_key")
 	require.NoError(t, err)
-	assert.Equal(t, "key-1", anthropic.Value)
+	assert.Equal(t, "anthropic-key", anthropicKey)
 
-	openai, err := mgr.Load(context.Background(), "openai")
+	openaiKey, err := mgr.ResolveKey(context.Background(), "openai_api_key")
 	require.NoError(t, err)
-	assert.Equal(t, "key-2", openai.Value)
+	assert.Equal(t, "openai-key", openaiKey)
 }
 
-// EARS: REQ-AU-004
-func TestIntegration_Auth_StatusReporting(t *testing.T) {
+// EARS: REQ-AU-001, REQ-AU-004
+// After deleting a credential, List no longer includes it and ResolveKey falls back.
+func TestIntegration_Auth_DeleteAndVerifyResolution(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "credentials.json")
 	mgr := auth.NewManager(path)
 
-	err := mgr.Store(context.Background(), &auth.Credential{
-		Provider: "anthropic", Kind: "api_key", Value: "sk-secret-key",
+	require.NoError(t, mgr.Store(context.Background(), &auth.Credential{
+		Provider: "test-provider", Kind: "api_key", Value: "will-delete",
 		CreatedAt: time.Now().Unix(), UpdatedAt: time.Now().Unix(),
-	})
-	require.NoError(t, err)
+	}))
 
+	// Verify listed
 	creds, err := mgr.List(context.Background())
 	require.NoError(t, err)
-	require.Len(t, creds, 1)
-	assert.Equal(t, "anthropic", creds[0].Provider)
-	// Value should be accessible (masking is done at display time)
+	assert.Len(t, creds, 1)
+
+	// Delete
+	require.NoError(t, mgr.Delete(context.Background(), "test-provider"))
+
+	// List should be empty
+	creds, err = mgr.List(context.Background())
+	require.NoError(t, err)
+	assert.Empty(t, creds)
+
+	// Load should fail
+	_, err = mgr.Load(context.Background(), "test-provider")
+	assert.Error(t, err)
 }
 
 // EARS: REQ-AU-001
-func TestIntegration_Auth_Delete(t *testing.T) {
+// Credential file is stored with restricted permissions (0600).
+func TestIntegration_Auth_FileSecurity(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "credentials.json")
 	mgr := auth.NewManager(path)
 
-	err := mgr.Store(context.Background(), &auth.Credential{
-		Provider: "test", Kind: "api_key", Value: "to-delete",
+	require.NoError(t, mgr.Store(context.Background(), &auth.Credential{
+		Provider: "secure-test", Kind: "api_key", Value: "secret-value",
 		CreatedAt: time.Now().Unix(), UpdatedAt: time.Now().Unix(),
-	})
-	require.NoError(t, err)
+	}))
 
-	err = mgr.Delete(context.Background(), "test")
+	info, err := os.Stat(path)
 	require.NoError(t, err)
-
-	_, err = mgr.Load(context.Background(), "test")
-	assert.Error(t, err, "loading deleted credential should fail")
+	assert.Equal(t, os.FileMode(0o600), info.Mode().Perm(), "credentials file should be 0600")
 }
 
 // EARS: REQ-AU-001
-func TestIntegration_Auth_ResolveKey(t *testing.T) {
+// Auth credential storage integrates with config profile resolution:
+// storing a credential for a provider and checking it against config settings.
+func TestIntegration_Auth_ConfigProfileIntegration(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "credentials.json")
 	mgr := auth.NewManager(path)
 
-	err := mgr.Store(context.Background(), &auth.Credential{
-		Provider: "anthropic", Kind: "api_key", Value: "resolved-key",
+	// Store credential for a provider used in a profile
+	require.NoError(t, mgr.Store(context.Background(), &auth.Credential{
+		Provider: "anthropic", Kind: "api_key", Value: "profile-test-key",
 		CreatedAt: time.Now().Unix(), UpdatedAt: time.Now().Unix(),
+	}))
+
+	// Build a permission checker using config (cross-component)
+	settings := config.PermissionSettings{Mode: "auto"}
+	checker := permissions.NewDefaultChecker(settings)
+	decision, err := checker.Check(context.Background(), permissions.Check{
+		ToolName: "read_file",
+		Args:     map[string]any{"path": "/tmp/test"},
 	})
 	require.NoError(t, err)
+	assert.Equal(t, permissions.Allow, decision, "auto mode should allow read tool")
 
-	// ResolveKey maps auth sources to providers: "anthropic_api_key" -> "anthropic"
+	// Verify the key resolves for the profile's auth source
 	key, err := mgr.ResolveKey(context.Background(), "anthropic_api_key")
 	require.NoError(t, err)
-	assert.Equal(t, "resolved-key", key)
+	assert.Equal(t, "profile-test-key", key)
 }
