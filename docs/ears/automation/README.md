@@ -1,15 +1,28 @@
 # Automation
 
-# REQ-AT-001: Background Task Execution
+Recurring and background task automation — scheduled jobs, cron expressions, and automatic prompt execution.
+
+## Requirements
+
+| ID | Title | Pattern |
+|----|-------|---------|
+| [REQ-AT-001](#req-at-001-background-task-execution) | Background Task Execution | Event-Driven |
+| [REQ-AT-002](#req-at-002-background-task-lifecycle-management) | Background Task Lifecycle Management | State-Driven |
+| [REQ-AT-003](#req-at-003-cron-scheduling) | Cron Scheduling | Optional Feature |
+| [REQ-AT-004](#req-at-004-task-output-retrieval) | Task Output Retrieval | Event-Driven |
+| [REQ-AT-005](#req-at-005-task-progress-tracking) | Task Progress Tracking | Event-Driven |
+
+## Details
+
+## REQ-AT-001: Background Task Execution
 
 **Pattern:** Event-Driven
-**Capability:** Task Automation
 
-## Requirement
+### Requirement
 
 When a background task is created, the system shall execute it independently of the main conversation.
 
-## Acceptance Criteria
+### Acceptance Criteria
 
 - [ ] Tasks can run external commands
 - [ ] Tasks can run agent-driven prompts
@@ -17,30 +30,30 @@ When a background task is created, the system shall execute it independently of 
 - [ ] Task state is queryable at any time
 - [ ] When task execution fails (command not found, timeout), the task state transitions to failed with an error message
 
-## Source Evidence
+### Source Evidence
 
 - `OpenHarness/src/openharness/tools/task_create_tool.py`
 - `OpenHarness/src/openharness/tasks/`
 
+
 ---
 
-# REQ-AT-002: Background Task Lifecycle Management
+## REQ-AT-002: Background Task Lifecycle Management
 
 **Pattern:** State-Driven
-**Capability:** Task Automation
 
-## Requirement
+### Requirement
 
 While a background task exists, the system shall manage its complete lifecycle from creation through termination. Progress tracking is covered separately by REQ-AT-005.
 
-## Acceptance Criteria
+### Acceptance Criteria
 
 - [ ] Tasks are created with unique IDs
 - [ ] Task state transitions follow: pending, running, completed, or failed
 - [ ] Tasks can be stopped by user request
 - [ ] When a task creation fails (duplicate ID, invalid state), the system returns a descriptive error identifying the cause
 
-## Source Evidence
+### Source Evidence
 
 - `OpenHarness/src/openharness/tools/task_create_tool.py`
 - `OpenHarness/src/openharness/tools/task_get_tool.py`
@@ -49,18 +62,18 @@ While a background task exists, the system shall manage its complete lifecycle f
 - `OpenHarness/src/openharness/tools/task_stop_tool.py`
 - `OpenHarness/src/openharness/tools/task_update_tool.py`
 
+
 ---
 
-# REQ-AT-003: Cron Scheduling
+## REQ-AT-003: Cron Scheduling
 
 **Pattern:** Optional Feature
-**Capability:** Task Automation
 
-## Requirement
+### Requirement
 
 Where cron jobs are configured, the system shall execute specified commands or agent prompts on the defined cron schedule.
 
-## Acceptance Criteria
+### Acceptance Criteria
 
 - [ ] Cron expressions define the schedule
 - [ ] Jobs can be enabled and disabled individually
@@ -69,7 +82,7 @@ Where cron jobs are configured, the system shall execute specified commands or a
 - [ ] When a cron expression is invalid, the system rejects it with a parse error message identifying the malformed portion
 - [ ] When cron job execution fails, the system logs the error and does not remove or disable the job
 
-## Source Evidence
+### Source Evidence
 
 - `OpenHarness/src/openharness/tools/cron_create_tool.py`
 - `OpenHarness/src/openharness/tools/cron_delete_tool.py`
@@ -78,48 +91,46 @@ Where cron jobs are configured, the system shall execute specified commands or a
 - `OpenHarness/src/openharness/tools/remote_trigger_tool.py`
 - `OpenHarness/src/openharness/cli.py` — `cron` subcommand
 
+
 ---
 
-# REQ-AT-004: Task Output Retrieval
+## REQ-AT-004: Task Output Retrieval
 
 **Pattern:** Event-Driven
-**Capability:** Task Automation
 
-## Requirement
+### Requirement
 
 When the user requests task output, the system shall return the accumulated output up to a configurable size limit.
 
-## Acceptance Criteria
+### Acceptance Criteria
 
 - [ ] Returns output from completed or running tasks
 - [ ] Respects a configurable maximum byte limit
 - [ ] When output exceeds the size limit, the returned content is truncated and includes a note indicating truncation and the original size
 - [ ] When output is requested for an invalid or expired task ID, the system returns an error indicating the task was not found
 
-## Source Evidence
+### Source Evidence
 
 - `OpenHarness/src/openharness/tools/task_output_tool.py` — `max_bytes` parameter
 
+
 ---
 
-# REQ-AT-005: Task Progress Tracking
+## REQ-AT-005: Task Progress Tracking
 
 **Pattern:** Event-Driven
-**Capability:** Task Automation
 
-## Requirement
+### Requirement
 
 When a task updates its progress, the system shall persist the progress metadata (percentage, status note) for status queries.
 
-## Acceptance Criteria
+### Acceptance Criteria
 
 - [ ] Progress is a percentage value (0-100)
 - [ ] A status note describes current activity
 - [ ] Progress metadata is persisted and available to task retrieval operations (REQ-AT-002, REQ-AT-004)
 - [ ] When an invalid progress value is provided (negative, over 100, or non-numeric), the system rejects the update and returns a validation error
 
-## Source Evidence
+### Source Evidence
 
 - `OpenHarness/src/openharness/tools/task_update_tool.py` — `progress`, `status_note` parameters
-
----
