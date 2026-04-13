@@ -1,4 +1,4 @@
-.PHONY: all build build-og build-ogmo test test-v test-pkg coverage vet lint check ci fmt clean install run
+.PHONY: all build build-og build-ogmo test test-v test-pkg test-integration coverage vet lint check ci fmt clean install run
 
 BINDIR    := bin
 GO        := go
@@ -30,13 +30,17 @@ test:
 test-v:
 	$(GO) test -v ./...
 
+# Integration tests (requires -tags=integration)
+test-integration:
+	$(GO) test -tags=integration -count=1 -v ./internal/...
+
 # Run a single package's tests (usage: make test-pkg PKG=./internal/engine)
 test-pkg:
 	$(GO) test -v $(PKG)
 
 # Run all tests and generate coverage reports
 coverage:
-	$(GO) test -coverprofile=$(COVERAGE_FILE) -covermode=atomic ./...
+	$(GO) test -coverprofile=$(COVERAGE_FILE) -covermode=atomic ./internal/...
 	$(GO) tool cover -func=$(COVERAGE_FILE) | tail -1
 # 	$(GO) tool cover -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
 
