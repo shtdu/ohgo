@@ -2,6 +2,8 @@
 
 A complete Go reimplementation of [OpenHarness](https://github.com/HKUDS/OpenHarness) — the open-source agent harness that wraps an LLM with tool-use, skills, memory, permissions, multi-agent coordination, and MCP support. Distributed as a single static binary.
 
+[![codecov](https://codecov.io/gh/shtdu/ohgo/branch/main/graph/badge.svg)](https://app.codecov.io/gh/shtdu/ohgo)
+
 ## Why Go?
 
 The Python OpenHarness works great, but a Go build gives you:
