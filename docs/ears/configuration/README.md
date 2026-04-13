@@ -31,11 +31,6 @@ The system shall read configuration from a JSON settings file at a standard loca
 - [ ] The settings file schema covers all configuration parameters defined in the Configuration domain requirements (REQ-CF-002 through REQ-CF-007)
 - [ ] When the settings file contains invalid JSON, the system reports a parse error with the file path and line number
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/config/settings.py`
-- `OpenHarness/src/openharness/cli.py` — `--settings` flag
-
 
 ---
 
@@ -53,10 +48,6 @@ Where CLI flags are provided at invocation (e.g., `--model`, `--permission-mode`
 - [ ] Flag values are not persisted to the settings file
 - [ ] Unset flags fall through to the next configuration layer (project settings, then global settings)
 - [ ] When a CLI flag value is invalid (e.g., non-existent model, unknown permission mode), the system reports the error before session start and exits with a non-zero status
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `--model`, `--permission-mode`, `--effort`, `--max-turns` flags
 
 
 ---
@@ -76,11 +67,6 @@ Where provider profiles are defined, the system shall connect to AI backends usi
 - [ ] The active profile determines which backend receives API requests; switching profiles changes the target backend
 - [ ] When a profile has missing required fields or a duplicate name, the system rejects the profile and reports the specific validation error
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `provider` subcommand
-- `OpenHarness/src/openharness/config/settings.py` — profile storage
-
 
 ---
 
@@ -97,11 +83,6 @@ When the user switches provider profiles, the system shall validate the new prov
 - [ ] After a profile switch completes, the next API call uses the new provider configuration
 - [ ] The active profile selection is persisted to the settings file so that future sessions use the same profile
 - [ ] The system confirms the profile switch to the user, showing the new provider name
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `provider use` subcommand
-- `/provider` slash command
 
 
 ---
@@ -122,10 +103,6 @@ Where environment variables are set (e.g., `ANTHROPIC_API_KEY`, `OPENHARNESS_MOD
 - [ ] Environment variables take precedence over settings file but not CLI flags
 - [ ] When an environment variable override contains an invalid value, the system reports which variable and the expected format
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/config/settings.py` — environment variable handling
-
 
 ---
 
@@ -143,10 +120,6 @@ When the user updates settings via slash commands (e.g., `/config`, `/model`, `/
 - [ ] Changes are persisted to the settings file
 - [ ] The user is informed of the change
 - [ ] When an invalid value is provided via slash command (e.g., non-existent model, invalid key-value pair), the system reports the specific error and does not apply the change
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/commands/` — `/config`, `/model`, `/theme` commands
 
 
 ---
@@ -166,7 +139,3 @@ The system shall discover and merge configuration from multiple layers per sessi
 - [ ] CLI flags override both layers
 - [ ] When the same setting is defined in multiple layers, the value from the highest-precedence layer (CLI flags > project settings > global settings) is used
 - [ ] When a configuration file is missing, unreadable, or contains invalid syntax, the system uses defaults for that layer and logs a warning
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/config/settings.py` — multi-layer config loading

@@ -35,11 +35,6 @@ When the agent delegates work to a subagent, the system shall create a new agent
 - [ ] Subagent output is included in the parent agent's conversation as a tool result
 - [ ] When subagent spawning fails due to resource limits or invalid configuration, the system returns an error to the parent agent
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/agent_tool.py`
-- `OpenHarness/src/openharness/swarm/` — swarm/subprocess execution
-
 
 ---
 
@@ -57,11 +52,6 @@ When a team is created, the system shall establish a named group of agents with 
 - [ ] A created team persists until explicitly disbanded
 - [ ] Team members share a communication channel
 - [ ] Creating a team with a name that already exists produces an error
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/team_create_tool.py`
-- `OpenHarness/src/openharness/tools/team_delete_tool.py`
 
 
 ---
@@ -81,11 +71,6 @@ When an agent sends a message to another agent, the system shall deliver the mes
 - [ ] The sending agent continues execution without waiting for the receiving agent to process the message
 - [ ] When a message is sent to a non-existent or terminated agent, the system returns a delivery failure error to the sender
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/send_message_tool.py`
-- `OpenHarness/src/openharness/swarm/mailbox.py`
-
 
 ---
 
@@ -104,10 +89,6 @@ While a subagent is running, the system shall maintain execution isolation with 
 - [ ] A subagent cannot read or modify the parent agent's conversation history or tool state
 - [ ] When a subagent attempts to access resources outside its scope (file paths, environment variables), the system blocks the access and reports the violation to the parent agent
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/swarm/` — subprocess and in-process backends
-
 
 ---
 
@@ -125,7 +106,3 @@ When a subagent task is created, the system shall manage its lifecycle including
 - [ ] Subagent execution state (running, completed, failed) is observable via the background task query tools (per REQ-AT-002)
 - [ ] When a subagent task completes, its result is distinguishable from other background task results as originating from a subagent
 - [ ] Subagent tasks can be stopped on user request, relayed through the background task system (per REQ-AT-002)
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/swarm/` — subagent spawning and management

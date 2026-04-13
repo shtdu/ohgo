@@ -33,11 +33,6 @@ The system shall provide a command-line interface that accepts natural language 
 - [ ] The system returns a non-zero exit code on failure
 - [ ] When the model service is unreachable at startup, the system reports a connection error before entering interactive mode
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — CLI entry point with prompt handling
-- `OpenHarness/src/openharness/__main__.py` — module invocation
-
 
 ---
 
@@ -60,10 +55,6 @@ The system shall accept model selection, permission mode, effort level, and outp
 - [ ] CLI flags override values from the settings file for the duration of the session
 - [ ] When an invalid flag value is provided (unknown model, unsupported permission mode), the system reports the error and exits with a non-zero status code
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — argparse definitions for all flags
-
 
 ---
 
@@ -82,11 +73,6 @@ The system shall render a terminal user interface that displays streaming AI res
 - [ ] Progress indicators show during tool execution and API streaming
 - [ ] The interface handles terminal resize events
 - [ ] When the terminal is too small to render the interface, the system displays a minimum-size warning message
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/ui/` — terminal UI components
-- `OpenHarness/frontend/` — frontend rendering components
 
 
 ---
@@ -108,10 +94,6 @@ When a user enters a slash command (e.g., `/help`, `/commit`, `/plan`), the syst
 - [ ] When a built-in command fails during execution, the system reports the error and returns to the prompt loop
 - [ ] When a plugin registers a command name matching a built-in command, the plugin command is namespaced and does not override the built-in
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/commands/` — 54+ slash command implementations
-
 
 ---
 
@@ -131,11 +113,6 @@ Where a channel gateway is configured, the system shall receive messages from ex
 - [ ] The gateway can run as a persistent background service
 - [ ] When a gateway connection times out, the system retries up to 3 times with exponential backoff (maximum delay 30 seconds) and reports failure after exhausting retries
 - [ ] When channel authentication fails (invalid token, expired credentials), the system logs the error and does not attempt to process messages for that channel
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/channels/` — channel integrations
-- `OpenHarness/ohmo/cli.py` — `gateway` subcommand
 
 
 ---
@@ -158,10 +135,6 @@ When the agent needs user input for decisions, confirmations, or selections, the
 - [ ] When the user does not respond within the timeout period, the system cancels the prompt and returns a timeout result to the agent
 - [ ] When a prompt is cancelled (user interrupt or timeout), the agent receives a cancellation result and continues the session
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/ask_user_question_tool.py` — AskUserQuestionTool
-
 
 ---
 
@@ -180,11 +153,6 @@ Where a theme is configured, the system shall apply the selected visual theme to
 - [ ] Theme changes take effect on the next rendered frame without requiring application restart
 - [ ] When the specified theme configuration is invalid or cannot be loaded, the system falls back to the default theme
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `--theme` flag
-- `OpenHarness/src/openharness/config/settings.py` — theme setting
-
 
 ---
 
@@ -202,8 +170,3 @@ Where vim mode is enabled, the system shall provide vim-style keybindings for in
 - [ ] Supports modal editing (normal mode, insert mode)
 - [ ] Supports h/j/k/l for movement, i/a for insert mode entry, Esc for normal mode, and w/b for word navigation
 - [ ] When vim mode configuration cannot be loaded, the system falls back to default (non-vim) input handling
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/commands/` — `/vim` slash command
-- Settings: `vim_mode` key

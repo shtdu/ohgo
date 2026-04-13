@@ -30,10 +30,6 @@ Where the memory feature is enabled, the system shall maintain persistent memory
 - [ ] Memory entries are individually addressable and removable
 - [ ] When the memory store is corrupted or unreadable, the system logs the error and continues without memory
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/memory/` — memory management module
-
 
 ---
 
@@ -53,10 +49,6 @@ When a session starts, the system shall load relevant memory files from the proj
 - [ ] Memory content is available in the system prompt
 - [ ] When memory files exist but are unreadable due to permission errors or corruption, the system logs the specific error and skips the affected entries
 - [ ] When no memory files are found, the system proceeds with empty context without error
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/memory/` — `scan_memory_files()`, `load_memory_prompt()`
 
 
 ---
@@ -79,10 +71,6 @@ When a session starts, the system shall load project instruction files (CLAUDE.m
 - [ ] When the project directory is inaccessible or instruction files are unreadable, the system reports the specific error and skips context loading
 - [ ] When an instruction file contains invalid or unparsable content, the system logs a warning with the file path and skips that file
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/prompts/claudemd.py` — CLAUDE.md discovery and loading (Go version extends to AGENTS.md, GEMINI.md)
-
 
 ---
 
@@ -102,10 +90,6 @@ When the agent queries memory, the system shall search memory files by relevance
 - [ ] Returns an empty result set with no error when no memories match the query
 - [ ] When the memory index is unavailable or corrupt, search returns an empty result set with a warning
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/memory/` — `find_relevant_memories()`
-
 
 ---
 
@@ -124,10 +108,6 @@ When the agent adds, removes, or updates a memory entry, the system shall persis
 - [ ] The memory index (MEMORY.md) is updated to reflect changes
 - [ ] When a memory write fails (disk full, permission denied), the system reports the error to the user and retains existing memory entries
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/memory/` — `add_memory_entry()`, `remove_memory_entry()`
-
 
 ---
 
@@ -144,7 +124,3 @@ When a memory entry is added, the system shall enforce configurable limits on th
 - [ ] Maximum number of memory files is configurable (default: 200 files)
 - [ ] Maximum content size per entry is configurable (default: 32KB per entry)
 - [ ] When a memory write would exceed a configured limit, the system rejects the write and reports the limit condition to the agent
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/config/settings.py` — `memory.max_files`, `memory.max_entrypoint_lines`

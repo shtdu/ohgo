@@ -30,11 +30,6 @@ When a background task is created, the system shall execute it independently of 
 - [ ] Task state is queryable at any time
 - [ ] When task execution fails (command not found, timeout), the task state transitions to failed with an error message
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/task_create_tool.py`
-- `OpenHarness/src/openharness/tasks/`
-
 
 ---
 
@@ -52,15 +47,6 @@ While a background task exists, the system shall manage its complete lifecycle f
 - [ ] Task state transitions follow: pending, running, completed, or failed
 - [ ] Tasks can be stopped by user request
 - [ ] When a task creation fails (duplicate ID, invalid state), the system returns a descriptive error identifying the cause
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/task_create_tool.py`
-- `OpenHarness/src/openharness/tools/task_get_tool.py`
-- `OpenHarness/src/openharness/tools/task_list_tool.py`
-- `OpenHarness/src/openharness/tools/task_output_tool.py`
-- `OpenHarness/src/openharness/tools/task_stop_tool.py`
-- `OpenHarness/src/openharness/tools/task_update_tool.py`
 
 
 ---
@@ -82,15 +68,6 @@ Where cron jobs are configured, the system shall execute specified commands or a
 - [ ] When a cron expression is invalid, the system rejects it with a parse error message identifying the malformed portion
 - [ ] When cron job execution fails, the system logs the error and does not remove or disable the job
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/cron_create_tool.py`
-- `OpenHarness/src/openharness/tools/cron_delete_tool.py`
-- `OpenHarness/src/openharness/tools/cron_list_tool.py`
-- `OpenHarness/src/openharness/tools/cron_toggle_tool.py`
-- `OpenHarness/src/openharness/tools/remote_trigger_tool.py`
-- `OpenHarness/src/openharness/cli.py` — `cron` subcommand
-
 
 ---
 
@@ -109,10 +86,6 @@ When the user requests task output, the system shall return the accumulated outp
 - [ ] When output exceeds the size limit, the returned content is truncated and includes a note indicating truncation and the original size
 - [ ] When output is requested for an invalid or expired task ID, the system returns an error indicating the task was not found
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/task_output_tool.py` — `max_bytes` parameter
-
 
 ---
 
@@ -130,7 +103,3 @@ When a task updates its progress, the system shall persist the progress metadata
 - [ ] A status note describes current activity
 - [ ] Progress metadata is persisted and available to task retrieval operations (REQ-AT-002, REQ-AT-004)
 - [ ] When an invalid progress value is provided (negative, over 100, or non-numeric), the system rejects the update and returns a validation error
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/task_update_tool.py` — `progress`, `status_note` parameters

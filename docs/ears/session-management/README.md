@@ -33,10 +33,6 @@ The system shall persist conversation state including message history and tool r
 - [ ] A persisted session can be restored to a state where the agent has access to the full conversation history
 - [ ] When session storage is unavailable at startup, the system logs the error and operates in stateless mode for that session
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/commands/` — `/resume`, `/continue` commands
-
 
 ---
 
@@ -55,10 +51,6 @@ When the user requests to continue a session (`-c` flag), the system shall load 
 - [ ] The agent can reference and build upon information from the restored conversation history in subsequent responses
 - [ ] When no previous session exists, the system starts a new session without error
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `--continue` / `-c` flag
-
 
 ---
 
@@ -75,10 +67,6 @@ When the user provides a session ID (`-r` flag), the system shall load the speci
 - [ ] Accepts a session ID as input
 - [ ] Restores the full conversation state for that session
 - [ ] Produces an error if the session ID does not exist
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `--resume` / `-r` flag
 
 
 ---
@@ -98,10 +86,6 @@ When the user requests an export (`/export`), the system shall produce a complet
 - [ ] The exported transcript preserves the chronological order of all messages
 - [ ] When export fails (disk full, permission denied), the system reports the specific error and file path to the user
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/commands/` — `/export` command
-
 
 ---
 
@@ -119,10 +103,6 @@ When the user requests to share a session (`/share`), the system shall create a 
 - [ ] Includes the full conversation with formatted tool results
 - [ ] The system provides a confirmation before creating the shareable artifact
 - [ ] When the share target file path is not writable, the system reports the specific error with the file path
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/commands/` — `/share` command
 
 
 ---
@@ -142,10 +122,6 @@ When the user tags a session (`/tag`), the system shall create a named snapshot 
 - [ ] Tagged sessions are listed in session history
 - [ ] When the specified tag already exists, the system returns an error message without overwriting the existing tag
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/commands/` — `/tag` command
-
 
 ---
 
@@ -163,10 +139,6 @@ When the user rewinds a session (`/rewind`), the system shall remove the specifi
 - [ ] Removes both user and assistant messages for the specified turns
 - [ ] The conversation continues from the rewound state
 - [ ] When the rewind target is beyond the session history, the system reports an error and retains the current session state
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/commands/` — `/rewind` command
 
 
 ---
@@ -186,8 +158,3 @@ When the conversation reaches the compaction threshold (default: 90% of the mode
 - [ ] Compacted messages are replaced with a summary that is included in the conversation context
 - [ ] The agent continues responding to new prompts using the compacted context
 - [ ] When compaction fails to produce a usable summary, the system retains the original context and logs the failure
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/commands/` — `/compact` command
-- `OpenHarness/src/openharness/engine/` — auto-compaction logic

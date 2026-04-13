@@ -42,11 +42,6 @@ The system shall provide a catalog of available tools that the agent can invoke 
 - [ ] Tool invocation integrates with the hook system for pre/post execution events (detailed behavior per REQ-EX-005)
 - [ ] When a tool schema definition is invalid, the system logs the error and excludes the tool from the catalog
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/` — 43+ tool implementations
-- `OpenHarness/src/openharness/tools/base.py` — BaseTool with schema
-
 
 ---
 
@@ -65,12 +60,6 @@ The system shall provide tools for reading, writing, and editing files within th
 - [ ] Edit tool replaces specific text strings in existing files
 - [ ] File operations are subject to path permission rules (per Permissions domain)
 - [ ] When a file operation fails (not found, permission denied), the tool returns a structured error containing the path and the failure reason
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/file_read_tool.py`
-- `OpenHarness/src/openharness/tools/file_write_tool.py`
-- `OpenHarness/src/openharness/tools/file_edit_tool.py`
 
 
 ---
@@ -93,10 +82,6 @@ When the agent invokes the command execution tool, the system shall execute the 
 - [ ] When a shell command returns a non-zero exit code, the tool returns both stdout and stderr to the agent
 - [ ] When the command executable is not found or execution is denied by permissions, the tool returns an error with the command name and failure reason
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/bash_tool.py`
-
 
 ---
 
@@ -116,10 +101,6 @@ When the agent searches for files, the system shall match files by glob pattern 
 - [ ] Results are limited to a configurable maximum count
 - [ ] When a glob pattern is invalid, the tool returns an error describing the malformed pattern
 - [ ] When the root directory is not found or inaccessible, the tool returns an error with the directory path
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/glob_tool.py`
 
 
 ---
@@ -141,10 +122,6 @@ When the agent searches file contents, the system shall match lines by regular e
 - [ ] When a regex pattern is invalid, the tool returns a parse error identifying the offending portion of the pattern
 - [ ] When file read errors occur (permission denied, binary file), the tool returns an error identifying the affected file
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/grep_tool.py`
-
 
 ---
 
@@ -163,10 +140,6 @@ When the agent requests web content, the system shall fetch the specified URL an
 - [ ] Supports a configurable maximum character limit
 - [ ] When the requested URL cannot be retrieved, the system returns a descriptive error message indicating the failure reason
 - [ ] When content extraction fails despite a successful HTTP response (e.g., empty body, unsupported encoding), the tool returns the raw response with a warning
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/web_fetch_tool.py`
 
 
 ---
@@ -187,10 +160,6 @@ When the agent performs a web search, the system shall query a search engine and
 - [ ] Returns results or an error within a configurable timeout period
 - [ ] When the search engine query times out, the tool returns a timeout error identifying the search provider
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/web_search_tool.py`
-
 
 ---
 
@@ -208,10 +177,6 @@ Where a language intelligence service is available for the file type, the system
 - [ ] Results include the source file path and line number for each symbol
 - [ ] Returns structured results suitable for agent interpretation
 - [ ] When no language intelligence service is available for the target file type, the system returns a descriptive error
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/lsp_tool.py`
 
 
 ---
@@ -231,10 +196,6 @@ Where a Jupyter notebook file is targeted, the system shall provide cell-level e
 - [ ] Operates on individual cells by index
 - [ ] Preserves notebook structure and metadata
 - [ ] When the cell index is out of bounds or the notebook format is invalid, the tool returns an error identifying the issue
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/notebook_edit_tool.py`
 
 
 ---
@@ -256,11 +217,6 @@ Where external tool servers are configured, the system shall discover their tool
 - [ ] When an MCP server connection fails or times out, the tool returns a connection error containing the server name and failure reason
 - [ ] When invalid input is sent to an external tool, the system returns the external server's error response to the agent
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/mcp/` — MCP client manager
-- `OpenHarness/src/openharness/tools/mcp_tool.py` — McpToolAdapter
-
 
 ---
 
@@ -279,7 +235,3 @@ When the agent queries available tools, the system shall search tool names and d
 - [ ] Returns matching tools with their descriptions and parameter schemas
 - [ ] When a tool search returns no results, the system returns an empty list without error
 - [ ] When the search query is empty or exceeds a maximum length, the tool returns a validation error
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/tools/tool_search_tool.py`

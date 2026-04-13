@@ -32,11 +32,6 @@ While a permission mode is active, the system shall enforce tool execution permi
 - [ ] When the permission mode changes during a session, the new mode's rules apply to all subsequent tool invocations
 - [ ] When an invalid permission mode is specified, the system defaults to the most restrictive mode and logs a warning
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/permissions/` — PermissionChecker, PermissionMode enum
-- `OpenHarness/src/openharness/cli.py` — `--permission-mode` flag
-
 
 ---
 
@@ -55,10 +50,6 @@ When the permission mode is default and the agent requests a sensitive tool exec
 - [ ] The user can approve a single action, deny it, or approve all remaining actions for the session
 - [ ] When the user denies a tool execution, the engine receives a rejection result and continues the session without error
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/permissions/` — default mode behavior
-
 
 ---
 
@@ -75,12 +66,6 @@ While the system is in plan mode, the system shall restrict tool execution to re
 - [ ] File write, edit, and bash tools are disabled
 - [ ] File read, search, and planning tools remain available
 - [ ] Any attempt to invoke a write-capable tool while in plan mode is rejected with an informative message
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/permissions/` — plan mode restrictions
-- `OpenHarness/src/openharness/tools/enter_plan_mode_tool.py`
-- `OpenHarness/src/openharness/tools/exit_plan_mode_tool.py`
 
 
 ---
@@ -100,10 +85,6 @@ While the system is in full auto mode, the system shall execute tools without us
 - [ ] Path rules still restrict file operations
 - [ ] Destructive operation warnings (per REQ-PS-007) remain active even in full auto mode
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/permissions/` — full_auto mode behavior
-
 
 ---
 
@@ -121,11 +102,6 @@ If a tool appears on the denied list, then the system shall block its execution 
 - [ ] When operating in default mode, the allowed list grants auto-approval; in other modes, the allowed list has no auto-approval effect
 - [ ] Lists are configurable via CLI flags and settings
 - [ ] Both built-in and MCP tools are subject to list filtering
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `--allowed-tools`, `--disallowed-tools`
-- `OpenHarness/src/openharness/config/settings.py` — `permission.allowed_tools`, `permission.denied_tools`
 
 
 ---
@@ -146,10 +122,6 @@ Where path permission rules are configured, the system shall restrict file opera
 - [ ] An access-denied message is returned identifying the blocked path
 - [ ] When a path rule contains invalid syntax, the system rejects the rule at load time and reports the specific rule and error
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/config/settings.py` — `permission.path_rules`
-
 
 ---
 
@@ -168,10 +140,6 @@ When the agent attempts a destructive operation (e.g., force push, file deletion
 - [ ] Execution remains blocked until the user explicitly confirms or denies the operation
 - [ ] When the user confirms, execution proceeds with the destructive operation; when denied, execution is cancelled
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/permissions/` — destructive operation detection
-
 
 ---
 
@@ -188,7 +156,3 @@ If the permission system encounters an error during evaluation, the system shall
 - [ ] Tool execution is blocked when permission checking fails
 - [ ] The user receives an error message containing the tool name, the permission rule that failed, and the failure reason
 - [ ] The error is logged with the tool name, permission context, and timestamp
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/permissions/` — error handling in permission checker

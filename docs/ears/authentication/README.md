@@ -33,11 +33,6 @@ Where an AI provider is configured, the system shall authenticate using API keys
 - [ ] When no API key is found through any source, the system produces an error indicating the missing credential and the expected configuration key
 - [ ] When an API key is invalid or expired, the system returns an authentication error from the provider without exposing the key value
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `--api-key` flag
-- `OpenHarness/src/openharness/config/settings.py` — `api_key` setting
-
 
 ---
 
@@ -57,11 +52,6 @@ When the user invokes an authentication command (login, status, logout, switch),
 - [ ] Switch selects a different stored credential profile as the active profile
 - [ ] When the OAuth device flow expires or is denied, the system returns an error and does not store credentials
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `auth` subcommand (login, status, logout, switch)
-- `OpenHarness/src/openharness/auth/` — OAuth flow implementation
-
 
 ---
 
@@ -80,11 +70,6 @@ While a provider profile is active, the system shall authenticate with that prov
 - [ ] When a subscription bridge provider is active, the system delegates credential verification to the associated CLI tool and reports success or failure to the user
 - [ ] When no provider profile is active, the system produces an error indicating that a provider must be configured
 
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `--api-format` flag
-- `OpenHarness/src/openharness/bridge/` — subscription bridge implementations
-
 
 ---
 
@@ -101,7 +86,3 @@ When the user checks authentication status (`auth status`), the system shall rep
 - [ ] Shows the currently active provider profile
 - [ ] Indicates whether credentials are valid or expired
 - [ ] Lists available provider profiles
-
-### Source Evidence
-
-- `OpenHarness/src/openharness/cli.py` — `auth status` subcommand
