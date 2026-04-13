@@ -145,7 +145,7 @@ func TestSpawn_Stop(t *testing.T) {
 }
 
 func TestShutdown(t *testing.T) {
-	c := New("/bin/sleep")
+	c := New("/bin/echo")
 
 	_, err := c.Spawn(context.Background(), AgentSpec{
 		Name:   "agent-1",

@@ -88,13 +88,14 @@ func TestIntegration_Coordinator_ListAgents(t *testing.T) {
 
 // EARS: REQ-AC-001
 // Stop kills a running agent, transitioning it to done status.
+// Uses /bin/cat which blocks on stdin (stays running) until killed.
 func TestIntegration_Coordinator_StopRunningAgent(t *testing.T) {
-	c := coordinator.New("/bin/sleep")
+	c := coordinator.New("/bin/cat")
 	defer c.Shutdown()
 
 	agentID, err := c.Spawn(context.Background(), coordinator.AgentSpec{
 		Name:   "long-runner",
-		Prompt: "300", // sleep 300 seconds
+		Prompt: "ignored",
 	})
 	require.NoError(t, err)
 
