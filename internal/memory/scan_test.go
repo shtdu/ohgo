@@ -65,7 +65,7 @@ func TestParseKV(t *testing.T) {
 }
 
 func TestScan_SkipNonMdFiles(t *testing.T) {
-	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	t.Setenv("OHGO_DATA_DIR", t.TempDir())
 	cwd := t.TempDir()
 	memDir, err := ProjectDir(cwd)
 	require.NoError(t, err)
@@ -81,7 +81,7 @@ func TestScan_SkipNonMdFiles(t *testing.T) {
 }
 
 func TestScan_SkipDirectories(t *testing.T) {
-	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	t.Setenv("OHGO_DATA_DIR", t.TempDir())
 	cwd := t.TempDir()
 	memDir, err := ProjectDir(cwd)
 	require.NoError(t, err)
@@ -97,7 +97,7 @@ func TestScan_SkipDirectories(t *testing.T) {
 }
 
 func TestScan_MaxFilesCap(t *testing.T) {
-	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	t.Setenv("OHGO_DATA_DIR", t.TempDir())
 	cwd := t.TempDir()
 	memDir, err := ProjectDir(cwd)
 	require.NoError(t, err)
@@ -114,7 +114,7 @@ func TestScan_MaxFilesCap(t *testing.T) {
 }
 
 func TestScan_MaxFilesZero(t *testing.T) {
-	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	t.Setenv("OHGO_DATA_DIR", t.TempDir())
 	cwd := t.TempDir()
 	memDir, err := ProjectDir(cwd)
 	require.NoError(t, err)

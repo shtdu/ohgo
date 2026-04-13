@@ -14,10 +14,10 @@ type initCmd struct{}
 var _ Command = initCmd{}
 
 func (initCmd) Name() string      { return "init" }
-func (initCmd) ShortHelp() string { return "Initialize .openharness/ project directory" }
+func (initCmd) ShortHelp() string { return "Initialize .ohgo/ project directory" }
 
 func (initCmd) Run(_ context.Context, _ string, deps *Deps) (Result, error) {
-	dir := filepath.Join(deps.Cwd, ".openharness")
+	dir := filepath.Join(deps.Cwd, ".ohgo")
 
 	if info, err := os.Stat(dir); err == nil && info.IsDir() {
 		return Result{Output: fmt.Sprintf("init: %s already exists", dir)}, nil

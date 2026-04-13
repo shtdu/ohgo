@@ -96,10 +96,10 @@ func TestInitCmd_CreatesDirectory(t *testing.T) {
 		t.Errorf("expected output to contain 'created', got %q", res.Output)
 	}
 
-	// Verify .openharness directory was created.
-	ohDir := filepath.Join(tmpDir, ".openharness")
+	// Verify .ohgo directory was created.
+	ohDir := filepath.Join(tmpDir, ".ohgo")
 	if info, err := os.Stat(ohDir); err != nil || !info.IsDir() {
-		t.Fatalf("expected .openharness directory to exist")
+		t.Fatalf("expected .ohgo directory to exist")
 	}
 
 	// Verify settings.json was created.

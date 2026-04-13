@@ -12,6 +12,7 @@ var (
 )
 
 // Find returns memory headers whose metadata and content overlap with the query.
+// It searches both personal and project memory layers.
 // Metadata matches are weighted 2x over body matches.
 func Find(query, cwd string, maxResults int) ([]*Header, error) {
 	tokens := tokenize(query)
@@ -19,10 +20,24 @@ func Find(query, cwd string, maxResults int) ([]*Header, error) {
 		return nil, nil
 	}
 
-	headers, err := Scan(cwd, 100)
+	// Scan both layers.
+	projectHeaders, err := Scan(cwd, 100)
 	if err != nil {
 		return nil, err
 	}
+	for _, h := range projectHeaders {
+		h.Layer = "project"
+	}
+
+	personalHeaders, err := ScanPersonal(100)
+	if err != nil {
+		return nil, err
+	}
+	for _, h := range personalHeaders {
+		h.Layer = "personal"
+	}
+
+	allHeaders := append(projectHeaders, personalHeaders...)
 
 	type scored struct {
 		score  float64
@@ -30,7 +45,7 @@ func Find(query, cwd string, maxResults int) ([]*Header, error) {
 	}
 
 	var results []scored
-	for _, h := range headers {
+	for _, h := range allHeaders {
 		meta := strings.ToLower(h.Title + " " + h.Description)
 		body := strings.ToLower(h.BodyPreview)
 
@@ -69,6 +84,15 @@ func Find(query, cwd string, maxResults int) ([]*Header, error) {
 		out[i] = r.header
 	}
 	return out, nil
+}
+
+// ScanPersonal reads memory files from the personal memory directory.
+func ScanPersonal(maxFiles int) ([]*Header, error) {
+	dir, err := PersonalDir()
+	if err != nil {
+		return nil, err
+	}
+	return scanDir(dir, maxFiles)
 }
 
 // tokenize extracts search tokens from text, handling ASCII and Han ideographs.

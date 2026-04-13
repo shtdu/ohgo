@@ -15,7 +15,12 @@ func Scan(cwd string, maxFiles int) ([]*Header, error) {
 	if err != nil {
 		return nil, err
 	}
+	return scanDir(dir, maxFiles)
+}
 
+// scanDir reads memory files from the given directory and returns
+// headers sorted by modification time (newest first), capped at maxFiles.
+func scanDir(dir string, maxFiles int) ([]*Header, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {

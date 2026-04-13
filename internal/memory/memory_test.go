@@ -11,11 +11,13 @@ import (
 
 func setupStore(t *testing.T) *Store {
 	t.Helper()
-	// Create a temp dir to use as cwd, but manually set the store dir.
+	// Create a temp dir to use as both personal and project memory dirs.
 	tmpDir := t.TempDir()
-	memDir := filepath.Join(tmpDir, "memory-test")
-	require.NoError(t, os.MkdirAll(memDir, 0o755))
-	return &Store{dir: memDir}
+	projDir := filepath.Join(tmpDir, "project")
+	persDir := filepath.Join(tmpDir, "personal")
+	require.NoError(t, os.MkdirAll(projDir, 0o755))
+	require.NoError(t, os.MkdirAll(persDir, 0o755))
+	return &Store{projectDir: projDir, personalDir: persDir}
 }
 
 func TestStore_Add(t *testing.T) {
@@ -32,7 +34,7 @@ func TestStore_Add(t *testing.T) {
 	assert.Equal(t, "This is the content\n", string(data))
 
 	// MEMORY.md should reference it.
-	ep := filepath.Join(s.dir, "MEMORY.md")
+	ep := filepath.Join(s.projectDir, "MEMORY.md")
 	indexData, err := os.ReadFile(ep)
 	require.NoError(t, err)
 	assert.Contains(t, string(indexData), "my_test_memory.md")
@@ -95,4 +97,58 @@ func TestStore_LoadPrompt_NotExist(t *testing.T) {
 	prompt, err := s.LoadPrompt(0)
 	require.NoError(t, err)
 	assert.Empty(t, prompt)
+}
+
+func TestStore_LoadPrompt_BothLayers(t *testing.T) {
+	s := setupStore(t)
+
+	_, err := s.AddPersonal("My Prefs", "I prefer table-driven tests")
+	require.NoError(t, err)
+	_, err = s.Add("Auth Rewrite", "Compliance-driven refactor")
+	require.NoError(t, err)
+
+	prompt, err := s.LoadPrompt(0)
+	require.NoError(t, err)
+	assert.Contains(t, prompt, "Personal Memory")
+	assert.Contains(t, prompt, "my_prefs.md")
+	assert.Contains(t, prompt, "Project Memory")
+	assert.Contains(t, prompt, "auth_rewrite.md")
+}
+
+func TestStore_PersonalAddRemove(t *testing.T) {
+	s := setupStore(t)
+
+	path, err := s.AddPersonal("User Role", "I am a backend engineer")
+	require.NoError(t, err)
+	assert.Contains(t, filepath.Base(path), "user_role")
+
+	names, err := s.ListPersonal()
+	require.NoError(t, err)
+	require.Len(t, names, 1)
+	assert.Equal(t, "user_role.md", names[0])
+
+	removed, err := s.RemovePersonal("user_role")
+	require.NoError(t, err)
+	assert.True(t, removed)
+
+	names, err = s.ListPersonal()
+	require.NoError(t, err)
+	assert.Empty(t, names)
+}
+
+func TestStore_LoadPrompt_MaxLines(t *testing.T) {
+	s := setupStore(t)
+
+	_, err := s.Add("Test", "content")
+	require.NoError(t, err)
+
+	prompt, err := s.LoadPrompt(1)
+	require.NoError(t, err)
+	lines := 0
+	for _, ch := range prompt {
+		if ch == '\n' {
+			lines++
+		}
+	}
+	assert.LessOrEqual(t, lines, 1)
 }

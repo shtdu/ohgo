@@ -32,8 +32,8 @@ func (onboardingCmd) Run(_ context.Context, _ string, _ *Deps) (Result, error) {
    /help          - Show all commands
 
 5. Configuration:
-   Settings are stored in ~/.openharness/settings.json
-   Project-specific config goes in .openharness/settings.json
+   Settings are stored in ~/.ohgo/settings.json
+   Project-specific config goes in .ohgo/settings.json
 
 6. Learn more:
    https://github.com/HKUDS/OpenHarness

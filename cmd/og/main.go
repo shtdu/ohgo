@@ -175,7 +175,7 @@ func run(cmd *cobra.Command, args []string) error {
 		pluginDirs = append(pluginDirs, userPluginDir)
 	}
 	if cwd, err := os.Getwd(); err == nil {
-		pluginDirs = append(pluginDirs, filepath.Join(cwd, ".openharness", "plugins"))
+		pluginDirs = append(pluginDirs, filepath.Join(cwd, ".ohgo", "plugins"))
 	}
 	if len(pluginDirs) > 0 {
 		if err := pluginMgr.Discover(ctx, pluginDirs...); err != nil {

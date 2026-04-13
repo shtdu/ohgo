@@ -12,9 +12,9 @@ import (
 
 func TestLoad_DefaultsOnly(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
 
 	mgr := NewManager(tmp)
@@ -27,9 +27,9 @@ func TestLoad_DefaultsOnly(t *testing.T) {
 
 func TestLoad_FromFile(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
 
 	configData := `{"model": "claude-opus-4-6", "max_tokens": 8192, "max_turns": 50}`
@@ -46,9 +46,9 @@ func TestLoad_FromFile(t *testing.T) {
 
 func TestLoad_EnvOverrides(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
-	t.Setenv("OPENHARNESS_MODEL", "gpt-4")
-	t.Setenv("OPENHARNESS_MAX_TOKENS", "4096")
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_MODEL", "gpt-4")
+	t.Setenv("OHGO_MAX_TOKENS", "4096")
 	t.Setenv("ANTHROPIC_API_KEY", "sk-test-123")
 
 	mgr := NewManager(tmp)
@@ -61,7 +61,7 @@ func TestLoad_EnvOverrides(t *testing.T) {
 
 func TestLoad_MalformedJSON(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
 
 	err := os.WriteFile(filepath.Join(tmp, "settings.json"), []byte("{invalid"), 0o644)
@@ -133,9 +133,9 @@ func TestParseBoolEnv(t *testing.T) {
 
 func TestLoad_AnthropicBaseURL(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
 	t.Setenv("ANTHROPIC_BASE_URL", "https://custom.api.com")
 
@@ -145,14 +145,14 @@ func TestLoad_AnthropicBaseURL(t *testing.T) {
 	assert.Equal(t, "https://custom.api.com", s.BaseURL)
 }
 
-func TestLoad_OpenHarnessBaseURL(t *testing.T) {
+func TestLoad_OHGOBaseURL(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
 	t.Setenv("ANTHROPIC_BASE_URL", "")
-	t.Setenv("OPENHARNESS_BASE_URL", "https://oh.api.com")
+	t.Setenv("OHGO_BASE_URL", "https://oh.api.com")
 
 	mgr := NewManager(tmp)
 	s, err := mgr.Load(context.Background())
@@ -162,12 +162,12 @@ func TestLoad_OpenHarnessBaseURL(t *testing.T) {
 
 func TestLoad_AnthropicBaseURLPreferred(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
 	t.Setenv("ANTHROPIC_BASE_URL", "https://anthropic.api.com")
-	t.Setenv("OPENHARNESS_BASE_URL", "https://oh.api.com")
+	t.Setenv("OHGO_BASE_URL", "https://oh.api.com")
 
 	mgr := NewManager(tmp)
 	s, err := mgr.Load(context.Background())
@@ -177,11 +177,11 @@ func TestLoad_AnthropicBaseURLPreferred(t *testing.T) {
 
 func TestLoad_APIFormat(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
-	t.Setenv("OPENHARNESS_API_FORMAT", "openai")
+	t.Setenv("OHGO_API_FORMAT", "openai")
 
 	mgr := NewManager(tmp)
 	s, err := mgr.Load(context.Background())
@@ -191,11 +191,11 @@ func TestLoad_APIFormat(t *testing.T) {
 
 func TestLoad_Provider(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
-	t.Setenv("OPENHARNESS_PROVIDER", "openai")
+	t.Setenv("OHGO_PROVIDER", "openai")
 
 	mgr := NewManager(tmp)
 	s, err := mgr.Load(context.Background())
@@ -205,11 +205,11 @@ func TestLoad_Provider(t *testing.T) {
 
 func TestLoad_MaxTurns(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
-	t.Setenv("OPENHARNESS_MAX_TURNS", "100")
+	t.Setenv("OHGO_MAX_TURNS", "100")
 
 	mgr := NewManager(tmp)
 	s, err := mgr.Load(context.Background())
@@ -219,11 +219,11 @@ func TestLoad_MaxTurns(t *testing.T) {
 
 func TestLoad_InvalidMaxTokens(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
-	t.Setenv("OPENHARNESS_MAX_TOKENS", "notanumber")
+	t.Setenv("OHGO_MAX_TOKENS", "notanumber")
 
 	mgr := NewManager(tmp)
 	s, err := mgr.Load(context.Background())
@@ -233,10 +233,10 @@ func TestLoad_InvalidMaxTokens(t *testing.T) {
 
 func TestLoad_AnthropicModelPreferred(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	t.Setenv("ANTHROPIC_API_KEY", "")
 	t.Setenv("ANTHROPIC_MODEL", "claude-opus-4-6")
-	t.Setenv("OPENHARNESS_MODEL", "gpt-4")
+	t.Setenv("OHGO_MODEL", "gpt-4")
 
 	mgr := NewManager(tmp)
 	s, err := mgr.Load(context.Background())
@@ -386,7 +386,7 @@ func TestSave_InvalidPath(t *testing.T) {
 func TestLoadConfig_WithConfigDir(t *testing.T) {
 	tmp := t.TempDir()
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
 
 	// Write settings to the custom config dir
@@ -402,7 +402,7 @@ func TestLoadConfig_WithConfigDir(t *testing.T) {
 
 func TestLoadConfig_EmptyConfigDir(t *testing.T) {
 	t.Setenv("ANTHROPIC_API_KEY", "")
-	t.Setenv("OPENHARNESS_MODEL", "")
+	t.Setenv("OHGO_MODEL", "")
 	t.Setenv("ANTHROPIC_MODEL", "")
 	// Empty configDir should use default path via ConfigFilePath
 	s, err := loadConfig(context.Background(), "")

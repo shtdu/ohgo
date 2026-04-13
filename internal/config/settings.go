@@ -102,23 +102,23 @@ func mergeSettings(base, override Settings) Settings {
 func applyEnvOverrides(s *Settings) {
 	if v := os.Getenv("ANTHROPIC_MODEL"); v != "" {
 		s.Model = v
-	} else if v := os.Getenv("OPENHARNESS_MODEL"); v != "" {
+	} else if v := os.Getenv("OHGO_MODEL"); v != "" {
 		s.Model = v
 	}
 
 	if v := os.Getenv("ANTHROPIC_BASE_URL"); v != "" {
 		s.BaseURL = v
-	} else if v := os.Getenv("OPENHARNESS_BASE_URL"); v != "" {
+	} else if v := os.Getenv("OHGO_BASE_URL"); v != "" {
 		s.BaseURL = v
 	}
 
-	if v := os.Getenv("OPENHARNESS_MAX_TOKENS"); v != "" {
+	if v := os.Getenv("OHGO_MAX_TOKENS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
 			s.MaxTokens = n
 		}
 	}
 
-	if v := os.Getenv("OPENHARNESS_MAX_TURNS"); v != "" {
+	if v := os.Getenv("OHGO_MAX_TURNS"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
 			s.MaxTurns = n
 		}
@@ -128,11 +128,11 @@ func applyEnvOverrides(s *Settings) {
 		s.APIKey = v
 	}
 
-	if v := os.Getenv("OPENHARNESS_API_FORMAT"); v != "" {
+	if v := os.Getenv("OHGO_API_FORMAT"); v != "" {
 		s.APIFormat = v
 	}
 
-	if v := os.Getenv("OPENHARNESS_PROVIDER"); v != "" {
+	if v := os.Getenv("OHGO_PROVIDER"); v != "" {
 		s.Provider = v
 	}
 }

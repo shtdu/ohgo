@@ -7,16 +7,16 @@ import (
 )
 
 const (
-	defaultBaseDir    = ".openharness"
+	defaultBaseDir    = ".ohgo"
 	configFileName    = "settings.json"
-	projectConfigDir  = ".openharness"
-	envConfigDir      = "OPENHARNESS_CONFIG_DIR"
-	envDataDir        = "OPENHARNESS_DATA_DIR"
-	envLogsDir        = "OPENHARNESS_LOGS_DIR"
+	projectConfigDir  = ".ohgo"
+	envConfigDir      = "OHGO_CONFIG_DIR"
+	envDataDir        = "OHGO_DATA_DIR"
+	envLogsDir        = "OHGO_LOGS_DIR"
 )
 
 // ConfigDir returns the configuration directory, creating it if needed.
-// Resolution order: OPENHARNESS_CONFIG_DIR env var, then ~/.openharness/.
+// Resolution order: OHGO_CONFIG_DIR env var, then ~/.ohgo/.
 func ConfigDir() (string, error) {
 	if dir := os.Getenv(envConfigDir); dir != "" {
 		return ensureDir(dir)
@@ -97,7 +97,7 @@ func CronRegistryPath() (string, error) {
 	return filepath.Join(dataDir, "cron_jobs.json"), nil
 }
 
-// ProjectDir returns the per-project .openharness directory.
+// ProjectDir returns the per-project .ohgo directory.
 func ProjectDir(cwd string) (string, error) {
 	abs, err := filepath.Abs(cwd)
 	if err != nil {

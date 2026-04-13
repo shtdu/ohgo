@@ -23,7 +23,7 @@ type Payload struct {
 // DefinitionExecutor runs hooks from a Registry for lifecycle events.
 // It implements the HookRunner interface for integration with the engine.
 //
-// Command hooks pass tool arguments via the OPENHARNESS_HOOK_ARGUMENTS
+// Command hooks pass tool arguments via the OHGO_HOOK_ARGUMENTS
 // environment variable (as JSON). Hook commands run with the full privileges
 // of the og process. Hook definitions should be treated as trusted configuration.
 type DefinitionExecutor struct {
@@ -143,9 +143,9 @@ func (e *DefinitionExecutor) runCommandHook(ctx context.Context, hook HookDefini
 
 	cmd := exec.CommandContext(ctx, "sh", "-c", hook.Command)
 	cmd.Env = append(os.Environ(),
-		"OPENHARNESS_HOOK_EVENT="+string(hook.Event),
-		"OPENHARNESS_HOOK_TOOL="+toolName,
-		"OPENHARNESS_HOOK_ARGUMENTS="+string(argsJSON),
+		"OHGO_HOOK_EVENT="+string(hook.Event),
+		"OHGO_HOOK_TOOL="+toolName,
+		"OHGO_HOOK_ARGUMENTS="+string(argsJSON),
 	)
 
 	var stdout, stderr bytes.Buffer

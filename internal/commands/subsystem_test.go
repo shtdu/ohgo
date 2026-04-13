@@ -375,7 +375,7 @@ func TestFeedbackCommand_SavesToFile(t *testing.T) {
 
 	// Use a temp dir as config dir.
 	tmpDir := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmpDir)
+	t.Setenv("OHGO_CONFIG_DIR", tmpDir)
 
 	res, err := cmd.Run(context.Background(), "this is great!", &Deps{})
 	if err != nil {

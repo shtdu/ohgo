@@ -11,30 +11,123 @@ import (
 	"sync"
 )
 
-// Store manages memory files for a project.
-// Memory is stored per-project under .openharness/memory/.
+// Store manages memory files across personal and project layers.
+// Personal memory is stored in ~/.ohgo/data/memory/_personal/.
+// Project memory is stored per-project under ~/.ohgo/data/memory/<project>-<hash>/.
 // Each entry is a markdown file; MEMORY.md serves as the index.
 // Format is compatible with the Python OpenHarness version.
 // All operations are safe for concurrent use.
 type Store struct {
-	dir string // project memory directory
-	mu  sync.Mutex
+	projectDir  string // project memory directory
+	personalDir string // personal (user-level) memory directory
+	mu          sync.Mutex
 }
 
 // NewStore creates a memory store for the given working directory.
+// Both personal and project memory directories are initialized.
 func NewStore(cwd string) (*Store, error) {
-	dir, err := ProjectDir(cwd)
+	projDir, err := ProjectDir(cwd)
 	if err != nil {
 		return nil, err
 	}
-	return &Store{dir: dir}, nil
+	persDir, err := PersonalDir()
+	if err != nil {
+		return nil, err
+	}
+	return &Store{projectDir: projDir, personalDir: persDir}, nil
 }
 
-// List returns sorted .md file basenames in the memory directory.
+// ProjectDir returns the project-scoped memory directory path.
+func (s *Store) ProjectDir() string { return s.projectDir }
+
+// PersonalDir returns the user-level memory directory path.
+func (s *Store) PersonalDir() string { return s.personalDir }
+
+// --- Project-scoped operations (existing API preserved) ---
+
+// List returns sorted .md file basenames in the project memory directory.
 func (s *Store) List() ([]string, error) {
+	return listDir(s.projectDir)
+}
+
+// Add creates a project memory file and appends it to the project MEMORY.md index.
+func (s *Store) Add(title, content string) (string, error) {
+	return addToDir(s.projectDir, title, content)
+}
+
+// Remove deletes a project memory file and removes its entry from the index.
+func (s *Store) Remove(name string) (bool, error) {
+	return removeFromDir(s.projectDir, name)
+}
+
+// --- Personal-scoped operations ---
+
+// ListPersonal returns sorted .md file basenames in the personal memory directory.
+func (s *Store) ListPersonal() ([]string, error) {
+	return listDir(s.personalDir)
+}
+
+// AddPersonal creates a personal memory file and appends it to the personal MEMORY.md index.
+func (s *Store) AddPersonal(title, content string) (string, error) {
+	return addToDir(s.personalDir, title, content)
+}
+
+// RemovePersonal deletes a personal memory file and removes its entry from the index.
+func (s *Store) RemovePersonal(name string) (bool, error) {
+	return removeFromDir(s.personalDir, name)
+}
+
+// --- Dual-layer operations ---
+
+// LoadPrompt reads both personal and project MEMORY.md indexes for prompt injection.
+// Personal memory appears first, then project memory, separated by section headers.
+func (s *Store) LoadPrompt(maxLines int) (string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	entries, err := os.ReadDir(s.dir)
+
+	personalContent, _ := readIndex(s.personalDir)
+	projectContent, _ := readIndex(s.projectDir)
+
+	if personalContent == "" && projectContent == "" {
+		return "", nil
+	}
+
+	var sections []string
+	if personalContent != "" {
+		sections = append(sections, "# Personal Memory\n"+personalContent)
+	}
+	if projectContent != "" {
+		sections = append(sections, "# Project Memory\n"+projectContent)
+	}
+
+	content := strings.Join(sections, "\n\n")
+
+	if maxLines <= 0 {
+		return content, nil
+	}
+
+	lines := strings.Split(content, "\n")
+	if len(lines) > maxLines {
+		lines = lines[:maxLines]
+	}
+	return strings.Join(lines, "\n"), nil
+}
+
+// --- Internal helpers ---
+
+func readIndex(dir string) (string, error) {
+	data, err := os.ReadFile(filepath.Join(dir, "MEMORY.md"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	return string(data), nil
+}
+
+func listDir(dir string) ([]string, error) {
+	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil
@@ -53,10 +146,7 @@ func (s *Store) List() ([]string, error) {
 
 var slugRe = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 
-// Add creates a memory file and appends it to the MEMORY.md index.
-func (s *Store) Add(title, content string) (string, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+func addToDir(dir, title, content string) (string, error) {
 	slug := slugRe.ReplaceAllString(strings.ToLower(strings.TrimSpace(title)), "_")
 	slug = strings.Trim(slug, "_")
 	if slug == "" {
@@ -64,12 +154,12 @@ func (s *Store) Add(title, content string) (string, error) {
 	}
 
 	filename := slug + ".md"
-	path := filepath.Join(s.dir, filename)
+	path := filepath.Join(dir, filename)
 	if err := os.WriteFile(path, []byte(strings.TrimSpace(content)+"\n"), 0o644); err != nil {
 		return "", fmt.Errorf("write memory file: %w", err)
 	}
 
-	entrypoint := filepath.Join(s.dir, "MEMORY.md")
+	entrypoint := filepath.Join(dir, "MEMORY.md")
 	existing := "# Memory Index\n"
 	if data, err := os.ReadFile(entrypoint); err == nil {
 		existing = string(data)
@@ -85,13 +175,9 @@ func (s *Store) Add(title, content string) (string, error) {
 	return path, nil
 }
 
-// Remove deletes a memory file and removes its entry from the MEMORY.md index.
-func (s *Store) Remove(name string) (bool, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	// Find file by stem or full name.
+func removeFromDir(dir, name string) (bool, error) {
 	var target string
-	entries, err := os.ReadDir(s.dir)
+	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return false, err
 	}
@@ -109,11 +195,11 @@ func (s *Store) Remove(name string) (bool, error) {
 		return false, nil
 	}
 
-	if err := os.Remove(filepath.Join(s.dir, target)); err != nil {
+	if err := os.Remove(filepath.Join(dir, target)); err != nil {
 		return false, fmt.Errorf("remove memory file: %w", err)
 	}
 
-	entrypoint := filepath.Join(s.dir, "MEMORY.md")
+	entrypoint := filepath.Join(dir, "MEMORY.md")
 	data, err := os.ReadFile(entrypoint)
 	if err != nil {
 		return true, nil
@@ -130,29 +216,4 @@ func (s *Store) Remove(name string) (bool, error) {
 	}
 
 	return true, nil
-}
-
-// LoadPrompt reads the MEMORY.md index for prompt injection.
-func (s *Store) LoadPrompt(maxLines int) (string, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	entrypoint := filepath.Join(s.dir, "MEMORY.md")
-	data, err := os.ReadFile(entrypoint)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return "", nil
-		}
-		return "", err
-	}
-
-	content := string(data)
-	if maxLines <= 0 {
-		return content, nil
-	}
-
-	lines := strings.Split(content, "\n")
-	if len(lines) > maxLines {
-		lines = lines[:maxLines]
-	}
-	return strings.Join(lines, "\n"), nil
 }

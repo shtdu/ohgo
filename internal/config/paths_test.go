@@ -10,16 +10,16 @@ import (
 )
 
 func TestConfigDir_Default(t *testing.T) {
-	t.Setenv("OPENHARNESS_CONFIG_DIR", "")
+	t.Setenv("OHGO_CONFIG_DIR", "")
 	dir, err := ConfigDir()
 	require.NoError(t, err)
 	home, _ := os.UserHomeDir()
-	assert.Equal(t, filepath.Join(home, ".openharness"), dir)
+	assert.Equal(t, filepath.Join(home, ".ohgo"), dir)
 }
 
 func TestConfigDir_EnvOverride(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	dir, err := ConfigDir()
 	require.NoError(t, err)
 	assert.Equal(t, tmp, dir)
@@ -27,7 +27,7 @@ func TestConfigDir_EnvOverride(t *testing.T) {
 
 func TestConfigFilePath(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
 	path, err := ConfigFilePath()
 	require.NoError(t, err)
 	assert.Equal(t, filepath.Join(tmp, "settings.json"), path)
@@ -35,8 +35,8 @@ func TestConfigFilePath(t *testing.T) {
 
 func TestDataDir_Default(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
-	t.Setenv("OPENHARNESS_DATA_DIR", "")
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_DATA_DIR", "")
 	dir, err := DataDir()
 	require.NoError(t, err)
 	assert.Equal(t, filepath.Join(tmp, "data"), dir)
@@ -44,7 +44,7 @@ func TestDataDir_Default(t *testing.T) {
 
 func TestDataDir_EnvOverride(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_DATA_DIR", tmp)
+	t.Setenv("OHGO_DATA_DIR", tmp)
 	dir, err := DataDir()
 	require.NoError(t, err)
 	assert.Equal(t, tmp, dir)
@@ -52,8 +52,8 @@ func TestDataDir_EnvOverride(t *testing.T) {
 
 func TestSessionsDir(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", tmp)
-	t.Setenv("OPENHARNESS_DATA_DIR", "")
+	t.Setenv("OHGO_CONFIG_DIR", tmp)
+	t.Setenv("OHGO_DATA_DIR", "")
 	dir, err := SessionsDir()
 	require.NoError(t, err)
 	assert.Equal(t, filepath.Join(tmp, "data", "sessions"), dir)
@@ -65,7 +65,7 @@ func TestProjectDir(t *testing.T) {
 	tmp := t.TempDir()
 	dir, err := ProjectDir(tmp)
 	require.NoError(t, err)
-	assert.Equal(t, filepath.Join(tmp, ".openharness"), dir)
+	assert.Equal(t, filepath.Join(tmp, ".ohgo"), dir)
 	_, err = os.Stat(dir)
 	assert.NoError(t, err, "project dir should exist")
 }

@@ -36,12 +36,12 @@ type Manager struct {
 }
 
 // NewManager creates a new auth manager.
-// If storePath is empty, defaults to ~/.openharness/credentials.json.
+// If storePath is empty, defaults to ~/.ohgo/credentials.json.
 func NewManager(storePath string) *Manager {
 	if storePath == "" {
 		home, _ := os.UserHomeDir()
 		if home != "" {
-			storePath = filepath.Join(home, ".openharness", "credentials.json")
+			storePath = filepath.Join(home, ".ohgo", "credentials.json")
 		}
 	}
 	m := &Manager{

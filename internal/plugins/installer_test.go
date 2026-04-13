@@ -12,7 +12,7 @@ import (
 func TestInstallCopiesFiles(t *testing.T) {
 	// Set up a fake config dir via environment variable.
 	configDir := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", configDir)
+	t.Setenv("OHGO_CONFIG_DIR", configDir)
 
 	// Create a source plugin directory.
 	src := t.TempDir()
@@ -41,7 +41,7 @@ func TestInstallCopiesFiles(t *testing.T) {
 
 func TestInstallOverwritesExisting(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", configDir)
+	t.Setenv("OHGO_CONFIG_DIR", configDir)
 
 	src := t.TempDir()
 	srcPlugin := filepath.Join(src, "overwrite-test")
@@ -65,7 +65,7 @@ func TestInstallOverwritesExisting(t *testing.T) {
 
 func TestInstallFailsOnFileSource(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", configDir)
+	t.Setenv("OHGO_CONFIG_DIR", configDir)
 
 	src := t.TempDir()
 	filePath := filepath.Join(src, "not-a-dir.txt")
@@ -78,7 +78,7 @@ func TestInstallFailsOnFileSource(t *testing.T) {
 
 func TestUninstallRemovesDirectory(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", configDir)
+	t.Setenv("OHGO_CONFIG_DIR", configDir)
 
 	// Create a plugin to uninstall.
 	pluginDir := filepath.Join(configDir, "plugins", "to-remove")
@@ -96,7 +96,7 @@ func TestUninstallRemovesDirectory(t *testing.T) {
 
 func TestUninstallMissingReturnsFalse(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", configDir)
+	t.Setenv("OHGO_CONFIG_DIR", configDir)
 
 	removed, err := Uninstall("nonexistent")
 	require.NoError(t, err)
@@ -105,7 +105,7 @@ func TestUninstallMissingReturnsFalse(t *testing.T) {
 
 func TestPluginsDirCreatesDirectory(t *testing.T) {
 	configDir := t.TempDir()
-	t.Setenv("OPENHARNESS_CONFIG_DIR", configDir)
+	t.Setenv("OHGO_CONFIG_DIR", configDir)
 
 	// Plugins dir should not exist yet.
 	pluginsPath := filepath.Join(configDir, "plugins")

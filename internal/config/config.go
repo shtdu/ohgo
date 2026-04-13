@@ -61,7 +61,7 @@ func loadConfig(_ context.Context, configDir string) (*Settings, error) {
 
 	// Project config
 	if cwd, err := WorkingDir(); err == nil {
-		projectPath := cwd + "/.openharness/settings.json"
+		projectPath := cwd + "/.ohgo/settings.json"
 		if projSettings, err := loadFromFile(projectPath); err == nil {
 			s = mergeSettings(s, projSettings)
 		}

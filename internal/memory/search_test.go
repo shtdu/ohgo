@@ -43,7 +43,7 @@ func TestFind_EmptyQuery(t *testing.T) {
 }
 
 func TestFind_WithRealFiles(t *testing.T) {
-	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	t.Setenv("OHGO_DATA_DIR", t.TempDir())
 	cwd := t.TempDir()
 	memDir, err := ProjectDir(cwd)
 	require.NoError(t, err)
@@ -58,7 +58,7 @@ func TestFind_WithRealFiles(t *testing.T) {
 }
 
 func TestFind_MaxResultsDefault(t *testing.T) {
-	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	t.Setenv("OHGO_DATA_DIR", t.TempDir())
 	cwd := t.TempDir()
 	memDir, err := ProjectDir(cwd)
 	require.NoError(t, err)
@@ -75,7 +75,7 @@ func TestFind_MaxResultsDefault(t *testing.T) {
 }
 
 func TestFind_ScoreOrdering(t *testing.T) {
-	t.Setenv("OPENHARNESS_DATA_DIR", t.TempDir())
+	t.Setenv("OHGO_DATA_DIR", t.TempDir())
 	cwd := t.TempDir()
 	memDir, err := ProjectDir(cwd)
 	require.NoError(t, err)

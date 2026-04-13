@@ -10,4 +10,5 @@ type Header struct {
 	ModifiedAt  time.Time
 	MemoryType  string
 	BodyPreview string
+	Layer       string // "personal" or "project"
 }

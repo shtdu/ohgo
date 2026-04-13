@@ -58,5 +58,5 @@ func configDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".openharness"), nil
+	return filepath.Join(home, ".ohgo"), nil
 }
