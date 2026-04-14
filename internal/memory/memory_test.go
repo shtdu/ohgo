@@ -115,6 +115,23 @@ func TestStore_LoadPrompt_BothLayers(t *testing.T) {
 	assert.Contains(t, prompt, "auth_rewrite.md")
 }
 
+func TestStore_LoadPrompt_IncludesDirectoryPaths(t *testing.T) {
+	s := setupStore(t)
+
+	_, err := s.AddPersonal("My Prefs", "I prefer table-driven tests")
+	require.NoError(t, err)
+	_, err = s.Add("Auth Rewrite", "Compliance-driven refactor")
+	require.NoError(t, err)
+
+	prompt, err := s.LoadPrompt(0)
+	require.NoError(t, err)
+
+	// Each section must include the absolute directory path so the agent
+	// can resolve relative file references in the index.
+	assert.Contains(t, prompt, s.personalDir, "personal section should contain the absolute directory path")
+	assert.Contains(t, prompt, s.projectDir, "project section should contain the absolute directory path")
+}
+
 func TestStore_PersonalAddRemove(t *testing.T) {
 	s := setupStore(t)
 

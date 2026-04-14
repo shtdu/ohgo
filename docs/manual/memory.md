@@ -72,18 +72,20 @@ When frontmatter is omitted, ohgo infers the title from the filename and the des
   settings.json                    # global settings
   credentials.json                 # stored API keys
   data/
-    memory/
-      _personal/                   # personal memory (all projects)
-        MEMORY.md                  # personal memory index
-        user_role.md               # personal memory files
-        feedback_testing.md
-      myproject-a1b2c3/            # project memory (per-project hash)
-        MEMORY.md                  # project memory index
-        project_auth_rewrite.md
-        reference_linear.md
+    memory/                        # personal memory (all projects)
+      MEMORY.md                    # personal memory index
+      user_role.md                 # personal memory files
+      feedback_testing.md
+
+<project-dir>/.ohgo/
+  data/
+    memory/                        # project memory (per-project)
+      MEMORY.md                    # project memory index
+      project_auth_rewrite.md
+      reference_linear.md
 ```
 
-Each project directory gets its own memory store, keyed by a SHA1 hash of the working directory path. The personal memory store lives at a fixed location and is shared across all projects.
+Project memory lives inside the project directory at `.ohgo/data/memory/`, making it portable with the repo. Personal memory lives at `~/.ohgo/data/memory/` and is shared across all projects.
 
 ## Commands
 

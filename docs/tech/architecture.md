@@ -145,5 +145,5 @@ ohgo must remain compatible with the Python OpenHarness ecosystem:
 | Skills | YAML frontmatter + markdown body (`anthropics/skills` format) |
 | Plugins | `plugin.json` + directory layout (`claude-code/plugins` format) |
 | Settings | `settings.json` with the same schema |
-| Memory | `MEMORY.md` index + separate files, same directory structure |
+| Memory | `MEMORY.md` index + separate files, project memory at `<CWD>/.ohgo/data/memory/` |
 | Permissions | `default`, `plan`, `auto` modes with same behavior |

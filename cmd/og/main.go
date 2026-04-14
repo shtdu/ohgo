@@ -21,6 +21,7 @@ import (
 	"github.com/shtdu/ohgo/internal/coordinator"
 	"github.com/shtdu/ohgo/internal/engine"
 	"github.com/shtdu/ohgo/internal/hooks"
+	"github.com/shtdu/ohgo/internal/memory"
 	mpcpkg "github.com/shtdu/ohgo/internal/mcp"
 	"github.com/shtdu/ohgo/internal/permissions"
 	"github.com/shtdu/ohgo/internal/plugins"
@@ -205,7 +206,16 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	// Build system prompt
+	cwd, _ := os.Getwd()
+	memStore, memErr := memory.NewStore(cwd)
+	if memErr != nil {
+		slog.Warn("failed to init memory store", "error", memErr)
+	}
+
 	assembler := prompts.NewAssembler("").WithCustomPrompt(cfg.SystemPrompt)
+	if memStore != nil {
+		assembler = assembler.WithMemoryStore(memStore)
+	}
 	systemPrompt, err := assembler.Build(ctx)
 	if err != nil {
 		slog.Warn("failed to build system prompt, using default", "error", err)
@@ -232,7 +242,6 @@ func run(cmd *cobra.Command, args []string) error {
 	// Register slash commands
 	cmdReg := commands.NewRegistry()
 	commands.RegisterAll(cmdReg)
-	cwd, _ := os.Getwd()
 	cmdDeps := &commands.Deps{
 		Engine:    eng,
 		Config:    cfg,

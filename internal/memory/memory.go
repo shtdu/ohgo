@@ -112,10 +112,10 @@ func (s *Store) LoadPrompt(maxLines int) (string, error) {
 
 	var sections []string
 	if personalContent != "" {
-		sections = append(sections, "# Personal Memory\n"+personalContent)
+		sections = append(sections, fmt.Sprintf("# Personal Memory\nDirectory: %s\n%s", s.personalDir, personalContent))
 	}
 	if projectContent != "" {
-		sections = append(sections, "# Project Memory\n"+projectContent)
+		sections = append(sections, fmt.Sprintf("# Project Memory\nDirectory: %s\n%s", s.projectDir, projectContent))
 	}
 
 	content := strings.Join(sections, "\n\n")

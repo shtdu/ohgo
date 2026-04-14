@@ -1,30 +1,19 @@
 package memory
 
 import (
-	"crypto/sha1"
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/shtdu/ohgo/internal/config"
 )
 
-// ProjectDir returns the persistent memory directory for a project,
-// derived from the SHA1 hash of the absolute working directory path.
+// ProjectDir returns the project-scoped memory directory at <cwd>/.ohgo/data/memory/.
+// This places memory files alongside the project, making them portable with the repo.
 func ProjectDir(cwd string) (string, error) {
 	abs, err := filepath.Abs(cwd)
 	if err != nil {
 		return "", fmt.Errorf("resolve cwd: %w", err)
 	}
-	digest := sha1.Sum([]byte(abs))
-	base := filepath.Base(abs)
-	dirName := fmt.Sprintf("%s-%x", base, digest[:6])
-
-	dataDir, err := config.DataDir()
-	if err != nil {
-		return "", err
-	}
-	dir := filepath.Join(dataDir, "memory", dirName)
+	dir := filepath.Join(abs, ".ohgo", "data", "memory")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", fmt.Errorf("create memory dir: %w", err)
 	}

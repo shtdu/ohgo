@@ -9,6 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/shtdu/ohgo/internal/memory"
 )
 
 func TestAssembler_FullAssembly(t *testing.T) {
@@ -78,4 +80,49 @@ func TestAssembler_EmptyCwdUsesCurrentDir(t *testing.T) {
 	result, err := a.Build(context.Background())
 	require.NoError(t, err)
 	assert.NotEmpty(t, result)
+}
+
+func TestAssembler_MemoryInjectedIntoPrompt(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create a memory store and add a project memory entry.
+	store, err := memory.NewStore(dir)
+	require.NoError(t, err)
+	_, err = store.Add("Test Memory", "This is remembered context")
+	require.NoError(t, err)
+
+	a := NewAssembler(dir).WithMemoryStore(store)
+	result, err := a.Build(context.Background())
+	require.NoError(t, err)
+
+	assert.Contains(t, result, "Test Memory", "prompt should contain memory title from index")
+}
+
+func TestAssembler_MemoryNotInjectedWhenNil(t *testing.T) {
+	dir := t.TempDir()
+
+	// No memory store set — should not panic or add memory section headers.
+	a := NewAssembler(dir)
+	result, err := a.Build(context.Background())
+	require.NoError(t, err)
+	assert.NotContains(t, result, "Personal Memory")
+	assert.NotContains(t, result, "Project Memory")
+}
+
+func TestAssembler_MemoryPersonalAndProject(t *testing.T) {
+	dir := t.TempDir()
+
+	store, err := memory.NewStore(dir)
+	require.NoError(t, err)
+	_, err = store.AddPersonal("My Prefs", "I prefer Go")
+	require.NoError(t, err)
+	_, err = store.Add("Auth Rewrite", "Compliance-driven")
+	require.NoError(t, err)
+
+	a := NewAssembler(dir).WithMemoryStore(store)
+	result, err := a.Build(context.Background())
+	require.NoError(t, err)
+
+	assert.Contains(t, result, "Personal Memory", "should include personal memory section header")
+	assert.Contains(t, result, "Project Memory", "should include project memory section header")
 }

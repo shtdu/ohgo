@@ -56,7 +56,8 @@ All paths derive from the config directory:
 
 ./.ohgo/
   settings.json        # project settings
-  memory/              # project-local memory store
+  data/
+    memory/            # project-local memory store
   plugins/             # project-local plugins
 ```
 
