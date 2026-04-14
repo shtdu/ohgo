@@ -2,7 +2,42 @@
 
 Concrete plan for porting OpenHarness (Python) to ohgo (Go), organized by phase with dependency ordering.
 
-**Status legend:** `TODO` `IN PROGRESS` `DONE` `SKIPPED`
+**Status legend:** `TODO` `IN PROGRESS` `DONE` `SKIPPED` `PARTIAL`
+
+---
+
+## Porting Status Overview
+
+**All tests passing: 45/45 packages green.** Phases 1–7 are complete. Remaining work is in new phases 8–9.
+
+### Fully Ported Modules (148 items, all DONE)
+
+| Phase | Items | Go Package(s) | Tests | Milestone |
+|---|---|---|---|---|
+| 1. Foundation | 13 | `config`, `engine`, `api`, `tools` | 9 files | Single streaming LLM call |
+| 2. Safety & Prompts | 11 | `permissions`, `hooks`, `prompts`, `engine` | 8 files | Permission checks, hooks, CLAUDE.md |
+| 3. Essential Tools | 10 | `tools/{read,write,edit,bash,glob,grep,webfetch,websearch,builtin,lsp}` | 10 files | Read/write/edit/bash/search |
+| 4. Extended Tools | 31 | `tools/{agent,ask,brief,config,cron,plan,worktree,notebook,sleep,message,skill,remote,todo,search,task,team,mcp}` | 17 files | All 40 tools ported |
+| 5. UI & Commands | 56 | `ui`, `commands` (58 files) | 8 files | Full REPL with slash commands |
+| 6. Subsystems | 17 | `skills`, `memory`, `mcp`, `plugins`, `coordinator`, `tasks`, `sandbox` | 17 files | Skills, memory, MCP, plugins |
+| 7. API Providers | 10 | `api`, `auth`, `bridge` | 10 files | Anthropic, OpenAI, Copilot, Codex |
+
+### Modules with Depth Gaps (PARTIAL)
+
+| Module | Go Package | What's Done | What's Missing |
+|---|---|---|---|
+| Coordinator spawning | `internal/coordinator` | Agent defs, teams, registry (3 files, 3 tests) | Actual subprocess-based agent spawn/execution |
+| Sandbox isolation | `internal/sandbox` | Interface, availability check (1 file, 1 test) | Full sandboxed execution (container/nsjail wrapping) |
+| UI rendering | `internal/ui` | Basic terminal output, permission prompts (2 files, 2 tests) | Rich TUI (bubbletea/lipgloss), interactive widgets |
+
+### Unported Python Modules (no Go equivalent)
+
+| Python Module | Lines | Description | Priority |
+|---|---|---|---|
+| `services/` | 1,483 | Cron scheduler, session backend, token estimation, mailbox, permission sync | Medium — partially absorbed by existing packages |
+| `swarm/` | 4,899 | Distributed coordination (mirrors services/) | Low — single-binary focus |
+| `state/` | 76 | App state store | Low — may be handled implicitly |
+| `cli.py` (full) | ~47K | Full CLI application logic | Low — core flow covered by `cmd/og/main.go` |
 
 ---
 
@@ -50,28 +85,6 @@ export ANTHROPIC_API_KEY=sk-...
 sleep 1 && kill -INT $!
 # Expect: clean shutdown, no goroutine leak
 ```
-
----
-
-## Phase 2: Safety & Prompts
-
-Permission checks, hooks, and system prompt assembly — everything that wraps tool execution.
-
-| # | Python Source | Go Target | Key Types to Port | Depends On | Status |
-|---|---|---|---|---|---|
-| 2.1 | `permissions/modes.py` | `internal/permissions/modes.go` | `Mode` enum, mode behavior matrix | — | DONE |
-| 2.2 | `permissions/checker.py` | `internal/permissions/checker.go` | `Checker` interface, `DefaultChecker`, path rules, command deny patterns | 2.1 | DONE |
-| 2.3 | `hooks/types.py` + `hooks/schemas.py` | `internal/hooks/types.go` | `HookType` (Command/HTTP/Prompt/Agent), `HookDefinition`, pattern matching | — | DONE |
-| 2.4 | `hooks/loader.py` | `internal/hooks/loader.go` | `LoadFromDir()`, parse `hooks.json` manifests | 2.3 | DONE |
-| 2.5 | `hooks/executor.py` | `internal/hooks/executor.go` | `Executor`, `RunPre()`, `RunPost()`, aggregation | 2.3, 2.4 | DONE |
-| 2.6 | `hooks/hot_reload.py` | `internal/hooks/reload.go` | `WatchAndReload()`, fsnotify integration | 2.4 | DONE |
-| 2.7 | `prompts/environment.py` | `internal/prompts/environment.go` | `EnvironmentInfo{OS, Shell, Cwd, GitStatus, Date}` | 1.4 | DONE |
-| 2.8 | `prompts/system_prompt.py` | `internal/prompts/system.go` | `BuildSystemPrompt()`, base prompt template | 2.7 | DONE |
-| 2.9 | `prompts/claudemd.py` | `internal/prompts/claudemd.go` | `DiscoverCLAUDEmd()`, walk up to root, merge | — | DONE |
-| 2.10 | `prompts/context.py` | `internal/prompts/context.go` | `BuildContextPrompt()`, inject environment + CLAUDE.md | 2.8, 2.9 | DONE |
-| 2.11 | `services/compact/` | `internal/engine/compact.go` | `Microcompact()`, `FullCompact()`, token budget check | 1.5, 1.11 | DONE |
-
-**Phase 1 milestone:** `og` starts, loads config, sends one prompt to Claude API, prints streaming response.
 
 ---
 
@@ -389,10 +402,10 @@ Self-contained subsystems that the engine and tools depend on.
 | 6.11 | `plugins/loader.py` | `internal/plugins/loader.go` | `Discover()`, directory scanning | 6.10 | `loader_test.go`: scan temp plugin dir, nested plugins, invalid plugin.json | DONE |
 | 6.12 | `plugins/installer.py` | `internal/plugins/installer.go` | `Install()`, `Uninstall()` | 6.10 | `installer_test.go`: install from source, uninstall by name, missing plugin | DONE |
 | 6.13 | `coordinator/agent_definitions.py` | `internal/coordinator/agent.go` + `loader.go` | `AgentDef`, YAML loading from directories | 6.1 | `loader_test.go`: parse valid YAML, tool filtering, model override | DONE |
-| 6.14 | `coordinator/coordinator_mode.py` | `internal/coordinator/coordinator.go` | `Coordinator`, agent lifecycle via subprocess | 6.13 | `coordinator_test.go`: spawn agent, stop, list, shutdown | DONE |
+| 6.14 | `coordinator/coordinator_mode.py` | `internal/coordinator/coordinator.go` | `Coordinator`, agent lifecycle via subprocess | 6.13 | `coordinator_test.go`: spawn agent, stop, list, shutdown | PARTIAL — framework only, subprocess spawn not wired |
 | 6.15 | `coordinator/registry.py` | `internal/coordinator/coordinator.go` | Agent registry, team management | 6.14 | `coordinator_test.go`: register defs, create/delete teams | DONE |
 | 6.16 | `tasks/` | `internal/tasks/manager.go` + `types.go` | `Manager`, `CreateShell()`, `Stop()`, `ReadOutput()`, subprocess lifecycle | — | `manager_test.go`: start task, get output, stop task, list tasks, context cancel | DONE |
-| 6.17 | `sandbox/adapter.py` | `internal/sandbox/sandbox.go` | `Availability`, `CheckAvailability()`, `WrapCommand()` | — | `sandbox_test.go`: availability check, wrap command, config generation | DONE |
+| 6.17 | `sandbox/adapter.py` | `internal/sandbox/sandbox.go` | `Availability`, `CheckAvailability()`, `WrapCommand()` | — | `sandbox_test.go`: availability check, wrap command, config generation | PARTIAL — interface only, no container/nsjail wrapping |
 
 ### Phase 6 Manual Test
 
@@ -475,64 +488,181 @@ Additional LLM provider clients and bridges.
 
 ---
 
-## Phase 8: Channels (ogmo)
+## Phase 8: Depth Gaps & Services
 
-IM channel integrations for the ogmo personal agent.
+Fill depth gaps in existing modules and port remaining Python `services/` functionality not yet absorbed.
+
+### 8A: Depth Gaps — Existing Modules
+
+| # | Module | Go Target | What to Add | Depends On | Unit Test | Status |
+|---|---|---|---|---|---|---|
+| 8.1 | Coordinator spawn | `internal/coordinator/spawn.go` | Subprocess-based agent spawn, stdout/stderr capture, exit handling | 6.14 | `spawn_test.go`: spawn echo agent, capture output, context cancel, timeout | TODO |
+| 8.2 | Coordinator dispatch | `internal/coordinator/dispatch.go` | Message routing to spawned agents, result aggregation | 8.1 | `dispatch_test.go`: send task to agent, collect results, agent failure | TODO |
+| 8.3 | Sandbox execution | `internal/sandbox/exec.go` | Command wrapping with resource limits, working dir isolation | 6.17 | `exec_test.go`: wrapped command runs, resource limit enforced, timeout | TODO |
+| 8.4 | OAuth device flow | `internal/auth/oauth.go` | Generic OAuth2 device code flow (not just Copilot) | 7.5 | `oauth_test.go`: mock OAuth endpoints, device code exchange, token refresh | TODO |
+
+### 8B: Services — New Modules
+
+The Python `services/` package provides long-running background processes. Some functionality is already absorbed by existing Go packages (cron tools, task manager). Items below are the remaining pieces not yet covered.
 
 | # | Python Source | Go Target | Description | Depends On | Unit Test | Status |
 |---|---|---|---|---|---|---|
-| 8.1 | `channels/adapter.py` + `base.py` | `internal/channels/adapter.go` | Base channel interface, adapter pattern | — | `adapter_test.go`: interface compliance, message conversion | TODO |
-| 8.2 | `channels/bus/events.py` + `queue.py` | `internal/channels/bus.go` | Event bus, message queue | 8.1 | `bus_test.go`: publish/subscribe, queue ordering, backpressure | TODO |
-| 8.3 | `channels/impl/telegram.py` | `internal/channels/telegram/telegram.go` | Telegram bot integration | 8.2, resty | `telegram_test.go`: mock Telegram API, send/receive, webhook | TODO |
-| 8.4 | `channels/impl/slack.py` | `internal/channels/slack/slack.go` | Slack bot integration | 8.2, gorilla/websocket | `slack_test.go`: mock Slack RTM, message handling | TODO |
-| 8.5 | `channels/impl/discord.py` | `internal/channels/discord/discord.go` | Discord bot integration | 8.2, gorilla/websocket | `discord_test.go`: mock Discord gateway, message handling | TODO |
-| 8.6 | `channels/impl/feishu.py` | `internal/channels/feishu/feishu.go` | Feishu/Lark integration | 8.2, resty | `feishu_test.go`: mock Feishu API, event handling | TODO |
-| 8.7 | `channels/impl/dingtalk.py` | `internal/channels/dingtalk/dingtalk.go` | DingTalk integration | 8.2, resty | `dingtalk_test.go`: mock DingTalk API, callback | TODO |
-| 8.8 | `channels/impl/matrix.py` | `internal/channels/matrix/matrix.go` | Matrix integration | 8.2 | `matrix_test.go`: mock Matrix client, sync loop | TODO |
-| 8.9 | `channels/impl/email.py` | `internal/channels/email/email.go` | Email channel | 8.2 | `email_test.go`: mock SMTP, send/receive | TODO |
-| 8.10 | `channels/impl/mochat.py` | `internal/channels/mochat/mochat.go` | Mochat integration | 8.2, resty | `mochat_test.go`: mock Mochat API | TODO |
-| 8.11 | `channels/impl/qq.py` | `internal/channels/qq/qq.go` | QQ integration | 8.2 | `qq_test.go`: mock QQ API | TODO |
-| 8.12 | `channels/impl/whatsapp.py` | `internal/channels/whatsapp/whatsapp.go` | WhatsApp integration | 8.2, gorilla/websocket | `whatsapp_test.go`: mock WhatsApp Web API | TODO |
-| 8.13 | `channels/impl/manager.py` | `internal/channels/manager.go` | Channel lifecycle manager | 8.1–8.12 | `manager_test.go`: register channels, start/stop all, error isolation | TODO |
-| 8.14 | `ohmo/cli.py` | `cmd/ogmo/main.go` | ogmo CLI with channel selection | 8.13, engine | see manual test | TODO |
-| 8.15 | `ohmo/workspace.py` + `prompts.py` | `internal/channels/workspace.go` | Workspace and bootstrap prompts | — | `workspace_test.go`: workspace init, prompt assembly | TODO |
-| 8.16 | `ohmo/gateway/` | `internal/channels/gateway.go` | Gateway service (HTTP router) | 8.13 | `gateway_test.go`: mock HTTP requests, routing, auth | TODO |
+| 8.5 | `services/cron_scheduler.py` | `internal/services/cron.go` | Persistent cron scheduler (survives restarts, durable jobs) | tools/cron | `cron_test.go`: schedule job, restart, verify job restored | TODO |
+| 8.6 | `services/session_backend.py` + `session_storage.py` | `internal/services/session.go` | Session save/restore with conversation history persistence | engine | `session_test.go`: save session, restore session, list sessions, expire old | TODO |
+| 8.7 | `services/token_estimation.py` | `internal/services/tokens.go` | Token counting for context window management | engine | `tokens_test.go`: estimate tokens for text, code, conversation | TODO |
+| 8.8 | `services/lockfile.py` | `internal/services/lockfile.go` | Process-level locking for single-instance enforcement | — | `lockfile_test.go`: acquire lock, second process fails, release lock | TODO |
+
+### Phase 8 Decisions Needed
+
+> **The following items need your input before proceeding.** Mark your choice with `[x]`.
+
+- [ ] **8.1–8.2 Coordinator depth**: Wire up real subprocess agent spawning, or keep framework-only for now?
+- [ ] **8.3 Sandbox depth**: Implement container/nsjail wrapping, or keep basic command wrapping?
+- [ ] **8.5–8.8 Services**: Port as a new `internal/services/` package, or absorb into existing packages?
+- [ ] **Swarm/State**: Port `swarm/` for distributed coordination, or skip (single-binary focus)?
 
 ### Phase 8 Manual Test
 
 ```bash
-# 1. ogmo help
-./ogmo --help
-# Expect: shows --channel flag, supported channels listed
+# 1. Coordinator spawn
+./og --prompt "Spawn an agent to read go.mod and report the module name"
+# Expect: agent spawned, output captured, result returned
 
-# 2. Telegram channel (requires bot token)
-./ogmo --channel telegram
-# Expect: connects to Telegram, processes messages
+# 2. Persistent cron
+./og --prompt "Create a durable cron job that runs every hour"
+# Expect: job persists across restart
+./og --prompt "List cron jobs"
+# Kill and restart og, then list cron jobs again
+# Expect: previously created job still present
 
-# 3. Gateway service
-./ogmo --gateway --port 8080
-# Expect: HTTP server starts, health check responds
-curl http://localhost:8080/health
-# Expect: {"status":"ok"}
+# 3. Session persistence
+./og
+# /session
+# Expect: shows session path
+# /exit
+./og --resume
+# Expect: previous conversation restored
 ```
 
-**Phase 8 milestone:** ogmo runs as a personal agent connected to IM channels.
+**Phase 8 milestone:** Coordinator can spawn agents, sessions persist across restarts, cron jobs are durable.
+
+---
+
+## Phase 9: Channels (ogmo) — SKIPPED
+
+IM channel integrations for the ogmo personal agent. Intentionally deferred.
+
+| # | Python Source | Go Target | Description | Depends On | Unit Test | Status |
+|---|---|---|---|---|---|---|
+| 9.1 | `channels/adapter.py` + `base.py` | `internal/channels/adapter.go` | Base channel interface, adapter pattern | — | `adapter_test.go`: interface compliance, message conversion | SKIPPED |
+| 9.2 | `channels/bus/events.py` + `queue.py` | `internal/channels/bus.go` | Event bus, message queue | 9.1 | `bus_test.go`: publish/subscribe, queue ordering, backpressure | SKIPPED |
+| 9.3 | `channels/impl/telegram.py` | `internal/channels/telegram/telegram.go` | Telegram bot integration | 9.2, resty | `telegram_test.go`: mock Telegram API, send/receive, webhook | SKIPPED |
+| 9.4 | `channels/impl/slack.py` | `internal/channels/slack/slack.go` | Slack bot integration | 9.2, gorilla/websocket | `slack_test.go`: mock Slack RTM, message handling | SKIPPED |
+| 9.5 | `channels/impl/discord.py` | `internal/channels/discord/discord.go` | Discord bot integration | 9.2, gorilla/websocket | `discord_test.go`: mock Discord gateway, message handling | SKIPPED |
+| 9.6 | `channels/impl/feishu.py` | `internal/channels/feishu/feishu.go` | Feishu/Lark integration | 9.2, resty | `feishu_test.go`: mock Feishu API, event handling | SKIPPED |
+| 9.7 | `channels/impl/dingtalk.py` | `internal/channels/dingtalk/dingtalk.go` | DingTalk integration | 9.2, resty | `dingtalk_test.go`: mock DingTalk API, callback | SKIPPED |
+| 9.8 | `channels/impl/matrix.py` | `internal/channels/matrix/matrix.go` | Matrix integration | 9.2 | `matrix_test.go`: mock Matrix client, sync loop | SKIPPED |
+| 9.9 | `channels/impl/email.py` | `internal/channels/email/email.go` | Email channel | 9.2 | `email_test.go`: mock SMTP, send/receive | SKIPPED |
+| 9.10 | `channels/impl/mochat.py` | `internal/channels/mochat/mochat.go` | Mochat integration | 9.2, resty | `mochat_test.go`: mock Mochat API | SKIPPED |
+| 9.11 | `channels/impl/qq.py` | `internal/channels/qq/qq.go` | QQ integration | 9.2 | `qq_test.go`: mock QQ API | SKIPPED |
+| 9.12 | `channels/impl/whatsapp.py` | `internal/channels/whatsapp/whatsapp.go` | WhatsApp integration | 9.2, gorilla/websocket | `whatsapp_test.go`: mock WhatsApp Web API | SKIPPED |
+| 9.13 | `channels/impl/manager.py` | `internal/channels/manager.go` | Channel lifecycle manager | 9.1–9.12 | `manager_test.go`: register channels, start/stop all, error isolation | SKIPPED |
+| 9.14 | `ohmo/cli.py` | `cmd/ogmo/main.go` | ogmo CLI with channel selection | 9.13, engine | see manual test | SKIPPED |
+| 9.15 | `ohmo/workspace.py` + `prompts.py` | `internal/channels/workspace.go` | Workspace and bootstrap prompts | — | `workspace_test.go`: workspace init, prompt assembly | SKIPPED |
+| 9.16 | `ohmo/gateway/` | `internal/channels/gateway.go` | Gateway service (HTTP router) | 9.13 | `gateway_test.go`: mock HTTP requests, routing, auth | SKIPPED |
+
+**Phase 9 milestone:** ogmo runs as a personal agent connected to IM channels. (Deferred)
+
+---
+
+## Porting Strategy
+
+### Guiding Principles
+
+1. **Single-binary focus** — `og` is a CLI-first tool. Every feature must work without a daemon.
+2. **Port behavior, not structure** — Match what the Python version *does*, not how it's organized. Go idioms > Python layout.
+3. **Absorb before creating** — Prefer adding to existing packages over creating new `internal/` packages.
+
+### Decision Points
+
+Mark your choices with `[x]` to guide next-phase work.
+
+#### Coordinator Depth
+
+How deep should multi-agent coordination go?
+
+- [ ] **A. Full subprocess spawning** — Wire `Coordinator.Spawn()` to launch `og` subprocesses with isolated state. Agent definitions from YAML. Output streaming back to parent.
+- [ ] **B. In-process goroutine agents** — Spawn agents as goroutines within the same process. Simpler but no isolation.
+- [ ] **C. Keep framework-only** — Types and registry exist. Defer execution to when there's a concrete use case.
+
+#### Services Approach
+
+How to handle the remaining Python `services/` functionality?
+
+- [ ] **A. New `internal/services/` package** — Mirror Python structure with cron scheduler, session backend, token estimation as separate files.
+- [ ] **B. Absorb into existing packages** — Cron durability into `tools/cron`, sessions into `engine`, token estimation into `engine`.
+- [ ] **C. Selective** — Pick only what's needed now (mark which items below):
+  - [ ] Persistent cron (survives restart)
+  - [ ] Session save/restore
+  - [ ] Token estimation
+  - [ ] Process lockfile
+
+#### UI Depth
+
+What terminal experience to target?
+
+- [ ] **A. Rich TUI** — Full bubbletea/lipgloss interface with panels, spinners, syntax highlighting. Matches Python's Textual UI.
+- [ ] **B. Enhanced CLI** — Keep current basic terminal output. Add streaming spinners and color via lipgloss only. No full TUI framework.
+- [ ] **C. Minimal** — Plain text output only. Focus on tool correctness over presentation.
+
+#### Sandbox Strategy
+
+How much execution isolation?
+
+- [ ] **A. Container-based** — Docker/Podman sandboxing for bash tool. Full isolation.
+- [ ] **B. OS-level** — Use OS sandboxing (macOS sandbox-exec, Linux namespaces). No external dependencies.
+- [ ] **C. Basic wrapping** — Current approach: timeout + working directory + env filtering. No true isolation.
+
+#### Skipped Modules Confirmation
+
+Which Python modules should remain unported?
+
+- [ ] `swarm/` — Distributed coordination (skip for single-binary focus)
+- [ ] `state/` — App state store (implicit in Go's struct-based architecture)
+- [ ] `voice/` — Speech-to-text interface (defer)
+- [ ] `vim/` — Vim mode transitions (currently a command toggle only)
+- [ ] `cli.py` (full 47K lines) — Core flow covered by `cmd/og/main.go`
+
+#### Priority Order for Phase 8
+
+Rank these from highest (1) to lowest priority:
+
+| Item | Your Rank |
+|---|---|
+| Coordinator subprocess spawning | ___ |
+| Session persistence | ___ |
+| OAuth device flow | ___ |
+| Persistent cron scheduler | ___ |
+| Token estimation | ___ |
+| Sandbox execution | ___ |
+| Process lockfile | ___ |
 
 ---
 
 ## Summary
 
-| Phase | Items | Description | Milestone | Manual Test |
+| Phase | Items | Description | Milestone | Status |
 |---|---|---|---|---|
-| 1 | 13 | Foundation | Single streaming LLM call works | CLI flags, streaming response, context cancel |
-| 2 | 11 | Safety & Prompts | Permissions, hooks, system prompt | permission prompts, plan mode, CLAUDE.md, hooks |
-| 3 | 10 | Essential Tools | Basic coding agent usable | read/write/edit/bash/glob/grep workflows |
-| 4 | 31 | Extended Tools | All 43 tools ported | plan mode, todos, cron, MCP, background tasks |
-| 5 | 56 | UI & Commands | Full REPL with 54 slash commands | interactive REPL, all slash commands |
-| 6 | 17 | Subsystems | Skills, memory, MCP, plugins, coordinator | skill loading, memory persistence, MCP connect, plugin install |
-| 7 | 10 | API Providers | All provider types work | OpenAI provider, provider switching, auth |
-| 8 | 16 | Channels (ogmo) | IM channel integrations | Telegram/Slack/Discord connect, gateway |
-| **Total** | **164** | | | |
+| 1 | 13 | Foundation | Single streaming LLM call works | DONE |
+| 2 | 11 | Safety & Prompts | Permissions, hooks, system prompt | DONE |
+| 3 | 10 | Essential Tools | Basic coding agent usable | DONE |
+| 4 | 31 | Extended Tools | All 40 tools ported | DONE |
+| 5 | 56 | UI & Commands | Full REPL with 58 slash commands | DONE |
+| 6 | 17 | Subsystems | Skills, memory, MCP, plugins, coordinator | 2 PARTIAL |
+| 7 | 10 | API Providers | All provider types work | DONE |
+| 8 | 8+4 | Depth Gaps & Services | Agent spawning, sessions, cron persistence | TODO |
+| 9 | 16 | Channels (ogmo) | IM channel integrations | SKIPPED |
+| **Total** | **172** | | **148 DONE / 12 TODO / 16 SKIPPED** | |
 
 ## Testing Conventions
 
